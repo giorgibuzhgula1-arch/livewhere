@@ -50,7 +50,7 @@ A user wants to find their perfect city to live in. Here is their profile:
   * Safety: ${priorities.safety}/5
 - Lifestyle preferences: ${lifestyle.join(', ')}
 
-Based on this profile, recommend exactly 20 cities from around the world, ensuring diversity across all continents.
+Based on this profile, recommend exactly 12 cities from around the world, ensuring diversity across all continents.
 For each city return a JSON object. Return ONLY a valid JSON array, no markdown, no explanation.
 
 Each city object must have exactly these fields:
