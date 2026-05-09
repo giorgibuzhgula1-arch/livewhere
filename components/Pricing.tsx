@@ -50,17 +50,17 @@ export default function Pricing({ onUpgrade }: Props) {
     {
       name: 'Free', price: '$0', period: 'forever',
       features: ['Top 5 city results', 'Basic score breakdown', '3 searches/month'],
-      btn: 'Get started free', style: 'ghost', popular: false, checkoutType: null as const
+      btn: 'Get started free', style: 'ghost', popular: false
     },
     {
       name: 'Pro', price: '$9', period: 'per month',
       features: ['Full 200+ city database', 'Real tax calculator', 'Unlimited searches', 'PDF reports', 'City comparisons', 'Visa difficulty scores'],
-      btn: loadingPlan === 'pro' ? 'Loading...' : 'Start Pro — $9/mo', style: 'primary', popular: true, checkoutType: 'pro' as const
+      btn: loadingPlan === 'pro' ? 'Loading...' : 'Start Pro — $9/mo', style: 'primary', popular: true
     },
     {
       name: 'One-time Report', price: '$19', period: 'single report',
       features: ['Full PDF analysis', 'Top 20 cities for you', 'Tax & cost breakdown', 'No subscription needed'],
-      btn: loadingPlan === 'report' ? 'Loading...' : 'Buy report', style: 'ghost', popular: false, checkoutType: 'report' as const
+      btn: loadingPlan === 'report' ? 'Loading...' : 'Buy report', style: 'ghost', popular: false
     },
   ]
 
@@ -87,11 +87,16 @@ export default function Pricing({ onUpgrade }: Props) {
         </div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 20 }}>
-        {plans.map(plan => (
+        {plans.map(plan => {
+          const isProPlan = plan.name === 'Pro'
+          const isReportPlan = plan.name === 'One-time Report'
+          const isLoading = (isProPlan && loadingPlan === 'pro') || (isReportPlan && loadingPlan === 'report')
+
+          return (
           <div key={plan.name} style={{
             background: plan.popular ? 'rgba(200,240,90,0.05)' : '#12121a',
             border: plan.popular ? '1px solid rgba(200,240,90,0.3)' : '1px solid rgba(255,255,255,0.07)',
-            borderRadius: 20, padding: 32, textAlign: 'left'
+            borderRadius: 20, padding: 32, textAlign: 'left', position: 'relative', zIndex: 1
           }}>
             {plan.popular && (
               <div style={{ background: '#c8f05a', color: '#0a0a0f', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', marginBottom: 20, textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -109,19 +114,21 @@ export default function Pricing({ onUpgrade }: Props) {
               ))}
             </ul>
             <button
-              onClick={plan.checkoutType ? () => handleCheckout(plan.checkoutType) : undefined}
-              disabled={plan.checkoutType ? loadingPlan === plan.checkoutType : false}
+              type="button"
+              onClick={isProPlan ? () => handleCheckout('pro') : isReportPlan ? () => handleCheckout('report') : undefined}
+              disabled={isLoading}
               style={{
                 width: '100%', padding: 14, borderRadius: 12,
                 fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
                 cursor: 'pointer', border: 'none', transition: 'all 0.2s',
                 background: plan.style === 'primary' ? '#c8f05a' : '#1a1a26',
                 color: plan.style === 'primary' ? '#0a0a0f' : '#f0ede8',
+                position: 'relative', zIndex: 2, pointerEvents: 'auto',
               }}>
               {plan.btn}
             </button>
           </div>
-        ))}
+        )})}
       </div>
     </section>
   )
