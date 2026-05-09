@@ -4,7 +4,19 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, email } = await req.json()
+    const rawBody = await req.text()
+    if (!rawBody.trim()) {
+      return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
+    }
+
+    let payload: { userId?: string; email?: string }
+    try {
+      payload = JSON.parse(rawBody)
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+
+    const { userId, email } = payload
 
     if (!userId || !email) {
       return NextResponse.json({ error: 'Missing userId or email' }, { status: 400 })
