@@ -7,24 +7,43 @@ interface Props { onUpgrade: () => void }
 
 export default function Pricing({ onUpgrade }: Props) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleProClick() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { onUpgrade(); return }
 
     setLoading(true)
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token}`
-      },
-      body: JSON.stringify({ userId: user.id, email: user.email })
-    })
-    const { url } = await res.json()
-    if (url) window.location.href = url
-    setLoading(false)
+    setError(null)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ userId: user.id, email: user.email })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Unable to start Stripe checkout')
+      }
+
+      if (data?.url) {
+        window.location.assign(data.url)
+        return
+      }
+
+      throw new Error('Stripe checkout URL not returned')
+    } catch (err: any) {
+      setError(err?.message || 'Unable to start Stripe checkout')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const plans = [
@@ -53,6 +72,20 @@ export default function Pricing({ onUpgrade }: Props) {
       <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, marginBottom: 48 }}>
         Simple, honest pricing
       </h2>
+      {error && (
+        <div style={{
+          maxWidth: 560,
+          margin: '0 auto 24px',
+          background: 'rgba(240,90,140,0.1)',
+          border: '1px solid rgba(240,90,140,0.3)',
+          borderRadius: 10,
+          padding: '12px 16px',
+          color: '#f05a8c',
+          fontSize: 13
+        }}>
+          {error}
+        </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 20 }}>
         {plans.map(plan => (
           <div key={plan.name} style={{
