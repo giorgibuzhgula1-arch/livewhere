@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
     const userId = session.metadata?.userId
-    if (userId) {
+    const checkoutType = session.metadata?.checkoutType
+    if (userId && session.mode === 'subscription' && checkoutType !== 'report') {
       await supabaseAdmin
         .from('profiles')
         .update({

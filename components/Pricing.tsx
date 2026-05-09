@@ -6,14 +6,14 @@ import { supabase } from '@/lib/supabase'
 interface Props { onUpgrade: () => void }
 
 export default function Pricing({ onUpgrade }: Props) {
-  const [loading, setLoading] = useState(false)
+  const [loadingPlan, setLoadingPlan] = useState<'pro' | 'report' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleProClick() {
+  async function handleCheckout(checkoutType: 'pro' | 'report') {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { onUpgrade(); return }
 
-    setLoading(true)
+    setLoadingPlan(checkoutType)
     setError(null)
 
     try {
@@ -24,7 +24,7 @@ export default function Pricing({ onUpgrade }: Props) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({ userId: user.id, email: user.email })
+        body: JSON.stringify({ userId: user.id, email: user.email, checkoutType })
       })
 
       const data = await res.json()
@@ -42,7 +42,7 @@ export default function Pricing({ onUpgrade }: Props) {
     } catch (err: any) {
       setError(err?.message || 'Unable to start Stripe checkout')
     } finally {
-      setLoading(false)
+      setLoadingPlan(null)
     }
   }
 
@@ -50,17 +50,17 @@ export default function Pricing({ onUpgrade }: Props) {
     {
       name: 'Free', price: '$0', period: 'forever',
       features: ['Top 5 city results', 'Basic score breakdown', '3 searches/month'],
-      btn: 'Get started free', style: 'ghost', popular: false
+      btn: 'Get started free', style: 'ghost', popular: false, checkoutType: null as const
     },
     {
       name: 'Pro', price: '$9', period: 'per month',
       features: ['Full 200+ city database', 'Real tax calculator', 'Unlimited searches', 'PDF reports', 'City comparisons', 'Visa difficulty scores'],
-      btn: loading ? 'Loading...' : 'Start Pro — $9/mo', style: 'primary', popular: true
+      btn: loadingPlan === 'pro' ? 'Loading...' : 'Start Pro — $9/mo', style: 'primary', popular: true, checkoutType: 'pro' as const
     },
     {
       name: 'One-time Report', price: '$19', period: 'single report',
       features: ['Full PDF analysis', 'Top 20 cities for you', 'Tax & cost breakdown', 'No subscription needed'],
-      btn: 'Buy report', style: 'ghost', popular: false
+      btn: loadingPlan === 'report' ? 'Loading...' : 'Buy report', style: 'ghost', popular: false, checkoutType: 'report' as const
     },
   ]
 
@@ -109,8 +109,8 @@ export default function Pricing({ onUpgrade }: Props) {
               ))}
             </ul>
             <button
-              onClick={plan.style === 'primary' ? handleProClick : undefined}
-              disabled={loading && plan.style === 'primary'}
+              onClick={plan.checkoutType ? () => handleCheckout(plan.checkoutType) : undefined}
+              disabled={plan.checkoutType ? loadingPlan === plan.checkoutType : false}
               style={{
                 width: '100%', padding: 14, borderRadius: 12,
                 fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
