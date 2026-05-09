@@ -11,7 +11,7 @@ export default function Pricing({ onUpgrade }: Props) {
 
   async function handleCheckout(checkoutType: 'pro' | 'report') {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { onUpgrade(); return }
+    if (!user && checkoutType === 'pro') { onUpgrade(); return }
 
     setLoadingPlan(checkoutType)
     setError(null)
@@ -22,9 +22,9 @@ export default function Pricing({ onUpgrade }: Props) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
         },
-        body: JSON.stringify({ userId: user.id, email: user.email, checkoutType })
+        body: JSON.stringify({ userId: user?.id, email: user?.email, checkoutType })
       })
 
       const data = await res.json()
