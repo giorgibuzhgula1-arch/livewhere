@@ -8,6 +8,7 @@ import Results from '@/components/Results'
 import HowItWorks from '@/components/HowItWorks'
 import Pricing from '@/components/Pricing'
 import AuthModal from '@/components/AuthModal'
+import { parseStreamingBufferToCities } from '@/lib/parse-streaming-cities'
 import { supabase } from '@/lib/supabase'
 import { CityResult, AnalyzeRequest } from '@/lib/types'
 
@@ -34,17 +35,19 @@ function parseSseEvents(chunk: string): { events: StreamPayload[]; rest: string 
 }
 
 export default function Home() {
-  const [results, setResults] = useState<CityResult[] | null>(null)
+  const [matches, setMatches] = useState<CityResult[] | null>(null)
   const [loading, setLoading] = useState(false)
-  const [streamPreview, setStreamPreview] = useState('')
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup')
   const [error, setError] = useState<string | null>(null)
 
+  const showLanding = matches === null && !loading
+
   async function handleAnalyze(data: AnalyzeRequest) {
     setLoading(true)
     setError(null)
-    setStreamPreview('')
+    setMatches([])
+    let accumulatedAi = ''
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -60,6 +63,7 @@ export default function Home() {
 
       if (res.status === 403) {
         const json = await res.json().catch(() => ({}))
+        setMatches(null)
         setAuthOpen(true)
         setAuthMode('signup')
         setError(json.error || 'Sign in to continue')
@@ -68,28 +72,29 @@ export default function Home() {
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
+        setMatches(null)
         setError((json as { error?: string }).error || 'Something went wrong')
         return
       }
 
       const reader = res.body?.getReader()
       if (!reader) {
+        setMatches(null)
         setError('No response body')
         return
       }
 
       const decoder = new TextDecoder()
       let buffer = ''
-      let preview = ''
       let finished = false
       let streamError: string | null = null
 
       const applyPayload = (payload: StreamPayload) => {
         if (payload.type === 'delta') {
-          preview += payload.text
-          setStreamPreview(preview)
+          accumulatedAi += payload.text
+          setMatches(parseStreamingBufferToCities(accumulatedAi, data))
         } else if (payload.type === 'done') {
-          setResults(payload.cities)
+          setMatches(payload.cities)
           finished = true
         } else if (payload.type === 'error') {
           streamError = payload.error
@@ -123,18 +128,23 @@ export default function Home() {
         setError('Analysis ended before results were ready')
       }
     } catch {
+      setMatches(null)
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
-      setStreamPreview('')
     }
+  }
+
+  function handleResetMatches() {
+    setMatches(null)
+    setError(null)
   }
 
   return (
     <main style={{ position: 'relative' }}>
       <Navbar onAuthClick={() => { setAuthOpen(true); setAuthMode('login') }} />
       
-      {!results && !loading && (
+      {showLanding && (
         <>
           <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
           <div id="quiz">
@@ -145,11 +155,11 @@ export default function Home() {
         </>
       )}
 
-      {loading && (
+      {matches !== null && loading && matches.length === 0 && (
         <div style={{
           minHeight: '100vh', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: '24px',
-          padding: '0 20px', maxWidth: 720, margin: '0 auto'
+          padding: '0 20px'
         }}>
           <div style={{
             width: 60, height: 60,
@@ -160,36 +170,50 @@ export default function Home() {
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
           <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, textAlign: 'center' }}>
-            Streaming your personalized city rankings…
+            Starting your personalized analysis…
           </p>
-          {streamPreview ? (
-            <div style={{
-              width: '100%',
-              maxHeight: 'min(40vh, 320px)',
-              overflow: 'auto',
-              background: '#12121a',
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 12,
-              padding: '16px 18px',
-              fontFamily: 'ui-monospace, monospace',
-              fontSize: 12,
-              lineHeight: 1.5,
-              color: 'rgba(240,237,232,0.55)',
-              textAlign: 'left',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word'
-            }}>
-              {streamPreview}
-            </div>
-          ) : null}
         </div>
       )}
 
-      {results && !loading && (
+      {matches !== null && matches.length > 0 && (
         <Results
-          cities={results}
-          onReset={() => setResults(null)}
+          cities={matches}
+          streaming={loading}
+          onReset={handleResetMatches}
         />
+      )}
+
+      {matches !== null && matches.length === 0 && !loading && (
+        <div style={{
+          minHeight: '100vh', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: 16, padding: 20
+        }}>
+          <p style={{ color: '#f05a8c', fontSize: 14, textAlign: 'center', maxWidth: 400 }}>
+            {error || 'No cities could be loaded. Try again.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => { setMatches(null); setError(null) }}
+            style={{
+              background: '#1a1a26', border: '1px solid rgba(255,255,255,0.07)',
+              color: '#c8f05a', padding: '12px 24px', borderRadius: 12, fontSize: 14,
+              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 600
+            }}
+          >
+            Back to quiz
+          </button>
+        </div>
+      )}
+
+      {matches !== null && matches.length > 0 && error && loading === false && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          maxWidth: 560, padding: '12px 18px',
+          background: 'rgba(240,90,140,0.12)', border: '1px solid rgba(240,90,140,0.35)',
+          borderRadius: 12, color: '#f05a8c', fontSize: 13, zIndex: 50
+        }}>
+          {error}
+        </div>
       )}
 
       <AuthModal

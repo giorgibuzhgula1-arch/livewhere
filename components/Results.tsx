@@ -9,11 +9,12 @@ import { CityResult } from '@/lib/types'
 interface Props {
   cities: CityResult[]
   onReset: () => void
+  streaming?: boolean
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
 
-export default function Results({ cities, onReset }: Props) {
+export default function Results({ cities, onReset, streaming = false }: Props) {
   const [filter, setFilter] = useState('all')
   const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
 
@@ -24,9 +25,26 @@ export default function Results({ cities, onReset }: Props) {
     <section style={{ maxWidth: 1100, margin: '0 auto', padding: '120px 20px 80px', position: 'relative', zIndex: 1 }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700 }}>
-          Top matches <span style={{ color: '#c8f05a' }}>for you</span>
-        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700 }}>
+            Top matches <span style={{ color: '#c8f05a' }}>for you</span>
+          </h2>
+          {streaming && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              fontSize: 12, color: 'rgba(240,237,232,0.45)',
+              background: 'rgba(200,240,90,0.08)', border: '1px solid rgba(200,240,90,0.2)',
+              borderRadius: 20, padding: '6px 12px', fontFamily: "'DM Sans', sans-serif"
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: '#c8f05a', animation: 'pulse 1.2s ease-in-out infinite'
+              }} />
+              <style>{`@keyframes pulse { 0%, 100% { opacity: 0.4 } 50% { opacity: 1 } }`}</style>
+              Loading more cities…
+            </div>
+          )}
+        </div>
         <button onClick={onReset} style={{
           background: '#1a1a26', border: '1px solid rgba(255,255,255,0.07)',
           color: 'rgba(240,237,232,0.45)', padding: '10px 18px', borderRadius: 10,
