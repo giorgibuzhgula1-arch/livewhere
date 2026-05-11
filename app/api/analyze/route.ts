@@ -63,6 +63,30 @@ function applyPlanResultLimit<T extends { score?: unknown }>(enriched: T[], plan
   return sorted.slice(0, FREE_MAX_CITIES)
 }
 
+const CLEAN_JSON_FENCE = /```json|```/gi
+
+function stripAndParseJsonArray(raw: string): unknown[] | null {
+  const clean = raw.replace(CLEAN_JSON_FENCE, '').trim()
+  try {
+    const v = JSON.parse(clean)
+    return Array.isArray(v) ? v : null
+  } catch {
+    return null
+  }
+}
+
+/** Full non-streaming completion when the streamed response is truncated or invalid JSON. */
+async function fetchCityArrayNonStreaming(prompt: string): Promise<unknown[] | null> {
+  const res = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.5,
+    max_tokens: 2000,
+  })
+  const content = res.choices[0]?.message?.content ?? ''
+  return stripAndParseJsonArray(content)
+}
+
 export async function POST(req: NextRequest) {
   let body: AnalyzeRequest
   try {
@@ -118,42 +142,42 @@ export async function POST(req: NextRequest) {
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 1500,
+          max_tokens: 2000,
           stream: true,
         })
 
         let full = ''
+        let finishReason: string | null = null
         for await (const chunk of aiStream) {
-          const piece = chunk.choices[0]?.delta?.content ?? ''
+          const choice = chunk.choices[0]
+          if (choice?.finish_reason) finishReason = choice.finish_reason
+          const piece = choice?.delta?.content ?? ''
           if (piece) {
             full += piece
             send({ type: 'delta', text: piece })
           }
         }
 
-        const clean = full.replace(/```json|```/g, '').trim()
-        let cities: unknown
-        try {
-          cities = JSON.parse(clean)
-        } catch {
+        let cities = stripAndParseJsonArray(full)
+        const truncated = finishReason === 'length'
+        const parseFailed = cities === null
+
+        if (truncated || parseFailed) {
+          cities = await fetchCityArrayNonStreaming(prompt)
+        }
+
+        if (cities === null) {
           send({ type: 'error', error: 'Could not parse AI response' })
           return
         }
 
-        if (!Array.isArray(cities)) {
-          send({ type: 'error', error: 'AI response was not a city list' })
-          return
-        }
-
-        const enriched = cities.map((city: Record<string, unknown>) => {
-          const c = city as {
-            taxRate: number
-            monthlyCost: number
-          }
+        const enriched = cities.map((city: unknown) => {
+          const row = city as Record<string, unknown>
+          const c = row as { taxRate: number; monthlyCost: number }
           const takeHomeYearly = Math.round(salary * (1 - Number(c.taxRate) / 100))
           const takeHomeMonthly = Math.round(takeHomeYearly / 12)
           const monthlySavings = takeHomeMonthly - Number(c.monthlyCost)
-          return { ...city, takeHomeMonthly, monthlySavings }
+          return { ...row, takeHomeMonthly, monthlySavings }
         })
 
         const resultsForClient = applyPlanResultLimit(enriched as { score?: unknown }[], plan) as typeof enriched
