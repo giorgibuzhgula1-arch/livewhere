@@ -12,9 +12,17 @@ function buildPrompt(body: AnalyzeRequest) {
 
   return `You are a world-class relocation advisor and financial analyst.
 
-A user wants to find their perfect city to live in. Here is their profile:
+STRICT RULES (never violate):
+- Recommendations MUST follow only this user's salary, priorities, and lifestyle—not generic “best cities” stereotypes or places commonly repeated for remote workers unless they objectively win on THIS weighted profile.
+- #1 must be the strongest weighted match for THIS user's numbers and ratings; do not pick a habitual default or famous hub without proving stronger fit than alternatives across their highest-rated priorities.
+- Weight each dimension by the user's priority ratings (5 = strongest influence on match score). Cities that shine only on dimensions the user rated low must NOT outrank cities that satisfy dimensions they rated high.
+- Rank by: (1) weighted priority fit, (2) affordability vs salary and taxes, (3) visa realism for remote workers where relevant, (4) lifestyle-tag alignment.
+- Pick 12 cities across continents where plausible; geographic spread must not override honest ranking for this profile.
+- Lisbon, Portugal: Do NOT place it in the top 3 positions (ranks 1–3) unless, after applying this user's weighted priorities and salary, Lisbon objectively beats every other candidate that could occupy those slots—i.e. it genuinely scores highest among all cities for this profile in those positions. If another city fits this user's top-rated priorities better, rank Lisbon fourth or lower. When in doubt, deprioritize Lisbon relative to stronger profile-specific matches.
+
+User profile:
 - Annual salary: ${salary} ${currency} (remote worker / location independent)
-- Priorities (1-5 scale, 5 = most important):
+- Priorities (1-5 scale, 5 = most important)—use these as weights:
   * Low taxes: ${priorities.tax}/5
   * Affordable housing: ${priorities.housing}/5
   * Good climate: ${priorities.climate}/5
@@ -23,7 +31,7 @@ A user wants to find their perfect city to live in. Here is their profile:
   * Safety: ${priorities.safety}/5
 - Lifestyle preferences: ${lifestyle.join(', ')}
 
-Based on this profile, recommend exactly 12 cities from around the world, ensuring diversity across all continents.
+Recommend exactly 12 cities worldwide (spread across continents where plausible).
 For each city return a JSON object. Return ONLY a valid JSON array, no markdown, no explanation.
 
 Each city object must have exactly these fields:
@@ -51,7 +59,9 @@ Each city object must have exactly these fields:
   "aiInsight": "2-sentence personalized insight for this specific user about why this city matches their profile"
 }
 
-Sort by score descending. Ensure geographic diversity. Be accurate with real tax rates and costs.`
+Sort by score descending (highest match first). The first row must be the single best weighted match for THIS user—not a generic popular pick.
+Use plausible real-world tax and cost ranges; keep each city's "scores" object consistent with how well that city serves each dimension for this user.
+`
 }
 
 const FREE_MAX_CITIES = 3
