@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function Navbar({ onAuthClick }: Props) {
+  const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
@@ -31,12 +33,20 @@ export default function Navbar({ onAuthClick }: Props) {
     }}>
       <Link
         href="/"
+        onClick={(e) => {
+          // Same-route clicks do not remount `/`; force navigation so results/quiz state resets to landing.
+          if (pathname === '/') {
+            e.preventDefault()
+            window.location.assign('/')
+          }
+        }}
         style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: 22,
           fontWeight: 900,
           color: 'inherit',
           textDecoration: 'none',
+          cursor: 'pointer',
         }}
       >
         Live<span style={{ color: '#c8f05a' }}>Where</span>
