@@ -1,12 +1,32 @@
 import { AnalyzeRequest, CityResult } from '@/lib/types'
 
+function stripForJsonPeel(raw: string): string {
+  return raw.replace(/^\uFEFF/, '').replace(/```json|```/gi, '').trim()
+}
+
+/** Prefer the opening bracket of a top-level `[ { ...` city array over stray `[` in prose. */
+function findArrayBracket(cleaned: string): number {
+  const hint = cleaned.match(/\[\s*\{/)
+  if (hint?.index !== undefined) return hint.index
+  return cleaned.indexOf('[')
+}
+
+function dedupeAndSort(items: unknown[], salary: number): CityResult[] {
+  const seen = new Map<string, CityResult>()
+  for (const obj of items) {
+    const city = normalizePeeledCity(obj, salary)
+    if (city) seen.set(`${city.name}|${city.country}`, city)
+  }
+  return Array.from(seen.values()).sort((a, b) => b.score - a.score)
+}
+
 /**
  * Peel complete top-level `{ ... }` objects from a streamed JSON array.
  * Handles strings and escapes so `{`/`}` inside string values don't break depth.
  */
 export function peelCompleteObjectsFromJsonArray(raw: string): unknown[] {
-  const cleaned = raw.replace(/```json|```/g, '').trim()
-  const bracket = cleaned.indexOf('[')
+  const cleaned = stripForJsonPeel(raw)
+  const bracket = findArrayBracket(cleaned)
   if (bracket === -1) return []
 
   const s = cleaned
@@ -30,6 +50,9 @@ export function peelCompleteObjectsFromJsonArray(raw: string): unknown[] {
       inString = true
       i++
       continue
+    }
+    if (c === ']' && depth === 0 && objStart === -1) {
+      break
     }
     if (c === '{') {
       if (depth === 0) objStart = i
@@ -122,11 +145,16 @@ export function normalizePeeledCity(raw: unknown, salary: number): CityResult | 
 }
 
 export function parseStreamingBufferToCities(raw: string, body: AnalyzeRequest): CityResult[] {
-  const peeled = peelCompleteObjectsFromJsonArray(raw)
-  const seen = new Map<string, CityResult>()
-  for (const obj of peeled) {
-    const city = normalizePeeledCity(obj, body.salary)
-    if (city) seen.set(`${city.name}|${city.country}`, city)
+  const cleaned = stripForJsonPeel(raw)
+  if (cleaned) {
+    try {
+      const parsed = JSON.parse(cleaned)
+      if (Array.isArray(parsed)) {
+        return dedupeAndSort(parsed, body.salary)
+      }
+    } catch {
+      /* Incomplete stream or leading prose — use incremental peel */
+    }
   }
-  return Array.from(seen.values()).sort((a, b) => b.score - a.score)
+  return dedupeAndSort(peelCompleteObjectsFromJsonArray(raw), body.salary)
 }

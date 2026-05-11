@@ -18,14 +18,19 @@ type StreamPayload =
   | { type: 'error'; error: string }
 
 function parseSseEvents(chunk: string): { events: StreamPayload[]; rest: string } {
+  const normalized = chunk.replace(/\r\n/g, '\n').replace(/^\uFEFF/, '')
   const events: StreamPayload[] = []
-  const parts = chunk.split('\n\n')
+  const parts = normalized.split('\n\n')
   const rest = parts.pop() ?? ''
   for (const part of parts) {
     for (const line of part.split('\n')) {
-      if (!line.startsWith('data: ')) continue
+      const trimmed = line.trim()
+      if (!trimmed.toLowerCase().startsWith('data:')) continue
+      const colon = trimmed.indexOf(':')
+      const jsonStr = trimmed.slice(colon + 1).trim()
+      if (!jsonStr) continue
       try {
-        events.push(JSON.parse(line.slice(6)) as StreamPayload)
+        events.push(JSON.parse(jsonStr) as StreamPayload)
       } catch {
         /* ignore malformed frame */
       }
@@ -125,7 +130,16 @@ export default function Home() {
       }
 
       if (!finished && !streamError) {
-        setError('Analysis ended before results were ready')
+        if (accumulatedAi.trim()) {
+          const recovered = parseStreamingBufferToCities(accumulatedAi, data)
+          if (recovered.length > 0) {
+            setMatches(recovered)
+          } else {
+            setError('Analysis ended before results were ready')
+          }
+        } else {
+          setError('Analysis ended before results were ready')
+        }
       }
     } catch {
       setMatches(null)
