@@ -54,30 +54,13 @@ Each city object must have exactly these fields:
 Sort by score descending. Ensure geographic diversity. Be accurate with real tax rates and costs.`
 }
 
-const FREE_MAX_COUNTRIES = 3
+const FREE_MAX_CITIES = 3
 
-/** Pro users get the full list; free users see cities from at most three distinct countries (score order). */
-function applyPlanResultLimit<T extends { country?: unknown; score?: unknown }>(
-  enriched: T[],
-  plan: string
-): T[] {
+/** Pro users get the full list; free users get the top three cities by score only. */
+function applyPlanResultLimit<T extends { score?: unknown }>(enriched: T[], plan: string): T[] {
   const sorted = [...enriched].sort((a, b) => Number(b.score) - Number(a.score))
   if (plan === 'pro') return sorted
-
-  const out: T[] = []
-  const countries = new Set<string>()
-  for (const city of sorted) {
-    const country =
-      typeof city.country === 'string' && city.country.trim() ? city.country.trim() : '—'
-    if (countries.has(country)) {
-      out.push(city)
-      continue
-    }
-    if (countries.size >= FREE_MAX_COUNTRIES) continue
-    countries.add(country)
-    out.push(city)
-  }
-  return out
+  return sorted.slice(0, FREE_MAX_CITIES)
 }
 
 export async function POST(req: NextRequest) {
@@ -126,11 +109,16 @@ export async function POST(req: NextRequest) {
       }
 
       try {
+        send({
+          type: 'limits',
+          maxCities: plan === 'pro' ? null : FREE_MAX_CITIES,
+        })
+
         const aiStream = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 4000,
+          max_tokens: 800,
           stream: true,
         })
 
@@ -139,10 +127,7 @@ export async function POST(req: NextRequest) {
           const piece = chunk.choices[0]?.delta?.content ?? ''
           if (piece) {
             full += piece
-            // Only stream raw tokens to Pro clients so free users cannot reconstruct full results from deltas.
-            if (plan === 'pro') {
-              send({ type: 'delta', text: piece })
-            }
+            send({ type: 'delta', text: piece })
           }
         }
 
@@ -171,10 +156,7 @@ export async function POST(req: NextRequest) {
           return { ...city, takeHomeMonthly, monthlySavings }
         })
 
-        const resultsForClient = applyPlanResultLimit(
-          enriched as { country?: unknown; score?: unknown }[],
-          plan
-        ) as typeof enriched
+        const resultsForClient = applyPlanResultLimit(enriched as { score?: unknown }[], plan) as typeof enriched
 
         if (userId) {
           await supabaseAdmin.from('searches').insert({

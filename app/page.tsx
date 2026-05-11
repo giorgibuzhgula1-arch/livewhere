@@ -16,6 +16,7 @@ type StreamPayload =
   | { type: 'delta'; text: string }
   | { type: 'done'; cities: CityResult[] }
   | { type: 'error'; error: string }
+  | { type: 'limits'; maxCities: number | null }
 
 function parseSseEvents(chunk: string): { events: StreamPayload[]; rest: string } {
   const normalized = chunk.replace(/\r\n/g, '\n').replace(/^\uFEFF/, '')
@@ -93,13 +94,21 @@ export default function Home() {
       let buffer = ''
       let finished = false
       let streamError: string | null = null
+      let streamMaxCities: number | null = null
+
+      const capMatches = (list: CityResult[]) =>
+        streamMaxCities != null && list.length > streamMaxCities
+          ? list.slice(0, streamMaxCities)
+          : list
 
       const applyPayload = (payload: StreamPayload) => {
-        if (payload.type === 'delta') {
+        if (payload.type === 'limits') {
+          streamMaxCities = payload.maxCities
+        } else if (payload.type === 'delta') {
           accumulatedAi += payload.text
-          setMatches(parseStreamingBufferToCities(accumulatedAi, data))
+          setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
         } else if (payload.type === 'done') {
-          setMatches(payload.cities)
+          setMatches(capMatches(payload.cities))
           finished = true
         } else if (payload.type === 'error') {
           streamError = payload.error
@@ -131,7 +140,7 @@ export default function Home() {
 
       if (!finished && !streamError) {
         if (accumulatedAi.trim()) {
-          const recovered = parseStreamingBufferToCities(accumulatedAi, data)
+          const recovered = capMatches(parseStreamingBufferToCities(accumulatedAi, data))
           if (recovered.length > 0) {
             setMatches(recovered)
           } else {
