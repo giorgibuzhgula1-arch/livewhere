@@ -47,7 +47,7 @@ export default function Hero({ onStart }: Props) {
           lineHeight: 1.7, marginBottom: 48, fontWeight: 300
         }}
       >
-        Enter your salary, set your priorities, and discover the world's best cities
+        Enter your salary, set your priorities, and discover the best cities worldwide
         for your lifestyle — with real tax calculations and cost breakdowns.
       </motion.p>
 
