@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+export const dynamic = 'force-static'
+
 export default function BlogLayout({ children }: { children: ReactNode }) {
   return (
     <>

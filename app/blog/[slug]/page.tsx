@@ -6,6 +6,8 @@ import { getPostBySlug, getPostSlugs } from '@/lib/blog'
 import { getSiteUrl } from '@/lib/site-url'
 import styles from '../blog.module.css'
 
+export const dynamic = 'force-static'
+
 type Props = {
   params: { slug: string }
 }
