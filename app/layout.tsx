@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
+import { getSiteUrl } from '@/lib/site-url'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: 'LiveWhere — Find Your Perfect City',
   description: 'AI-powered city recommendation. Enter your salary, set priorities, discover the best cities for your lifestyle.',
   openGraph: {
