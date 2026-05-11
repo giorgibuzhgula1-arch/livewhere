@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -28,9 +29,18 @@ export default function Navbar({ onAuthClick }: Props) {
       background: 'linear-gradient(to bottom, rgba(10,10,15,0.95), transparent)',
       backdropFilter: 'blur(10px)',
     }}>
-      <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900 }}>
+      <Link
+        href="/"
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 22,
+          fontWeight: 900,
+          color: 'inherit',
+          textDecoration: 'none',
+        }}
+      >
         Live<span style={{ color: '#c8f05a' }}>Where</span>
-      </div>
+      </Link>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <div style={{
