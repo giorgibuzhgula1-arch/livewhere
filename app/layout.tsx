@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'LiveWhere — Find Your Perfect City',
     description: 'Stop guessing where to live. Let data decide.',
-  }
+  },
+  verification: {
+    google: '0nIljKmgZB9PIlt13uYYNyc9f1O8OPmTgYBfZ8SGD14',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
