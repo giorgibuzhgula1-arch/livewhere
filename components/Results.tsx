@@ -69,7 +69,7 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
           )}
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {top && !streaming && (
+          {top && (
             <button
               type="button"
               onClick={() => shareCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
@@ -112,7 +112,7 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
         </motion.div>
       )}
 
-      {top && !streaming && (
+      {top && (
         <motion.div
           ref={shareCardRef}
           id="share-match"
