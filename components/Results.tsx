@@ -1,10 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import CityCard from './CityCard'
 import CityModal from './CityModal'
 import { CityResult } from '@/lib/types'
+import { getSiteUrl } from '@/lib/site-url'
+
+function buildShareLine(city: CityResult): string {
+  return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
+}
 
 interface Props {
   cities: CityResult[]
@@ -17,9 +22,27 @@ const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
 export default function Results({ cities, onReset, streaming = false }: Props) {
   const [filter, setFilter] = useState('all')
   const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const shareCardRef = useRef<HTMLDivElement>(null)
 
   const filtered = filter === 'all' ? cities : cities.filter(c => c.continent === filter)
   const top = cities[0]
+  const shareLine = top ? buildShareLine(top) : ''
+  const siteUrl = getSiteUrl()
+
+  async function copySiteLink() {
+    try {
+      await navigator.clipboard.writeText(siteUrl)
+      setLinkCopied(true)
+      window.setTimeout(() => setLinkCopied(false), 2000)
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
+  function openShareUrl(url: string) {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   return (
     <section style={{ maxWidth: 1100, margin: '0 auto', padding: '120px 20px 80px', position: 'relative', zIndex: 1 }}>
@@ -45,13 +68,28 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
             </div>
           )}
         </div>
-        <button onClick={onReset} style={{
-          background: '#1a1a26', border: '1px solid rgba(255,255,255,0.07)',
-          color: 'rgba(240,237,232,0.45)', padding: '10px 18px', borderRadius: 10,
-          fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif"
-        }}>
-          ← New search
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {top && !streaming && (
+            <button
+              type="button"
+              onClick={() => shareCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              style={{
+                background: 'rgba(200,240,90,0.1)', border: '1px solid rgba(200,240,90,0.35)',
+                color: '#c8f05a', padding: '10px 18px', borderRadius: 10,
+                fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 600
+              }}
+            >
+              Share
+            </button>
+          )}
+          <button type="button" onClick={onReset} style={{
+            background: '#1a1a26', border: '1px solid rgba(255,255,255,0.07)',
+            color: 'rgba(240,237,232,0.45)', padding: '10px 18px', borderRadius: 10,
+            fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif"
+          }}>
+            ← New search
+          </button>
+        </div>
       </div>
 
       {/* AI Insight */}
@@ -71,6 +109,104 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
             <strong style={{ color: '#c8f05a' }}>{top.flag} {top.name}</strong> is your #1 match.{' '}
             {top.aiInsight}
           </p>
+        </motion.div>
+      )}
+
+      {top && !streaming && (
+        <motion.div
+          ref={shareCardRef}
+          id="share-match"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          style={{
+            background: '#1a1a26',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 16,
+            padding: 24,
+            marginBottom: 28,
+          }}
+        >
+          <div style={{
+            fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.2,
+            color: 'rgba(240,237,232,0.45)', marginBottom: 12, fontFamily: "'DM Sans', sans-serif"
+          }}>
+            Share your match
+          </div>
+          <p style={{
+            fontSize: 15, lineHeight: 1.65, color: 'rgba(240,237,232,0.92)',
+            fontFamily: "'DM Sans', sans-serif", marginBottom: 20
+          }}>
+            {shareLine}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <button
+              type="button"
+              aria-label="Share on X"
+              onClick={() =>
+                openShareUrl(
+                  `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareLine)}`
+                )
+              }
+              style={{
+                flex: '1 1 120px',
+                minHeight: 44,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(240,237,232,0.9)',
+                padding: '10px 14px',
+                borderRadius: 10,
+                fontSize: 13,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              Share on X
+            </button>
+            <button
+              type="button"
+              aria-label="Share on WhatsApp"
+              onClick={() =>
+                openShareUrl(`https://wa.me/?text=${encodeURIComponent(shareLine)}`)
+              }
+              style={{
+                flex: '1 1 120px',
+                minHeight: 44,
+                background: 'rgba(37,211,102,0.12)',
+                border: '1px solid rgba(37,211,102,0.35)',
+                color: '#afffc1',
+                padding: '10px 14px',
+                borderRadius: 10,
+                fontSize: 13,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              WhatsApp
+            </button>
+            <button
+              type="button"
+              aria-label="Copy site link"
+              onClick={copySiteLink}
+              style={{
+                flex: '1 1 120px',
+                minHeight: 44,
+                background: linkCopied ? 'rgba(200,240,90,0.15)' : 'rgba(200,240,90,0.08)',
+                border: `1px solid ${linkCopied ? 'rgba(200,240,90,0.45)' : 'rgba(200,240,90,0.25)'}`,
+                color: '#c8f05a',
+                padding: '10px 14px',
+                borderRadius: 10,
+                fontSize: 13,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              {linkCopied ? 'Copied!' : 'Copy link'}
+            </button>
+          </div>
         </motion.div>
       )}
 
