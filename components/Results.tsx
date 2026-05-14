@@ -118,7 +118,7 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
           id="share-match"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
+          transition={{ delay: 0 }}
           style={{
             background: '#1a1a26',
             border: '1px solid rgba(255,255,255,0.1)',
@@ -185,6 +185,30 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
               }}
             >
               WhatsApp
+            </button>
+            <button
+              type="button"
+              aria-label="Share on Facebook"
+              onClick={() =>
+                openShareUrl(
+                  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteUrl)}&quote=${encodeURIComponent(shareLine)}`
+                )
+              }
+              style={{
+                flex: '1 1 120px',
+                minHeight: 44,
+                background: 'rgba(24,119,242,0.12)',
+                border: '1px solid rgba(24,119,242,0.12)',
+                color: '#7ab3ff',
+                padding: '10px 14px',
+                borderRadius: 10,
+                fontSize: 13,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              Facebook
             </button>
             <button
               type="button"
