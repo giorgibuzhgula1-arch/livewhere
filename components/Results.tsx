@@ -142,18 +142,18 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             <button
               type="button"
-              aria-label="Share on X"
+              aria-label="Share on Facebook"
               onClick={() =>
                 openShareUrl(
-                  `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareLine)}`
+                  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.livewhere.io')}`
                 )
               }
               style={{
                 flex: '1 1 120px',
                 minHeight: 44,
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: 'rgba(240,237,232,0.9)',
+                background: 'rgba(24,119,242,0.12)',
+                border: '1px solid rgba(24,119,242,0.12)',
+                color: '#7ab3ff',
                 padding: '10px 14px',
                 borderRadius: 10,
                 fontSize: 13,
@@ -162,7 +162,7 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
                 fontWeight: 600,
               }}
             >
-              Share on X
+              Facebook
             </button>
             <button
               type="button"
@@ -185,30 +185,6 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
               }}
             >
               WhatsApp
-            </button>
-            <button
-              type="button"
-              aria-label="Share on Facebook"
-              onClick={() =>
-                openShareUrl(
-                  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteUrl)}&quote=${encodeURIComponent(shareLine)}`
-                )
-              }
-              style={{
-                flex: '1 1 120px',
-                minHeight: 44,
-                background: 'rgba(24,119,242,0.12)',
-                border: '1px solid rgba(24,119,242,0.12)',
-                color: '#7ab3ff',
-                padding: '10px 14px',
-                borderRadius: 10,
-                fontSize: 13,
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              Facebook
             </button>
             <button
               type="button"
