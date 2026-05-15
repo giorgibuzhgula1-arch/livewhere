@@ -15,11 +15,15 @@ interface Props {
   cities: CityResult[]
   onReset: () => void
   streaming?: boolean
+  /** When set (free tier), hide "Loading more cities…" once this many are shown. */
+  maxCities?: number | null
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
 
-export default function Results({ cities, onReset, streaming = false }: Props) {
+export default function Results({ cities, onReset, streaming = false, maxCities = null }: Props) {
+  const showStreamingIndicator =
+    streaming && (maxCities == null || cities.length < maxCities)
   const [filter, setFilter] = useState('all')
   const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -52,7 +56,7 @@ export default function Results({ cities, onReset, streaming = false }: Props) {
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700 }}>
             Top matches <span style={{ color: '#c8f05a' }}>for you</span>
           </h2>
-          {streaming && (
+          {showStreamingIndicator && (
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               fontSize: 12, color: 'rgba(240,237,232,0.45)',

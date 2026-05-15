@@ -1,14 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { AnalyzeRequest } from '@/lib/types'
+import { AnalyzeRequest, UserPriorities } from '@/lib/types'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export const dynamic = 'force-dynamic'
 
+/** User prioritized low taxes (High/Max on the tax slider). */
+function isLowTaxPriority(priorities: UserPriorities): boolean {
+  return priorities.tax >= 4
+}
+
+function buildTaxRulesSection(body: AnalyzeRequest): string {
+  const { salary, currency, priorities } = body
+  const lowTaxFocus = isLowTaxPriority(priorities)
+
+  const base = `
+TAX DATA (mandatory — never guess or round loosely):
+- "taxRate" = realistic effective personal income tax % for a remote worker with ~${salary} ${currency}/year living/working in that city under current (2024–2025) national rules. Use documented statutory rates, flat-tax regimes, or widely cited effective rates from tax authorities — not ballpark estimates.
+- Cross-check each city: if you cannot cite a defensible published rate for that jurisdiction, exclude that city and substitute another you can justify.
+- Examples of realistic bands (verify before using): UAE 0%; Georgia ~1% on small business/foreign income paths; Paraguay ~10%; Bulgaria 10% flat; Romania ~10% for micro; Portugal NHR ended — do not use outdated 0% claims; US cities must reflect US federal+state if applicable, or the foreign host country rate for a tax resident there.
+- "scores.tax" must align with taxRate (lower taxRate → higher scores.tax when user cares about taxes).`
+
+  if (!lowTaxFocus) return base
+
+  return `${base}
+- LOW-TAX PRIORITY (user rated Low taxes ${priorities.tax}/5): Every recommended city MUST have taxRate strictly under 10 (integer 0–9 only). Do not include any city at 10% or above. Prefer well-known low-tax hubs (e.g. UAE, Georgia, Paraguay, Bulgaria, Romania, Malaysia MM2H context, Panama, etc.) that genuinely qualify. All 12 cities in the array must satisfy taxRate < 10.`
+}
+
+function enforceLowTaxCities<T extends { taxRate?: unknown }>(cities: T[], priorities: UserPriorities): T[] {
+  if (!isLowTaxPriority(priorities)) return cities
+  return cities.filter((c) => {
+    const rate = Number(c.taxRate)
+    return Number.isFinite(rate) && rate < 10
+  })
+}
+
 function buildPrompt(body: AnalyzeRequest) {
   const { salary, currency, priorities, lifestyle } = body
+  const taxRules = buildTaxRulesSection(body)
 
   return `You are a world-class relocation advisor and financial analyst.
 
@@ -60,7 +91,8 @@ Each city object must have exactly these fields:
 }
 
 Sort by score descending (highest match first). The first row must be the single best weighted match for THIS user—not a generic popular pick.
-Use plausible real-world tax and cost ranges; keep each city's "scores" object consistent with how well that city serves each dimension for this user.
+${taxRules}
+Use plausible real-world cost-of-living figures; keep each city's "scores" object consistent with how well that city serves each dimension for this user.
 `
 }
 
@@ -151,7 +183,7 @@ export async function POST(req: NextRequest) {
         const aiStream = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
+          temperature: isLowTaxPriority(priorities) ? 0.4 : 0.6,
           max_tokens: 2000,
           stream: true,
         })
@@ -181,7 +213,12 @@ export async function POST(req: NextRequest) {
           return
         }
 
-        const enriched = cities.map((city: unknown) => {
+        const taxFiltered = enforceLowTaxCities(
+          cities as { taxRate?: unknown }[],
+          priorities
+        )
+
+        const enriched = taxFiltered.map((city: unknown) => {
           const row = city as Record<string, unknown>
           const c = row as { taxRate: number; monthlyCost: number }
           const takeHomeYearly = Math.round(salary * (1 - Number(c.taxRate) / 100))

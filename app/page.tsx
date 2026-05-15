@@ -46,6 +46,7 @@ export default function Home() {
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup')
   const [error, setError] = useState<string | null>(null)
+  const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
 
   const showLanding = matches === null && !loading
 
@@ -53,6 +54,7 @@ export default function Home() {
     setLoading(true)
     setError(null)
     setMatches([])
+    setResultMaxCities(null)
     let accumulatedAi = ''
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -104,6 +106,7 @@ export default function Home() {
       const applyPayload = (payload: StreamPayload) => {
         if (payload.type === 'limits') {
           streamMaxCities = payload.maxCities
+          setResultMaxCities(payload.maxCities)
         } else if (payload.type === 'delta') {
           accumulatedAi += payload.text
           setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
@@ -202,6 +205,7 @@ export default function Home() {
         <Results
           cities={matches}
           streaming={loading}
+          maxCities={resultMaxCities}
           onReset={handleResetMatches}
         />
       )}
