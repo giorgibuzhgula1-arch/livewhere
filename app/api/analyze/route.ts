@@ -7,9 +7,12 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export const dynamic = 'force-dynamic'
 
-/** User prioritized low taxes (High/Max on the tax slider). */
 function isLowTaxPriority(priorities: UserPriorities): boolean {
   return priorities.tax >= 4
+}
+
+function isWarmClimatePriority(priorities: UserPriorities): boolean {
+  return priorities.climate >= 3
 }
 
 function buildTaxRulesSection(body: AnalyzeRequest): string {
@@ -40,21 +43,32 @@ function enforceLowTaxCities<T extends { taxRate?: unknown }>(cities: T[], prior
 function buildPrompt(body: AnalyzeRequest) {
   const { salary, currency, priorities, lifestyle } = body
   const taxRules = buildTaxRulesSection(body)
+  const warmClimate = isWarmClimatePriority(priorities)
 
-  return `You are a world-class relocation advisor and financial analyst.
+  const climateRule = warmClimate
+    ? `- CLIMATE RULE (STRICT — never violate): User rated climate ${priorities.climate}/5. You MUST only recommend cities with average annual temperature above 20°C. The following cities are STRICTLY FORBIDDEN: Tbilisi (13°C avg), Bucharest (11°C), Sofia (11°C), Prague (10°C), Warsaw (9°C), Belgrade (13°C), Budapest (12°C), Kyiv, Moscow, Berlin, Paris, London, Amsterdam, Vienna, Zagreb, Sarajevo, Minsk, Riga, Tallinn, Vilnius. ONLY recommend genuinely warm cities such as: Bangkok (29°C), Medellín (22°C), Panama City (27°C), Dubai (28°C), Chiang Mai (26°C), Ho Chi Minh City (28°C), Bali (27°C), Kuala Lumpur (27°C), Málaga (19°C borderline), Valencia (18°C borderline), Malta (19°C), Limassol Cyprus (21°C), Cape Town (17°C only summer), Mexico City (18°C), Playa del Carmen (27°C), Montevideo (17°C borderline), Medellin, Cartagena (28°C), Manila (28°C), Da Nang (26°C), Lisbon (17°C borderline — only if other priorities demand it). If a city does not clearly qualify as warm, exclude it.`
+    : `- CLIMATE RULE: User did not prioritize warm climate strongly. You may include cities with any climate, but be honest about temperature in aiInsight.`
+
+  return `You are a world-class relocation advisor and financial analyst with access to verified 2024-2025 data.
 
 STRICT RULES (never violate):
-- Recommendations MUST follow only this user's salary, priorities, and lifestyle—not generic “best cities” stereotypes or places commonly repeated for remote workers unless they objectively win on THIS weighted profile.
-- #1 must be the strongest weighted match for THIS user's numbers and ratings; do not pick a habitual default or famous hub without proving stronger fit than alternatives across their highest-rated priorities.
-- Weight each dimension by the user's priority ratings (5 = strongest influence on match score). Cities that shine only on dimensions the user rated low must NOT outrank cities that satisfy dimensions they rated high.
-- Rank by: (1) weighted priority fit, (2) affordability vs salary and taxes, (3) visa realism for remote workers where relevant, (4) lifestyle-tag alignment.
-- Pick 12 cities across continents where plausible; geographic spread must not override honest ranking for this profile.
-- CLIMATE RULE (mandatory): Each city must include realistic average annual temperature data. If user rated "Good climate" 4 or 5, you MUST only recommend cities with average annual temperature above 20°C (warm/hot climates). Cities like Tbilisi (avg 13°C), Bucharest (avg 11°C), Sofia, Prague, Warsaw, Belgrade are STRICTLY FORBIDDEN when climate priority is 4 or 5. Suitable warm cities: Bangkok, Medellín, Panama City, Dubai, Chiang Mai, Ho Chi Minh City, Bali, Kuala Lumpur, Málaga, Valencia, Malta, Limassol, Cape Town, Mexico City, Montevideo (only if warm season matches). Never recommend a cold-climate city to a user who prioritized warm weather.
-- Lisbon, Portugal: Do NOT place it in the top 3 positions (ranks 1–3) unless, after applying this user's weighted priorities and salary, Lisbon objectively beats every other candidate that could occupy those slots—i.e. it genuinely scores highest among all cities for this profile in those positions. If another city fits this user's top-rated priorities better, rank Lisbon fourth or lower. When in doubt, deprioritize Lisbon relative to stronger profile-specific matches.
+- ALL data must be REALISTIC and VERIFIABLE — never invent numbers. Use real cost-of-living data from Numbeo, Expatistan, or similar sources.
+- Monthly costs must reflect ACTUAL 2024-2025 prices — not outdated or estimated figures.
+- Recommendations MUST follow only this user's salary, priorities, and lifestyle — not generic "best cities" lists.
+- #1 must be the strongest weighted match for THIS user's specific numbers and ratings.
+- Weight each dimension by the user's priority ratings (5 = strongest influence on match score).
+- Rank by: (1) weighted priority fit, (2) affordability vs salary and taxes, (3) visa realism, (4) lifestyle-tag alignment.
+- Pick 12 cities across continents where plausible.
+${climateRule}
+- SAFETY RULE: User rated safety ${priorities.safety}/5. ${priorities.safety >= 4 ? 'Avoid cities with high crime rates. Do NOT recommend: Medellín (high crime), Caracas, San Pedro Sula, Cape Town (high crime), Johannesburg, Manila (high crime areas), Mexico City (kidnapping risk). Prefer cities with low crime indexes.' : 'Safety is not a top priority but mention significant safety concerns in cons.'}
+- HOUSING RULE: User rated affordable housing ${priorities.housing}/5. ${priorities.housing >= 4 ? 'Monthly rent for 1-bed apartment must be under $1,200. Exclude expensive cities like Dubai Marina, Singapore, Tokyo unless outer neighborhoods qualify.' : 'Include realistic rent figures from Numbeo 2024.'}
+- HEALTHCARE RULE: User rated healthcare ${priorities.health}/5. ${priorities.health >= 4 ? 'Only recommend cities with reliable international-standard healthcare. Avoid cities where healthcare quality is poor for expats.' : 'Mention healthcare quality honestly in pros/cons.'}
+- Lisbon: Do NOT place in top 3 unless it objectively beats all alternatives for this specific profile.
+- aiInsight must be specific to THIS user — mention their salary, their priorities, real numbers. Never write generic travel-blog text.
 
 User profile:
 - Annual salary: ${salary} ${currency} (remote worker / location independent)
-- Priorities (1-5 scale, 5 = most important)—use these as weights:
+- Priorities (1-5 scale, 5 = most important):
   * Low taxes: ${priorities.tax}/5
   * Affordable housing: ${priorities.housing}/5
   * Good climate: ${priorities.climate}/5
@@ -63,8 +77,8 @@ User profile:
   * Safety: ${priorities.safety}/5
 - Lifestyle preferences: ${lifestyle.join(', ')}
 
-Recommend exactly 12 cities worldwide (spread across continents where plausible).
-For each city return a JSON object. Return ONLY a valid JSON array, no markdown, no explanation.
+Recommend exactly 12 cities worldwide.
+Return ONLY a valid JSON array, no markdown, no explanation, no text before or after.
 
 Each city object must have exactly these fields:
 {
@@ -72,14 +86,14 @@ Each city object must have exactly these fields:
   "country": "Country name",
   "continent": "Europe|Americas|Asia|Other",
   "flag": "emoji flag",
-  "score": <0-100 integer, personalized match score based on user priorities>,
+  "score": <0-100 integer>,
   "taxRate": <effective income tax % as integer>,
-  "monthlyRent": <average 1-bed apartment rent in USD>,
-  "monthlyCost": <total monthly living cost in USD including rent>,
-  "pros": ["pro 1", "pro 2", "pro 3", "pro 4"],
-  "cons": ["con 1", "con 2", "con 3"],
+  "monthlyRent": <average 1-bed apartment rent in USD, from Numbeo 2024>,
+  "monthlyCost": <total monthly living cost in USD including rent, from Numbeo 2024>,
+  "pros": ["specific pro with real data", "specific pro with real data", "specific pro with real data", "specific pro with real data"],
+  "cons": ["specific con with real data", "specific con with real data", "specific con with real data"],
   "tags": ["tag1", "tag2", "tag3"],
-  "visa": "visa difficulty description",
+  "visa": "specific visa situation for remote workers from most countries",
   "scores": {
     "tax": <0-100>,
     "housing": <0-100>,
@@ -88,18 +102,16 @@ Each city object must have exactly these fields:
     "nightlife": <0-100>,
     "safety": <0-100>
   },
-  "aiInsight": "2-sentence personalized insight for this specific user about why this city matches their profile"
+  "aiInsight": "2-sentence insight referencing THIS user's salary of ${salary} ${currency} and their specific priorities"
 }
 
-Sort by score descending (highest match first). The first row must be the single best weighted match for THIS user—not a generic popular pick.
+Sort by score descending.
 ${taxRules}
-Use plausible real-world cost-of-living figures; keep each city's "scores" object consistent with how well that city serves each dimension for this user.
 `
 }
 
 const FREE_MAX_CITIES = 3
 
-/** Pro users get the full list; free users get the top three cities by score only. */
 function applyPlanResultLimit<T extends { score?: unknown }>(enriched: T[], plan: string): T[] {
   const sorted = [...enriched].sort((a, b) => Number(b.score) - Number(a.score))
   if (plan === 'pro') return sorted
@@ -118,13 +130,12 @@ function stripAndParseJsonArray(raw: string): unknown[] | null {
   }
 }
 
-/** Full non-streaming completion when the streamed response is truncated or invalid JSON. */
 async function fetchCityArrayNonStreaming(prompt: string): Promise<unknown[] | null> {
   const res = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
-    temperature: 0.5,
-    max_tokens: 2000,
+    temperature: 0.3,
+    max_tokens: 4000,
   })
   const content = res.choices[0]?.message?.content ?? ''
   return stripAndParseJsonArray(content)
@@ -184,8 +195,8 @@ export async function POST(req: NextRequest) {
         const aiStream = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
-          temperature: isLowTaxPriority(priorities) ? 0.4 : 0.6,
-          max_tokens: 2000,
+          temperature: 0.3,
+          max_tokens: 4000,
           stream: true,
         })
 
