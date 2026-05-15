@@ -50,23 +50,10 @@ export function buildCityResult(
   const monthlySavings = takeHomeMonthly - numbeo.monthlyCost
   const score = computeWeightedScore(dimensions, priorities, monthlySavings, salary)
 
-  const highPriorities = (Object.entries(priorities) as [keyof typeof priorities, number][])
-    .filter(([, v]) => v >= 4)
-    .map(([k]) => k)
-
-  const insightParts: string[] = []
-  insightParts.push(
-    `${candidate.flag} ${candidate.name} ranks #${rank} with a ${score}/100 match for your profile.`
-  )
-  if (highPriorities.length > 0) {
-    insightParts.push(
-      `It meets your high-priority criteria (${highPriorities.join(', ')}) using live Numbeo cost/safety data, Open-Meteo climate (${avgTempC}°C avg), and verified ${taxRate}% tax for ${candidate.country}.`
-    )
-  } else {
-    insightParts.push(
-      `On ${salary.toLocaleString()} ${currency}/yr you keep ~$${takeHomeMonthly.toLocaleString()}/mo after tax vs ~$${numbeo.monthlyCost.toLocaleString()} living costs (Numbeo).`
-    )
-  }
+  const insightParts: string[] = [
+    `${candidate.flag} ${candidate.name} ranks #${rank} with a ${score}/100 match for your profile.`,
+    `On ${salary.toLocaleString()} ${currency}/yr you keep ~$${takeHomeMonthly.toLocaleString()}/mo after ${taxRate}% tax vs ~$${numbeo.monthlyCost.toLocaleString()}/mo living costs (~${avgTempC}°C avg climate).`,
+  ]
 
   return {
     name: candidate.name,

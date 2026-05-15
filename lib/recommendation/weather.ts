@@ -55,6 +55,11 @@ const TEMP_FALLBACK: Record<string, number> = {
 
 const tempCache = new Map<string, number>()
 
+/** Fast local climate norm (no network). */
+export function getStaticMeanTempC(cityName: string): number {
+  return TEMP_FALLBACK[cityName] ?? TEMP_FALLBACK[cityName.split(' ')[0]] ?? 15
+}
+
 export async function fetchAnnualMeanTempC(
   lat: number,
   lon: number,

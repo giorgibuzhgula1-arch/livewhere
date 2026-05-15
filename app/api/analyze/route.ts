@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizePriorities } from '@/lib/recommendation/normalize-priorities'
-import {
-  excludeColdCitiesForClimatePriority,
-  recommendCities,
-} from '@/lib/recommendation/recommend'
+import { recommendCities, RESULT_COUNT } from '@/lib/recommendation/recommend'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AnalyzeRequest } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
-
-const FREE_MAX_CITIES = 3
-
-function applyPlanResultLimit<T extends { score?: unknown }>(enriched: T[], plan: string): T[] {
-  const sorted = [...enriched].sort((a, b) => Number(b.score) - Number(a.score))
-  if (plan === 'pro') return sorted
-  return sorted.slice(0, FREE_MAX_CITIES)
-}
 
 export async function POST(req: NextRequest) {
   let body: AnalyzeRequest
@@ -65,27 +54,15 @@ export async function POST(req: NextRequest) {
       try {
         send({
           type: 'limits',
-          maxCities: plan === 'pro' ? null : FREE_MAX_CITIES,
+          maxCities: RESULT_COUNT,
         })
 
         send({
           type: 'status',
-          text: 'Loading live cost, safety, climate, and tax data…',
+          text: 'Ranking cities for your profile…',
         })
 
-        let cities = await recommendCities(request)
-        cities = excludeColdCitiesForClimatePriority(cities, priorities)
-
-        if (cities.length === 0) {
-          send({
-            type: 'error',
-            error:
-              'No cities match all your high-priority criteria with current live data. Try lowering one or more priority sliders.',
-          })
-          return
-        }
-
-        const resultsForClient = applyPlanResultLimit(cities, plan)
+        const cities = await recommendCities(request)
 
         if (userId) {
           await supabaseAdmin.from('searches').insert({
@@ -94,7 +71,7 @@ export async function POST(req: NextRequest) {
             currency,
             priorities,
             lifestyle,
-            results: resultsForClient,
+            results: cities,
           })
 
           await supabaseAdmin
@@ -103,10 +80,10 @@ export async function POST(req: NextRequest) {
             .eq('id', userId)
         }
 
-        send({ type: 'done', cities: resultsForClient })
+        send({ type: 'done', cities })
       } catch (err) {
         console.error('Recommendation error:', err)
-        send({ type: 'error', error: 'Analysis failed' })
+        send({ type: 'done', cities: await recommendCities(request) })
       } finally {
         controller.close()
       }
