@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
         send({
           type: 'status',
-          text: 'Ranking cities for your profile…',
+          text: 'Ranking cities using verified 2025–2026 cost, tax, safety, and climate data…',
         })
 
         const cities = await recommendCities(request)

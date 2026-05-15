@@ -1,76 +1,61 @@
-import type { EnrichedCityData, DimensionScores } from '@/lib/recommendation/score'
-import { computeDimensionScores, computeWeightedScore } from '@/lib/recommendation/score'
+import {
+  computeDimensionScores,
+  computeWeightedScore,
+  type DimensionScores,
+} from '@/lib/recommendation/scoring'
+import type { CityRecord } from '@/lib/recommendation/city-database'
 import type { AnalyzeRequest, CityResult } from '@/lib/types'
 
-function buildPros(data: EnrichedCityData, dimensions: DimensionScores): string[] {
-  const { candidate, numbeo, avgTempC, taxRate } = data
-  const pros: string[] = []
-
-  if (taxRate <= 10) pros.push(`${taxRate}% effective income tax (${candidate.country}, verified rate table)`)
-  else pros.push(`${taxRate}% effective tax rate for ${candidate.country}`)
-
-  pros.push(`1-bed rent ~$${numbeo.monthlyRent.toLocaleString()}/mo (Numbeo)`)
-  pros.push(`Safety index ${numbeo.safetyIndex}/100 · crime index ${numbeo.crimeIndex} (Numbeo)`)
-  pros.push(`Mean annual temperature ~${avgTempC}°C (Open-Meteo climate data)`)
-
-  if (dimensions.health >= 85) pros.push('Internationally rated healthcare hub')
-  if (dimensions.nightlife >= 85) pros.push('Strong nightlife & cultural scene')
-  if (numbeo.monthlyCost < 1500) pros.push(`Total living costs ~$${numbeo.monthlyCost.toLocaleString()}/mo`)
-
+function buildPros(city: CityRecord, dimensions: DimensionScores): string[] {
+  const pros: string[] = [
+    `${city.taxRate}% effective income tax (2025–2026, ${city.country})`,
+    `1-bed rent $${city.monthlyRent.toLocaleString()}/mo · total ~$${city.monthlyCost.toLocaleString()}/mo (Numbeo 2025)`,
+    `Safety ${city.safetyIndex}/100 · crime index ${city.crimeIndex} (Numbeo)`,
+    `Healthcare index ${city.healthcareIndex} · ~${city.avgTempC}°C mean annual temp`,
+  ]
+  if (dimensions.nightlife >= 80) pros.push('Strong nightlife & culture scene')
   return pros.slice(0, 4)
 }
 
-function buildCons(data: EnrichedCityData, dimensions: DimensionScores): string[] {
-  const { candidate, numbeo, taxRate } = data
+function buildCons(city: CityRecord, dimensions: DimensionScores): string[] {
   const cons: string[] = []
-
-  if (taxRate > 25) cons.push(`Higher income tax (${taxRate}%) vs low-tax hubs`)
-  if (numbeo.monthlyRent >= 1200) cons.push(`Rent above budget nomad average ($${numbeo.monthlyRent}/mo)`)
-  if (dimensions.safety < 55) cons.push('Safety index below top-tier expat cities')
-  if (dimensions.climate < 60) cons.push('Cooler year-round climate — not a tropical base')
-  if (candidate.healthcareTier === 'average' || candidate.healthcareTier === 'poor') {
-    cons.push('Healthcare quality varies; private insurance recommended')
-  }
-  if (cons.length < 3) cons.push('Visa and tax residency rules depend on your nationality — verify locally')
-
+  if (city.taxRate > 25) cons.push(`Higher income tax (${city.taxRate}%) for remote earners`)
+  if (city.monthlyRent >= 1200) cons.push(`Rent above nomad budget tier ($${city.monthlyRent}/mo)`)
+  if (city.crimeIndex >= 45) cons.push(`Crime index ${city.crimeIndex} — research neighborhoods carefully`)
+  if (dimensions.climate < 55) cons.push(`Climate (${city.avgTempC}°C avg) may not match warm/cool preferences`)
+  if (city.healthcareIndex < 65) cons.push(`Healthcare index ${city.healthcareIndex} — confirm insurance & providers`)
+  if (cons.length < 2) cons.push('Visa and tax residency depend on your passport — verify locally')
   return cons.slice(0, 3)
 }
 
 export function buildCityResult(
-  data: EnrichedCityData,
+  city: CityRecord,
   body: AnalyzeRequest,
   rank: number
 ): CityResult {
-  const { candidate, numbeo, taxRate, avgTempC } = data
-  const { salary, currency, priorities } = body
-
-  const dimensions = computeDimensionScores(data, priorities)
-  const takeHomeYearly = Math.round(salary * (1 - taxRate / 100))
+  const { salary, currency, priorities, lifestyle } = body
+  const dimensions = computeDimensionScores(city, priorities, lifestyle)
+  const takeHomeYearly = Math.round(salary * (1 - city.taxRate / 100))
   const takeHomeMonthly = Math.round(takeHomeYearly / 12)
-  const monthlySavings = takeHomeMonthly - numbeo.monthlyCost
+  const monthlySavings = takeHomeMonthly - city.monthlyCost
   const score = computeWeightedScore(dimensions, priorities, monthlySavings, salary)
 
-  const insightParts: string[] = [
-    `${candidate.flag} ${candidate.name} ranks #${rank} with a ${score}/100 match for your profile.`,
-    `On ${salary.toLocaleString()} ${currency}/yr you keep ~$${takeHomeMonthly.toLocaleString()}/mo after ${taxRate}% tax vs ~$${numbeo.monthlyCost.toLocaleString()}/mo living costs (~${avgTempC}°C avg climate).`,
-  ]
-
   return {
-    name: candidate.name,
-    country: candidate.country,
-    continent: candidate.continent,
-    flag: candidate.flag,
+    name: city.name,
+    country: city.country,
+    continent: city.continent,
+    flag: city.flag,
     score,
-    taxRate,
-    monthlyRent: numbeo.monthlyRent,
-    monthlyCost: numbeo.monthlyCost,
+    taxRate: city.taxRate,
+    monthlyRent: city.monthlyRent,
+    monthlyCost: city.monthlyCost,
     takeHomeMonthly,
     monthlySavings,
-    pros: buildPros(data, dimensions),
-    cons: buildCons(data, dimensions),
-    tags: candidate.tags,
-    visa: candidate.visaNote,
+    pros: buildPros(city, dimensions),
+    cons: buildCons(city, dimensions),
+    tags: city.tags,
+    visa: city.visaNote,
     scores: dimensions,
-    aiInsight: insightParts.join(' '),
+    aiInsight: `${city.flag} ${city.name} ranks #${rank} (${score}/100). At ${salary.toLocaleString()} ${currency}/yr you keep ~$${takeHomeMonthly.toLocaleString()}/mo after ${city.taxRate}% tax vs ~$${city.monthlyCost.toLocaleString()}/mo living costs — ${city.avgTempC}°C climate, crime index ${city.crimeIndex}, healthcare ${city.healthcareIndex}.`,
   }
 }

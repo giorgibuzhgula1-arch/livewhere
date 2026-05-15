@@ -105,7 +105,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                   />
                   {key === 'climate' && priorities.climate >= 4 && (
                     <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 8, lineHeight: 1.5 }}>
-                      High or Max excludes cool cities (under 20°C year-round), including Tbilisi, Budapest, and Berlin.
+                      High/Max uses your lifestyle: Beach = warm cities (20°C+), Mountains = cool cities (14°C or below).
                     </p>
                   )}
                 </div>

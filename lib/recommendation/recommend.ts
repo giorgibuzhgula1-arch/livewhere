@@ -1,77 +1,97 @@
-import { CANDIDATE_CITIES, type CandidateCity } from '@/lib/recommendation/candidates'
 import { buildCityResult } from '@/lib/recommendation/build-result'
+import { getCityDatabase, type CityRecord } from '@/lib/recommendation/city-database'
+import {
+  countHighPriorityMatches,
+  passesHighPriorityFilters,
+  type FilterMode,
+} from '@/lib/recommendation/filters'
 import { normalizePriorities } from '@/lib/recommendation/normalize-priorities'
-import { NUMBEO_FALLBACK } from '@/lib/recommendation/numbeo-fallback'
-import { enrichCandidate, type EnrichedCityData } from '@/lib/recommendation/score'
-import { getStaticMeanTempC } from '@/lib/recommendation/weather'
+import { computeDimensionScores, computeWeightedScore } from '@/lib/recommendation/scoring'
 import type { AnalyzeRequest, CityResult } from '@/lib/types'
 
-/** Always return this many cities, ranked by weighted score (no hard filters). */
 export const RESULT_COUNT = 3
 
-function fallbackNumbeo(candidate: CandidateCity) {
-  return (
-    NUMBEO_FALLBACK[candidate.numbeoQuery] ??
-    NUMBEO_FALLBACK[candidate.name] ?? {
-      monthlyRent: 900,
-      monthlyCost: 1700,
-      safetyIndex: 55,
-      crimeIndex: 45,
-    }
+const FILTER_LADDER: FilterMode[] = ['strict', 'relaxed', 'none']
+
+type ScoredCity = { city: CityRecord; score: number }
+
+function scoreCity(city: CityRecord, request: AnalyzeRequest): number {
+  const dimensions = computeDimensionScores(city, request.priorities, request.lifestyle)
+  const takeHomeMonthly = Math.round(
+    (request.salary * (1 - city.taxRate / 100)) / 12
+  )
+  const monthlySavings = takeHomeMonthly - city.monthlyCost
+  return computeWeightedScore(
+    dimensions,
+    request.priorities,
+    monthlySavings,
+    request.salary
   )
 }
 
-function enrichCandidateFast(candidate: CandidateCity): EnrichedCityData {
-  return enrichCandidate(
-    candidate,
-    fallbackNumbeo(candidate),
-    getStaticMeanTempC(candidate.name)
-  )
+function rankCities(cities: CityRecord[], request: AnalyzeRequest): ScoredCity[] {
+  return cities
+    .map((city) => ({ city, score: scoreCity(city, request) }))
+    .sort((a, b) => b.score - a.score)
 }
 
-function enrichAllCandidatesFast(): EnrichedCityData[] {
-  return CANDIDATE_CITIES.map(enrichCandidateFast)
+function selectPool(
+  all: CityRecord[],
+  request: AnalyzeRequest
+): CityRecord[] {
+  const { priorities, lifestyle } = request
+
+  for (const mode of FILTER_LADDER) {
+    const filtered = all.filter((city) =>
+      passesHighPriorityFilters(city, priorities, lifestyle, mode)
+    )
+    if (filtered.length >= RESULT_COUNT) return filtered
+  }
+
+  return all
 }
 
-function pickTopByScore(
-  enriched: EnrichedCityData[],
-  request: AnalyzeRequest,
-  count: number
-): EnrichedCityData[] {
-  const ranked = [...enriched].sort(
-    (a, b) => buildCityResult(b, request, 1).score - buildCityResult(a, request, 1).score
-  )
-
-  const picked: EnrichedCityData[] = []
+function pickTopThree(pool: CityRecord[], all: CityRecord[], request: AnalyzeRequest): CityRecord[] {
+  const ranked = rankCities(pool, request)
+  const picked: CityRecord[] = []
   const seen = new Set<string>()
 
-  for (const data of ranked) {
-    const key = `${data.candidate.name}|${data.candidate.country}`
+  for (const { city } of ranked) {
+    const key = `${city.name}|${city.country}`
     if (seen.has(key)) continue
     seen.add(key)
-    picked.push(data)
-    if (picked.length >= count) break
+    picked.push(city)
+    if (picked.length >= RESULT_COUNT) break
   }
 
-  let i = 0
-  while (picked.length < count && i < CANDIDATE_CITIES.length * 2) {
-    const candidate = CANDIDATE_CITIES[i % CANDIDATE_CITIES.length]
-    const key = `${candidate.name}|${candidate.country}`
-    i++
+  if (picked.length >= RESULT_COUNT) return picked
+
+  const byMatches = [...all]
+    .map((city) => ({
+      city,
+      matches: countHighPriorityMatches(city, request.priorities, request.lifestyle),
+      score: scoreCity(city, request),
+    }))
+    .sort((a, b) => b.matches - a.matches || b.score - a.score)
+
+  for (const { city } of byMatches) {
+    const key = `${city.name}|${city.country}`
     if (seen.has(key)) continue
     seen.add(key)
-    picked.push(enrichCandidateFast(candidate))
+    picked.push(city)
+    if (picked.length >= RESULT_COUNT) break
   }
 
-  return picked.slice(0, count)
+  return picked.slice(0, RESULT_COUNT)
 }
 
 export async function recommendCities(body: AnalyzeRequest): Promise<CityResult[]> {
   const priorities = normalizePriorities(body.priorities)
   const request: AnalyzeRequest = { ...body, priorities }
 
-  const enriched = enrichAllCandidatesFast()
-  const top = pickTopByScore(enriched, request, RESULT_COUNT)
+  const all = getCityDatabase()
+  const pool = selectPool(all, request)
+  const top = pickTopThree(pool, all, request)
 
-  return top.map((data, idx) => buildCityResult(data, request, idx + 1))
+  return top.map((city, idx) => buildCityResult(city, request, idx + 1))
 }
