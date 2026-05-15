@@ -1,11 +1,5 @@
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-/** [name, country, continent, flag, temp, tax%, rent, safety, health] */
-const rows = [
+/** [name, country, continent, flag, temp, tax%, rent, safety, health] — shared source for scripts/build-recommendation-index.mjs */
+export const rows = [
   ['Dubai', 'United Arab Emirates', 'Asia', '🇦🇪', 28, 0, 1850, 84, 72],
   ['Abu Dhabi', 'United Arab Emirates', 'Asia', '🇦🇪', 27, 0, 1600, 88, 76],
   ['Doha', 'Qatar', 'Asia', '🇶🇦', 27, 0, 1650, 86, 73],
@@ -230,36 +224,3 @@ const rows = [
   ['Kathmandu', 'Nepal', 'Asia', '🇳🇵', 15, 30, 280, 42, 48],
   ['Colombo', 'Sri Lanka', 'Asia', '🇱🇰', 27, 24, 380, 52, 62],
 ]
-
-const header = `/**
- * 200 cities — hardcoded metrics aligned to Numbeo 2025 snapshots (indices, USD rent, climate normals).
- * income_tax_rate: approximate top effective bracket for wage earners / common expat regime (not tax advice).
- */
-export type CityRow = {
-  name: string
-  country: string
-  continent: string
-  flag: string
-  avg_temp_celsius: number
-  income_tax_rate: number
-  rent_1bed_usd: number
-  safety_index: number
-  healthcare_index: number
-}
-
-export const CITIES: CityRow[] = [
-`
-
-const trimmed = rows.slice(0, 200)
-const body = trimmed
-  .map(
-    (r) =>
-      `  { name: ${JSON.stringify(r[0])}, country: ${JSON.stringify(r[1])}, continent: ${JSON.stringify(
-        r[2]
-      )}, flag: ${JSON.stringify(r[3])}, avg_temp_celsius: ${r[4]}, income_tax_rate: ${r[5]}, rent_1bed_usd: ${r[6]}, safety_index: ${r[7]}, healthcare_index: ${r[8]} },`
-  )
-  .join('\n')
-
-const out = path.join(__dirname, '../lib/recommendation/cities-db.ts')
-fs.writeFileSync(out, header + body + '\n]\n')
-console.log('Wrote', trimmed.length, 'cities to', out)

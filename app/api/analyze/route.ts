@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { recommendCities, RESULT_COUNT } from '@/lib/recommendation/recommend'
+import { recommendCities, RESULT_COUNT } from '@/lib/recommendation'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AnalyzeRequest, UserPriorities } from '@/lib/types'
 
