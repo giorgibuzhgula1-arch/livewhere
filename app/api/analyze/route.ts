@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { normalizePriorities } from '@/lib/recommendation/normalize-priorities'
 import { recommendCities, RESULT_COUNT } from '@/lib/recommendation/recommend'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { AnalyzeRequest } from '@/lib/types'
+import { AnalyzeRequest, UserPriorities } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
+
+function normPriorities(p: UserPriorities): UserPriorities {
+  const c = (x: unknown) => Math.max(1, Math.min(5, Math.round(Number(x) || 3)))
+  return {
+    tax: c(p.tax),
+    housing: c(p.housing),
+    climate: c(p.climate),
+    health: c(p.health),
+    nightlife: c(p.nightlife),
+    safety: c(p.safety),
+  }
+}
 
 export async function POST(req: NextRequest) {
   let body: AnalyzeRequest
@@ -40,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const priorities = normalizePriorities(body.priorities)
+  const priorities = normPriorities(body.priorities)
   const request = { ...body, priorities }
   const { salary, currency, lifestyle } = request
   const encoder = new TextEncoder()
@@ -52,17 +63,10 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        send({
-          type: 'limits',
-          maxCities: RESULT_COUNT,
-        })
+        send({ type: 'limits', maxCities: RESULT_COUNT })
+        send({ type: 'status', text: 'Ranking from verified city database…' })
 
-        send({
-          type: 'status',
-          text: 'Ranking cities using verified 2025–2026 cost, tax, safety, and climate data…',
-        })
-
-        const cities = await recommendCities(request)
+        const cities = recommendCities(request)
 
         if (userId) {
           await supabaseAdmin.from('searches').insert({
@@ -83,7 +87,7 @@ export async function POST(req: NextRequest) {
         send({ type: 'done', cities })
       } catch (err) {
         console.error('Recommendation error:', err)
-        send({ type: 'done', cities: await recommendCities(request) })
+        send({ type: 'done', cities: recommendCities(request) })
       } finally {
         controller.close()
       }
