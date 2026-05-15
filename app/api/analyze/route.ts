@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { recommendCities } from '@/lib/recommendation/recommend'
+import { normalizePriorities } from '@/lib/recommendation/normalize-priorities'
+import {
+  excludeColdCitiesForClimatePriority,
+  recommendCities,
+} from '@/lib/recommendation/recommend'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AnalyzeRequest } from '@/lib/types'
 
@@ -47,7 +51,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { salary, currency, priorities, lifestyle } = body
+  const priorities = normalizePriorities(body.priorities)
+  const request = { ...body, priorities }
+  const { salary, currency, lifestyle } = request
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
@@ -63,11 +69,12 @@ export async function POST(req: NextRequest) {
         })
 
         send({
-          type: 'delta',
+          type: 'status',
           text: 'Loading live cost, safety, climate, and tax data…',
         })
 
-        const cities = await recommendCities(body)
+        let cities = await recommendCities(request)
+        cities = excludeColdCitiesForClimatePriority(cities, priorities)
 
         if (cities.length === 0) {
           send({

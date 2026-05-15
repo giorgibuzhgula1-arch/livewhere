@@ -14,6 +14,7 @@ import { CityResult, AnalyzeRequest } from '@/lib/types'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
+  | { type: 'status'; text: string }
   | { type: 'done'; cities: CityResult[] }
   | { type: 'error'; error: string }
   | { type: 'limits'; maxCities: number | null }
@@ -56,6 +57,7 @@ export default function Home() {
     setMatches([])
     setResultMaxCities(null)
     let accumulatedAi = ''
+    let usedDataEngine = false
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -107,9 +109,13 @@ export default function Home() {
         if (payload.type === 'limits') {
           streamMaxCities = payload.maxCities
           setResultMaxCities(payload.maxCities)
+        } else if (payload.type === 'status') {
+          usedDataEngine = true
         } else if (payload.type === 'delta') {
-          accumulatedAi += payload.text
-          setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
+          if (!usedDataEngine) {
+            accumulatedAi += payload.text
+            setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
+          }
         } else if (payload.type === 'done') {
           setMatches(capMatches(payload.cities))
           finished = true
@@ -141,7 +147,7 @@ export default function Home() {
         }
       }
 
-      if (!finished && !streamError) {
+      if (!finished && !streamError && !usedDataEngine) {
         if (accumulatedAi.trim()) {
           const recovered = capMatches(parseStreamingBufferToCities(accumulatedAi, data))
           if (recovered.length > 0) {

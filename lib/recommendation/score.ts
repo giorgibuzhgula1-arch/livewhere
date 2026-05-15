@@ -7,13 +7,13 @@ import {
   LOW_TAX_COUNTRIES,
   MAX_CRIME_INDEX,
   NIGHTLIFE_HUB_CITIES,
-  PRIORITY_HIGH_THRESHOLD,
   SAFETY_MIN_INDEX,
   UNSAFE_CITIES,
 } from '@/lib/recommendation/allowlists'
 import { getCountryTaxRate } from '@/lib/recommendation/country-tax-rates'
 import type { CandidateCity } from '@/lib/recommendation/candidates'
 import type { NumbeoSnapshot } from '@/lib/recommendation/numbeo-fallback'
+import { isPriorityHigh } from '@/lib/recommendation/normalize-priorities'
 import type { UserPriorities } from '@/lib/types'
 
 export type EnrichedCityData = {
@@ -32,42 +32,48 @@ export type DimensionScores = {
   safety: number
 }
 
-function isHigh(priority: number): boolean {
-  return priority >= PRIORITY_HIGH_THRESHOLD
+/** Warm year-round: blocklist + verified temp floor (used when Climate is High/Max). */
+export function passesClimateHighFilter(data: EnrichedCityData): boolean {
+  const { candidate, avgTempC } = data
+  const key = cityKey(candidate.name, candidate.country)
+
+  if (COOL_CLIMATE_CITIES.has(key)) return false
+  if (avgTempC < CLIMATE_MIN_TEMP_C) return false
+
+  return true
 }
 
 export function passesHighPriorityFilters(
   data: EnrichedCityData,
   priorities: UserPriorities
 ): boolean {
-  const { candidate, numbeo, avgTempC, taxRate } = data
+  const { candidate, numbeo, taxRate } = data
   const key = cityKey(candidate.name, candidate.country)
 
-  if (isHigh(priorities.tax)) {
+  if (isPriorityHigh(priorities.climate) && !passesClimateHighFilter(data)) {
+    return false
+  }
+
+  if (isPriorityHigh(priorities.tax)) {
     if (!LOW_TAX_COUNTRIES.has(candidate.country)) return false
     if (taxRate >= 10) return false
   }
 
-  if (isHigh(priorities.climate)) {
-    if (COOL_CLIMATE_CITIES.has(key)) return false
-    if (avgTempC < CLIMATE_MIN_TEMP_C) return false
-  }
-
-  if (isHigh(priorities.housing)) {
+  if (isPriorityHigh(priorities.housing)) {
     if (numbeo.monthlyRent >= HOUSING_MAX_RENT_USD) return false
   }
 
-  if (isHigh(priorities.health)) {
+  if (isPriorityHigh(priorities.health)) {
     if (!HEALTHCARE_HUB_CITIES.has(key)) return false
   }
 
-  if (isHigh(priorities.safety)) {
+  if (isPriorityHigh(priorities.safety)) {
     if (UNSAFE_CITIES.has(key)) return false
     if (numbeo.safetyIndex < SAFETY_MIN_INDEX) return false
     if (numbeo.crimeIndex > MAX_CRIME_INDEX) return false
   }
 
-  if (isHigh(priorities.nightlife)) {
+  if (isPriorityHigh(priorities.nightlife)) {
     if (!NIGHTLIFE_HUB_CITIES.has(key) && !candidate.nightlifeHub) return false
   }
 

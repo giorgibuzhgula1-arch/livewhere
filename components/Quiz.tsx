@@ -103,6 +103,11 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                     onChange={e => setPriorities(p => ({ ...p, [key]: Number(e.target.value) }))}
                     style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
                   />
+                  {key === 'climate' && priorities.climate >= 4 && (
+                    <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 8, lineHeight: 1.5 }}>
+                      High or Max excludes cool cities (under 20°C year-round), including Tbilisi, Budapest, and Berlin.
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
