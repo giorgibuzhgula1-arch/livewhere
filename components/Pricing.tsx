@@ -49,7 +49,7 @@ export default function Pricing({ onUpgrade }: Props) {
   const plans = [
     {
       name: 'Free', price: '$0', period: 'forever',
-      features: ['Top 5 city results', 'Basic score breakdown', '3 searches/month'],
+      features: ['Top 3 city results', 'Basic score breakdown', '3 searches/month'],
       btn: 'Get started free', style: 'ghost', popular: false
     },
     {
