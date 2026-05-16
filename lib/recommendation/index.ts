@@ -1,6 +1,11 @@
 /**
  * LiveWhere - 200 cities, 2025 reference metrics.
- * All scores normalized to 0-100 before weighting.
+ *
+ * SCORING LOGIC:
+ * - ყველა priority ყოველთვის ითვლება (1=მინიმალური გავლენა, 5=მაქსიმალური)
+ * - Climate Medium(3) = ოდნავ სჯის ექსტრემებს (<5°C ან >32°C)
+ * - Climate Low(1-2) = კლიმატი თითქმის არ ითვლება
+ * - Climate High(4-5) = კლიმატი მნიშვნელოვანია, ზომიერი (15-25°C) იგებს
  */
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
@@ -441,43 +446,56 @@ function metaFor(city: CityRow): { continent: string; flag: string } {
 export function scoreCity(row: CityRow, priorities: UserPriorities): number {
   let score = 0
 
-  // TAX: tax_rate is 0-56% → invert so 0% tax = 100 pts, 56% = 0 pts
+  // TAX: 0% = 100pts, 60%+ = 0pts
+  // weight 1=მინიმალური, 5=მაქსიმალური. ყოველთვის ითვლება.
   const pt = normPriority(priorities.tax)
-  if (pt >= 4) {
-    const taxScore = clamp((1 - row.tax_rate / 60) * 100, 0, 100)
-    score += taxScore * pt
-  }
+  const taxScore = clamp((1 - row.tax_rate / 60) * 100, 0, 100)
+  score += taxScore * pt
 
-  // CLIMATE: avg_temp 0-35°C → 0-100
-  const pc = normPriority(priorities.climate)
-  if (pc >= 4) {
-    const climateScore = clamp(row.avg_temp * 3, 0, 100)
-    score += climateScore * pc
-  }
-
-  // HOUSING: rent_usd 0-4500 → invert so cheap = high score
+  // HOUSING: $0 = 100pts, $4500+ = 0pts
   const ph = normPriority(priorities.housing)
-  if (ph >= 4) {
-    const housingScore = clamp((1 - row.rent_usd / 4500) * 100, 0, 100)
-    score += housingScore * ph
-  }
+  const housingScore = clamp((1 - row.rent_usd / 4500) * 100, 0, 100)
+  score += housingScore * ph
 
-  // SAFETY: already 1-10 scale → multiply to 0-100
+  // SAFETY: 1-10 → 0-100
   const ps = normPriority(priorities.safety)
-  if (ps >= 4) {
-    score += row.safety * 10 * ps
-  }
+  score += row.safety * 10 * ps
 
-  // HEALTHCARE: already 1-10 scale → multiply to 0-100
+  // HEALTHCARE: 1-10 → 0-100
   const phe = normPriority(priorities.health)
-  if (phe >= 4) {
-    score += row.healthcare * 10 * phe
-  }
+  score += row.healthcare * 10 * phe
 
-  // NIGHTLIFE: already 1-10 scale → multiply to 0-100
+  // NIGHTLIFE: 1-10 → 0-100
   const pn = normPriority(priorities.nightlife)
-  if (pn >= 4) {
-    score += row.nightlife * 10 * pn
+  score += row.nightlife * 10 * pn
+
+  // CLIMATE:
+  // Low(1-2)    = კლიმატი თითქმის არ ითვლება — მხოლოდ ექსტრემები ოდნავ სჯის
+  // Medium(3)   = ექსტრემები (<5°C ან >32°C) სჯის, ნეიტრალური ზონა ნეიტრალურია
+  // High(4-5)   = ზომიერი კლიმატი (15-25°C) იგებს, ექსტრემები ძლიერ სჯის
+  const pc = normPriority(priorities.climate)
+  const temp = row.avg_temp
+
+  let climatePenalty = 0
+  if (temp < 5) {
+    // ძალიან ცივი: რაც უფრო ცივია, მით უფრო მეტი penalty
+    climatePenalty = (5 - temp) * 4
+  } else if (temp > 32) {
+    // ძალიან ცხელი: რაც უფრო ცხელია, მით უფრო მეტი penalty
+    climatePenalty = (temp - 32) * 4
+  }
+  // 5-32°C შუალედი: penalty = 0, ანუ კლიმატი არ სჯის
+
+  // penalty-ს სიძლიერე priority-ზეა დამოკიდებული
+  // Low(1): penalty * 0.5 — თითქმის არ სჯის
+  // Medium(3): penalty * 1.5 — ოდნავ სჯის
+  // High(5): penalty * 3.0 — ძლიერ სჯის + bonus ზომიერ ქალაქებს
+  const penaltyMultiplier = pc * 0.5
+  score -= climatePenalty * penaltyMultiplier
+
+  // High priority-ზე ზომიერ ქალაქებს bonus
+  if (pc >= 4 && temp >= 15 && temp <= 25) {
+    score += (pc - 3) * 20
   }
 
   return score
@@ -491,7 +509,7 @@ function breakdownScores(row: CityRow): CityResult["scores"] {
   return {
     tax: clamp(Math.round((1 - row.tax_rate / 60) * 100), 0, 100),
     housing: clamp(Math.round((1 - row.rent_usd / 4500) * 100), 0, 100),
-    climate: clamp(Math.round(row.avg_temp * 3), 0, 100),
+    climate: clamp(Math.round(100 - Math.max(0, (row.avg_temp < 5 ? (5 - row.avg_temp) : row.avg_temp > 32 ? (row.avg_temp - 32) : 0)) * 4), 0, 100),
     health: row.healthcare * 10,
     nightlife: row.nightlife * 10,
     safety: row.safety * 10,
