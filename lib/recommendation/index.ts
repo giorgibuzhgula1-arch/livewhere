@@ -426,9 +426,10 @@ const DISPLAY: Record<string, { continent: string; flag: string }> = {
   "Colombo|Sri Lanka": { continent: "Asia", flag: "🇱🇰" },
 }
 
-// Free plan sees top 5, Pro sees all 200
 export const RESULT_COUNT = 3
 
+const OPENAI_MODEL = "gpt-4o-mini"
+const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n))
@@ -444,118 +445,126 @@ function metaFor(city: CityRow): { continent: string; flag: string } {
   return DISPLAY[`${city.name}|${city.country}`] ?? { continent: "Other", flag: "🏙️" }
 }
 
-export function scoreCity(row: CityRow, priorities: UserPriorities): number {
-  let score = 0
-
-  // TAX: 0% = 100pts, 60%+ = 0pts
-  // weight 1=მინიმალური, 5=მაქსიმალური. ყოველთვის ითვლება.
-  const pt = normPriority(priorities.tax)
-  const taxScore = clamp((1 - row.tax_rate / 60) * 100, 0, 100)
-  score += taxScore * pt
-
-  // HOUSING: $0 = 100pts, $4500+ = 0pts
-  const ph = normPriority(priorities.housing)
-  const housingScore = clamp((1 - row.rent_usd / 4500) * 100, 0, 100)
-  score += housingScore * ph
-
-  // SAFETY: 1-10 → 0-100
-  const ps = normPriority(priorities.safety)
-  score += row.safety * 10 * ps
-
-  // HEALTHCARE: 1-10 → 0-100
-  const phe = normPriority(priorities.health)
-  score += row.healthcare * 10 * phe
-
-  // NIGHTLIFE: 1-10 → 0-100
-  const pn = normPriority(priorities.nightlife)
-  score += row.nightlife * 10 * pn
-
-  // CLIMATE:
-  // Low(1-2)    = კლიმატი თითქმის არ ითვლება — მხოლოდ ექსტრემები ოდნავ სჯის
-  // Medium(3)   = ექსტრემები (<5°C ან >32°C) სჯის, ნეიტრალური ზონა ნეიტრალურია
-  // High(4-5)   = ზომიერი კლიმატი (15-25°C) იგებს, ექსტრემები ძლიერ სჯის
-  const pc = normPriority(priorities.climate)
-  const temp = row.avg_temp
-
-  let climatePenalty = 0
-  if (temp < 5) {
-    // ძალიან ცივი: რაც უფრო ცივია, მით უფრო მეტი penalty
-    climatePenalty = (5 - temp) * 4
-  } else if (temp > 32) {
-    // ძალიან ცხელი: რაც უფრო ცხელია, მით უფრო მეტი penalty
-    climatePenalty = (temp - 32) * 4
-  }
-  // 5-32°C შუალედი: penalty = 0, ანუ კლიმატი არ სჯის
-
-  // penalty-ს სიძლიერე priority-ზეა დამოკიდებული
-  // Low(1): penalty * 0.5 — თითქმის არ სჯის
-  // Medium(3): penalty * 1.5 — ოდნავ სჯის
-  // High(5): penalty * 3.0 — ძლიერ სჯის + bonus ზომიერ ქალაქებს
-  const penaltyMultiplier = pc * 0.5
-  score -= climatePenalty * penaltyMultiplier
-
-  // High priority-ზე ზომიერ ქალაქებს bonus
-  if (pc >= 4 && temp >= 15 && temp <= 25) {
-    score += (pc - 3) * 20
-  }
-
-  return score
+type OpenAIRecommendationResponse = {
+  cities?: Array<Partial<CityResult>>
 }
 
-function estimatedMonthlyCost(rent: number): number {
-  return Math.round(rent * 1.72)
+type OpenAIChatResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string | null
+    }
+  }>
 }
 
-function breakdownScores(row: CityRow): CityResult["scores"] {
+function priorityLabel(n: number): string {
+  switch (n) {
+    case 1:
+      return "not important"
+    case 2:
+      return "somewhat important"
+    case 3:
+      return "important"
+    case 4:
+      return "very important"
+    case 5:
+      return "very important"
+    default:
+      return "important"
+  }
+}
+
+function num(value: unknown, fallback: number): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function text(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback
+}
+
+function list(value: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(value)) return fallback
+  const items = value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+  return items.length ? items.slice(0, 4) : fallback
+}
+
+function scores(value: unknown): CityResult["scores"] {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {}
   return {
-    tax: clamp(Math.round((1 - row.tax_rate / 60) * 100), 0, 100),
-    housing: clamp(Math.round((1 - row.rent_usd / 4500) * 100), 0, 100),
-    climate: clamp(Math.round(100 - Math.max(0, (row.avg_temp < 5 ? (5 - row.avg_temp) : row.avg_temp > 32 ? (row.avg_temp - 32) : 0)) * 4), 0, 100),
-    health: row.healthcare * 10,
-    nightlife: row.nightlife * 10,
-    safety: row.safety * 10,
+    tax: clamp(Math.round(num(raw.tax, 70)), 0, 100),
+    housing: clamp(Math.round(num(raw.housing, 70)), 0, 100),
+    climate: clamp(Math.round(num(raw.climate, 70)), 0, 100),
+    health: clamp(Math.round(num(raw.health, 70)), 0, 100),
+    nightlife: clamp(Math.round(num(raw.nightlife, 70)), 0, 100),
+    safety: clamp(Math.round(num(raw.safety, 70)), 0, 100),
   }
 }
 
-function toCityResult(
-  row: CityRow,
-  rank: number,
-  priorities: UserPriorities,
-  salary: number,
-  currency: string,
-  totalScore: number
-): CityResult {
-  const { continent, flag } = metaFor(row)
-  const monthlyCost = estimatedMonthlyCost(row.rent_usd)
-  const takeHomeMonthly = Math.round((salary * (1 - row.tax_rate / 100)) / 12)
+function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities): string {
+  return [
+    "Recommend exactly the top 3 cities for this user.",
+    "Use current 2025 tax, rent, cost of living, safety, healthcare, climate, and nightlife knowledge.",
+    "Prioritize the user's highest priorities most strongly. Include practical reasoning, tax assumptions, and a monthly cost breakdown.",
+    "Do not mention uncertainty unless it changes the recommendation. Tax info should be practical but not legal advice.",
+    "",
+    `Salary: ${body.salary.toLocaleString()} ${body.currency} gross annual`,
+    `Lifestyle: ${body.lifestyle.length ? body.lifestyle.join(", ") : "No specific lifestyle selected"}`,
+    "Priorities, 1-5:",
+    `- Low taxes: ${priorities.tax} (${priorityLabel(priorities.tax)})`,
+    `- Affordable housing: ${priorities.housing} (${priorityLabel(priorities.housing)})`,
+    `- Climate: ${priorities.climate} (${priorityLabel(priorities.climate)})`,
+    `- Healthcare: ${priorities.health} (${priorityLabel(priorities.health)})`,
+    `- Nightlife and culture: ${priorities.nightlife} (${priorityLabel(priorities.nightlife)})`,
+    `- Safety: ${priorities.safety} (${priorityLabel(priorities.safety)})`,
+  ].join("\n")
+}
+
+function extractOpenAIJson(payload: OpenAIChatResponse): OpenAIRecommendationResponse | null {
+  const content = payload.choices?.[0]?.message?.content
+  if (!content) return null
+  try {
+    return JSON.parse(content) as OpenAIRecommendationResponse
+  } catch {
+    return null
+  }
+}
+
+function normalizeCity(city: Partial<CityResult>, idx: number, salary: number): CityResult {
+  const name = text(city.name, `Recommendation ${idx + 1}`)
+  const country = text(city.country, "Unknown")
+  const meta = metaFor({ name, country } as CityRow)
+  const taxRate = clamp(num(city.taxRate, 25), 0, 60)
+  const monthlyRent = Math.max(0, Math.round(num(city.monthlyRent, 1200)))
+  const monthlyCost = Math.max(monthlyRent, Math.round(num(city.monthlyCost, monthlyRent * 1.7)))
+  const takeHomeMonthly = Math.max(0, Math.round(num(city.takeHomeMonthly, (salary * (1 - taxRate / 100)) / 12)))
+
   return {
-    name: row.name,
-    country: row.country,
-    continent,
-    flag,
-    score: Math.round(totalScore),
-    taxRate: row.tax_rate,
-    monthlyRent: row.rent_usd,
+    name,
+    country,
+    continent: text(city.continent, meta.continent),
+    flag: text(city.flag, meta.flag),
+    score: clamp(Math.round(num(city.score, 90 - idx * 5)), 0, 100),
+    taxRate,
+    monthlyRent,
     monthlyCost,
     takeHomeMonthly,
-    monthlySavings: takeHomeMonthly - monthlyCost,
-    pros: [
-      `${row.tax_rate}% tax rate — take-home ~$${takeHomeMonthly.toLocaleString()}/mo`,
-      `Rent $${row.rent_usd}/mo, est. total living ~$${monthlyCost}/mo`,
-      `Safety ${row.safety}/10 · Healthcare ${row.healthcare}/10 · Nightlife ${row.nightlife}/10`,
-    ],
-    cons: ["Verify tax and visa rules for your passport."],
-    tags: [continent],
-    visa: "Check nomad, work, or residency options.",
-    scores: breakdownScores(row),
-    aiInsight:
-      `${flag} ${row.name} ranked #${rank} with score ${Math.round(totalScore)}. ` +
-      `Tax ${row.tax_rate}%, rent $${row.rent_usd}/mo, avg temp ${row.avg_temp}°C. ` +
-      `Salary ${salary.toLocaleString()} ${currency} → ~$${takeHomeMonthly.toLocaleString()}/mo take-home.`,
+    monthlySavings: Math.round(num(city.monthlySavings, takeHomeMonthly - monthlyCost)),
+    pros: list(city.pros, ["Strong fit for your selected priorities."]),
+    cons: list(city.cons, ["Verify tax and visa rules for your passport."]),
+    tags: list(city.tags, [text(city.continent, meta.continent)]),
+    visa: text(city.visa, "Check nomad, work, or residency options."),
+    scores: scores(city.scores),
+    aiInsight: text(city.aiInsight, `${name} is a strong match based on your salary and priorities.`),
   }
 }
 
-export function recommendCities(body: AnalyzeRequest): CityResult[] {
+export async function recommendCities(body: AnalyzeRequest): Promise<CityResult[]> {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured")
+  }
+
   const priorities: UserPriorities = {
     tax: normPriority(body.priorities.tax),
     housing: normPriority(body.priorities.housing),
@@ -564,14 +573,112 @@ export function recommendCities(body: AnalyzeRequest): CityResult[] {
     nightlife: normPriority(body.priorities.nightlife),
     safety: normPriority(body.priorities.safety),
   }
-  const ranked = CITIES.map((row) => ({
-    row,
-    total: scoreCity(row, priorities),
-  })).sort((a, b) => b.total - a.total)
 
-  return ranked
+  const res = await fetch(OPENAI_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      temperature: 0.3,
+      max_tokens: 2500,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are LiveWhere's relocation analyst. Return only structured recommendation data. Use realistic 2025 estimates and keep all numeric fields in USD/month or percentages as requested.",
+        },
+        { role: "user", content: formatPrompt(body, priorities) },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "city_recommendations",
+          strict: true,
+          schema: {
+            type: "object",
+            additionalProperties: false,
+            required: ["cities"],
+            properties: {
+              cities: {
+                type: "array",
+                minItems: RESULT_COUNT,
+                maxItems: RESULT_COUNT,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: [
+                    "name",
+                    "country",
+                    "continent",
+                    "flag",
+                    "score",
+                    "taxRate",
+                    "monthlyRent",
+                    "monthlyCost",
+                    "takeHomeMonthly",
+                    "monthlySavings",
+                    "pros",
+                    "cons",
+                    "tags",
+                    "visa",
+                    "scores",
+                    "aiInsight",
+                  ],
+                  properties: {
+                    name: { type: "string" },
+                    country: { type: "string" },
+                    continent: { type: "string" },
+                    flag: { type: "string" },
+                    score: { type: "number", minimum: 0, maximum: 100 },
+                    taxRate: { type: "number", minimum: 0, maximum: 60 },
+                    monthlyRent: { type: "number", minimum: 0 },
+                    monthlyCost: { type: "number", minimum: 0 },
+                    takeHomeMonthly: { type: "number", minimum: 0 },
+                    monthlySavings: { type: "number" },
+                    pros: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 },
+                    cons: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 3 },
+                    tags: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 4 },
+                    visa: { type: "string" },
+                    scores: {
+                      type: "object",
+                      additionalProperties: false,
+                      required: ["tax", "housing", "climate", "health", "nightlife", "safety"],
+                      properties: {
+                        tax: { type: "number", minimum: 0, maximum: 100 },
+                        housing: { type: "number", minimum: 0, maximum: 100 },
+                        climate: { type: "number", minimum: 0, maximum: 100 },
+                        health: { type: "number", minimum: 0, maximum: 100 },
+                        nightlife: { type: "number", minimum: 0, maximum: 100 },
+                        safety: { type: "number", minimum: 0, maximum: 100 },
+                      },
+                    },
+                    aiInsight: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  })
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "")
+    throw new Error(`OpenAI API request failed (${res.status})${detail ? `: ${detail}` : ""}`)
+  }
+
+  const payload = await res.json() as OpenAIChatResponse
+  const recommendations = extractOpenAIJson(payload)
+  const cities = recommendations?.cities
+  if (!cities || cities.length < RESULT_COUNT) {
+    throw new Error("OpenAI API did not return three city recommendations")
+  }
+
+  return cities
     .slice(0, RESULT_COUNT)
-    .map((p, idx) =>
-      toCityResult(p.row, idx + 1, priorities, body.salary, body.currency, p.total)
-    )
+    .map((city, idx) => normalizeCity(city, idx, body.salary))
 }

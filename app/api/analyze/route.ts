@@ -64,9 +64,9 @@ export async function POST(req: NextRequest) {
 
       try {
         send({ type: 'limits', maxCities: RESULT_COUNT })
-        send({ type: 'status', text: 'Ranking from verified city database…' })
+        send({ type: 'status', text: 'Asking OpenAI for your top city matches…' })
 
-        const cities = recommendCities(request)
+        const cities = await recommendCities(request)
 
         if (userId) {
           await supabaseAdmin.from('searches').insert({
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         send({ type: 'done', cities })
       } catch (err) {
         console.error('Recommendation error:', err)
-        send({ type: 'done', cities: recommendCities(request) })
+        send({ type: 'error', error: 'OpenAI could not generate recommendations. Please try again.' })
       } finally {
         controller.close()
       }
