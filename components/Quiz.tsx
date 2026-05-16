@@ -9,7 +9,13 @@ interface Props {
   error: string | null
 }
 
-const LABELS: Record<number, string> = { 1: 'Very Low', 2: 'Low', 3: 'Medium', 4: 'High', 5: 'Max' }
+const LABELS: Record<number, string> = {
+  1: 'Not important',
+  2: 'Somewhat important',
+  3: 'Important',
+  4: 'Very important',
+  5: 'Very important',
+}
 
 const PRIORITIES = [
   { key: 'tax', emoji: '💰', label: 'Low taxes' },
@@ -105,7 +111,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                   />
                   {key === 'climate' && priorities.climate >= 4 && (
                     <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 8, lineHeight: 1.5 }}>
-                      High/Max uses your lifestyle: Beach = warm cities (20°C+), Mountains = cool cities (14°C or below).
+                      Very important uses your lifestyle: Beach = warm cities (20°C+), Mountains = cool cities (14°C or below).
                     </p>
                   )}
                 </div>
