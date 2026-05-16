@@ -1,6 +1,6 @@
 /**
  * LiveWhere - 200 cities, 2025 reference metrics.
- * safety/healthcare/nightlife: scale 1-10. Scoring uses sliders 4-5 only (no filters).
+ * All scores normalized to 0-100 before weighting.
  */
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
@@ -421,7 +421,8 @@ const DISPLAY: Record<string, { continent: string; flag: string }> = {
   "Colombo|Sri Lanka": { continent: "Asia", flag: "🇱🇰" },
 }
 
-export const RESULT_COUNT = 3
+// Free plan sees top 5, Pro sees all 200
+export const RESULT_COUNT = 200
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n))
@@ -439,18 +440,46 @@ function metaFor(city: CityRow): { continent: string; flag: string } {
 
 export function scoreCity(row: CityRow, priorities: UserPriorities): number {
   let score = 0
+
+  // TAX: tax_rate is 0-56% → invert so 0% tax = 100 pts, 56% = 0 pts
   const pt = normPriority(priorities.tax)
-  if (pt >= 4) score += (10 - row.tax_rate) * pt
+  if (pt >= 4) {
+    const taxScore = clamp((1 - row.tax_rate / 60) * 100, 0, 100)
+    score += taxScore * pt
+  }
+
+  // CLIMATE: avg_temp 0-35°C → 0-100
   const pc = normPriority(priorities.climate)
-  if (pc >= 4) score += row.avg_temp * pc
+  if (pc >= 4) {
+    const climateScore = clamp(row.avg_temp * 3, 0, 100)
+    score += climateScore * pc
+  }
+
+  // HOUSING: rent_usd 0-4500 → invert so cheap = high score
   const ph = normPriority(priorities.housing)
-  if (ph >= 4) score += (10 - row.rent_usd / 200) * ph
+  if (ph >= 4) {
+    const housingScore = clamp((1 - row.rent_usd / 4500) * 100, 0, 100)
+    score += housingScore * ph
+  }
+
+  // SAFETY: already 1-10 scale → multiply to 0-100
   const ps = normPriority(priorities.safety)
-  if (ps >= 4) score += row.safety * ps
+  if (ps >= 4) {
+    score += row.safety * 10 * ps
+  }
+
+  // HEALTHCARE: already 1-10 scale → multiply to 0-100
   const phe = normPriority(priorities.health)
-  if (phe >= 4) score += row.healthcare * phe
+  if (phe >= 4) {
+    score += row.healthcare * 10 * phe
+  }
+
+  // NIGHTLIFE: already 1-10 scale → multiply to 0-100
   const pn = normPriority(priorities.nightlife)
-  if (pn >= 4) score += row.nightlife * pn
+  if (pn >= 4) {
+    score += row.nightlife * 10 * pn
+  }
+
   return score
 }
 
@@ -460,9 +489,9 @@ function estimatedMonthlyCost(rent: number): number {
 
 function breakdownScores(row: CityRow): CityResult["scores"] {
   return {
-    tax: clamp(Math.round((10 - row.tax_rate) * 10), 0, 100),
-    housing: clamp(Math.round((10 - row.rent_usd / 200) * 10), 0, 100),
-    climate: clamp(Math.round(row.avg_temp * 3.5), 0, 100),
+    tax: clamp(Math.round((1 - row.tax_rate / 60) * 100), 0, 100),
+    housing: clamp(Math.round((1 - row.rent_usd / 4500) * 100), 0, 100),
+    climate: clamp(Math.round(row.avg_temp * 3), 0, 100),
     health: row.healthcare * 10,
     nightlife: row.nightlife * 10,
     safety: row.safety * 10,
@@ -492,17 +521,18 @@ function toCityResult(
     takeHomeMonthly,
     monthlySavings: takeHomeMonthly - monthlyCost,
     pros: [
-      `${row.tax_rate}% tax, ${row.avg_temp}C avg, safety ${row.safety}/10, healthcare ${row.healthcare}/10, nightlife ${row.nightlife}/10`,
-      `Rent $${row.rent_usd}/mo, ~$${monthlyCost}/mo est. living`,
-      "2025 Numbeo-style reference dataset",
+      `${row.tax_rate}% tax rate — take-home ~$${takeHomeMonthly.toLocaleString()}/mo`,
+      `Rent $${row.rent_usd}/mo, est. total living ~$${monthlyCost}/mo`,
+      `Safety ${row.safety}/10 · Healthcare ${row.healthcare}/10 · Nightlife ${row.nightlife}/10`,
     ],
     cons: ["Verify tax and visa rules for your passport."],
     tags: [continent],
     visa: "Check nomad, work, or residency options.",
     scores: breakdownScores(row),
     aiInsight:
-      `${flag} ${row.name} #${rank} score ${Math.round(totalScore)}. Formula: tax/climate/housing/safety/health/nightlife terms only if slider 4-5.` +
-      ` Salary ${salary.toLocaleString()} ${currency}.`,
+      `${flag} ${row.name} ranked #${rank} with score ${Math.round(totalScore)}. ` +
+      `Tax ${row.tax_rate}%, rent $${row.rent_usd}/mo, avg temp ${row.avg_temp}°C. ` +
+      `Salary ${salary.toLocaleString()} ${currency} → ~$${takeHomeMonthly.toLocaleString()}/mo take-home.`,
   }
 }
 
@@ -519,6 +549,7 @@ export function recommendCities(body: AnalyzeRequest): CityResult[] {
     row,
     total: scoreCity(row, priorities),
   })).sort((a, b) => b.total - a.total)
+
   return ranked
     .slice(0, RESULT_COUNT)
     .map((p, idx) =>
