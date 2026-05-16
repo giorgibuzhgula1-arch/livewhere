@@ -427,7 +427,8 @@ const DISPLAY: Record<string, { continent: string; flag: string }> = {
 }
 
 // Free plan sees top 5, Pro sees all 200
-export const RESULT_COUNT = 200
+export const RESULT_COUNT = 3
+
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n))
