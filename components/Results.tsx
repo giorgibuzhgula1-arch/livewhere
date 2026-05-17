@@ -83,7 +83,7 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
                 fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 600
               }}
             >
-              Share
+              Share Your Match 🌍
             </button>
           )}
           <button type="button" onClick={onReset} style={{
@@ -211,6 +211,14 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
               {linkCopied ? 'Copied!' : 'Copy link'}
             </button>
           </div>
+          <p style={{
+            fontSize: 12,
+            color: 'rgba(240,237,232,0.38)',
+            marginTop: 12,
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
+            Let your friends find theirs too →
+          </p>
         </motion.div>
       )}
 
