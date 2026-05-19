@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Quiz from '@/components/Quiz'
@@ -11,6 +11,11 @@ import AuthModal from '@/components/AuthModal'
 import { parseStreamingBufferToCities } from '@/lib/parse-streaming-cities'
 import { supabase } from '@/lib/supabase'
 import { CityResult, AnalyzeRequest } from '@/lib/types'
+import {
+  savePendingAnalyze,
+  loadPendingAnalyze,
+  clearPendingAnalyze,
+} from '@/lib/pending-analyze'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -46,12 +51,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup')
+  const [authGoogleOnly, setAuthGoogleOnly] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
+  const resumeStarted = useRef(false)
 
   const showLanding = matches === null && !loading
 
-  async function handleAnalyze(data: AnalyzeRequest) {
+  const runAnalyze = useCallback(async (data: AnalyzeRequest) => {
     setLoading(true)
     setError(null)
     setMatches([])
@@ -74,8 +81,10 @@ export default function Home() {
       if (res.status === 403) {
         const json = await res.json().catch(() => ({}))
         setMatches(null)
+        savePendingAnalyze(data)
+        setAuthGoogleOnly(true)
         setAuthOpen(true)
-        setAuthMode('signup')
+        setAuthMode('login')
         setError(json.error || 'Sign in to continue')
         return
       }
@@ -165,6 +174,43 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  const tryResumePendingAnalyze = useCallback(async () => {
+    const pending = loadPendingAnalyze()
+    if (!pending || resumeStarted.current) return
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return
+
+    resumeStarted.current = true
+    clearPendingAnalyze()
+    setAuthOpen(false)
+    setAuthGoogleOnly(false)
+    await runAnalyze(pending)
+    resumeStarted.current = false
+  }, [runAnalyze])
+
+  useEffect(() => {
+    tryResumePendingAnalyze()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        tryResumePendingAnalyze()
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [tryResumePendingAnalyze])
+
+  async function handleAnalyzeRequest(data: AnalyzeRequest) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) {
+      savePendingAnalyze(data)
+      setAuthGoogleOnly(true)
+      setAuthMode('login')
+      setAuthOpen(true)
+      return
+    }
+    await runAnalyze(data)
   }
 
   function handleResetMatches() {
@@ -174,16 +220,16 @@ export default function Home() {
 
   return (
     <main style={{ position: 'relative' }}>
-      <Navbar onAuthClick={() => { setAuthOpen(true); setAuthMode('login') }} />
+      <Navbar onAuthClick={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('login') }} />
       
       {showLanding && (
         <>
           <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
           <div id="quiz">
-            <Quiz onSubmit={handleAnalyze} loading={loading} error={error} />
+            <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
           <HowItWorks />
-          <Pricing onUpgrade={() => { setAuthOpen(true); setAuthMode('signup') }} />
+          <Pricing onUpgrade={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('signup') }} />
         </>
       )}
 
@@ -252,7 +298,11 @@ export default function Home() {
       <AuthModal
         isOpen={authOpen}
         mode={authMode}
-        onClose={() => setAuthOpen(false)}
+        googleOnly={authGoogleOnly}
+        onClose={() => {
+          setAuthOpen(false)
+          setAuthGoogleOnly(false)
+        }}
         onModeSwitch={() => setAuthMode(m => m === 'login' ? 'signup' : 'login')}
       />
     </main>

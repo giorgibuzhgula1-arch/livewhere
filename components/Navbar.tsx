@@ -10,6 +10,21 @@ interface Props {
   onAuthClick: () => void
 }
 
+function userAvatar(user: User): string | null {
+  const meta = user.user_metadata
+  if (!meta || typeof meta !== 'object') return null
+  const url = meta.avatar_url ?? meta.picture
+  return typeof url === 'string' && url.length > 0 ? url : null
+}
+
+function userLabel(user: User): string {
+  const meta = user.user_metadata
+  if (meta && typeof meta === 'object' && typeof meta.full_name === 'string' && meta.full_name) {
+    return meta.full_name
+  }
+  return user.email?.split('@')[0] ?? 'Account'
+}
+
 export default function Navbar({ onAuthClick }: Props) {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
@@ -21,6 +36,8 @@ export default function Navbar({ onAuthClick }: Props) {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  const avatar = user ? userAvatar(user) : null
 
   return (
     <nav style={{
@@ -34,7 +51,6 @@ export default function Navbar({ onAuthClick }: Props) {
       <Link
         href="/"
         onClick={(e) => {
-          // Same-route clicks do not remount `/`; force navigation so results/quiz state resets to landing.
           if (pathname === '/') {
             e.preventDefault()
             window.location.assign('/')
@@ -60,18 +76,86 @@ export default function Navbar({ onAuthClick }: Props) {
           ✦ AI-Powered
         </div>
         {user ? (
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(240,237,232,0.6)', padding: '8px 16px',
-              borderRadius: 10, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif"
-            }}
-          >
-            Sign out
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {avatar ? (
+              <img
+                src={avatar}
+                alt=""
+                width={32}
+                height={32}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: 'rgba(200,240,90,0.15)',
+                  border: '1px solid rgba(200,240,90,0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: '#c8f05a',
+                }}
+                aria-hidden
+              >
+                {userLabel(user).charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', maxWidth: 180 }}>
+              <span style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#f0ede8',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: '100%',
+              }}>
+                {userLabel(user)}
+              </span>
+              {user.email && (
+                <span style={{
+                  fontSize: 11,
+                  color: 'rgba(240,237,232,0.45)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                }}>
+                  {user.email}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => supabase.auth.signOut()}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'rgba(240,237,232,0.6)',
+                padding: '8px 14px',
+                borderRadius: 10,
+                fontSize: 12,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Sign out
+            </button>
+          </div>
         ) : (
           <button
+            type="button"
             onClick={onAuthClick}
             style={{
               background: '#c8f05a', border: 'none', color: '#0a0a0f',
