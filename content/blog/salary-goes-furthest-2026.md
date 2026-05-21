@@ -25,7 +25,13 @@ When you reduce cost of living AND stress simultaneously — which the right geo
 
 Same Salary, Completely Different Life: A Real Comparison
 Let's make this concrete. Here is what $5,000 per month actually looks like in different places.
-ExpenseLondon 🇬🇧New York 🇺🇸Chiang Mai 🇹🇭Lisbon 🇵🇹Medellín 🇨🇴Rent (1BR)$2,400$2,800$500$1,100$600Food$700$800$300$500$350Transport$250$200$100$150$100Utilities$200$180$80$120$90Total expenses$3,550$3,980$980$1,870$1,140Monthly savings$1,450$1,020$4,020$3,130$3,860
+|---|---|---|---|---|---|
+| Rent (1BR) | $2,400 | $2,800 | $500 | $1,100 | $600 |
+| Food | $700 | $800 | $300 | $500 | $350 |
+| Transport | $250 | $200 | $100 | $150 | $100 |
+| Utilities | $200 | $180 | $80 | $120 | $90 |
+| Total expenses | $3,550 | $3,980 | $980 | $1,870 | $1,140 |
+| Monthly savings | $1,450 | $1,020 | $4,020 | $3,130 | $3,860 |
 Same income. Wildly different outcomes.
 The person in Chiang Mai is saving nearly three times more per month than the person in London — while often reporting a higher quality of life, more free time, and lower stress.
 This is not a fantasy. This is geographic arbitrage — and millions of remote workers are quietly using it right now.
