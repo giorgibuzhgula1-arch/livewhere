@@ -37,7 +37,7 @@ function cardShellStyle(rank: number, cursor: string) {
 
 function CityIdentity({ city, countryCode }: { city: CityResult; countryCode: string }) {
   return (
-    <div style={{ marginBottom: 16, opacity: 1 }}>
+    <div style={{ marginBottom: 16, opacity: 1, filter: 'none' }}>
       <span style={{
         display: 'inline-block',
         fontSize: 14,
@@ -145,7 +145,7 @@ function LockedCityDetails({ city, color }: { city: CityResult; color: string })
         {city.country} · {city.continent}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16, filter: 'blur(8px)', opacity: 0.3 }}>
         {[
           { label: 'Take-home/mo', val: fmt(city.takeHomeMonthly) },
           { label: 'Monthly cost', val: fmt(city.monthlyCost) },
