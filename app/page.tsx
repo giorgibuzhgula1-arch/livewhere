@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Quiz from '@/components/Quiz'
@@ -16,6 +16,12 @@ import {
   loadPendingResults,
   clearPendingResults,
 } from '@/lib/pending-results'
+import {
+  waitForAuthSession,
+  clearOAuthReturn,
+  isOAuthReturnPending,
+} from '@/lib/wait-for-session'
+import { startProCheckout } from '@/lib/start-pro-checkout'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -63,7 +69,10 @@ export default function Home() {
     if (typeof window === 'undefined') return false
     return Boolean(loadPendingResults()?.cities.length)
   })
-  const authListenerReady = useRef(false)
+  const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return isOAuthReturnPending() && Boolean(loadPendingResults()?.cities.length)
+  })
 
   const showLanding = matches === null && !loading && !awaitingAuthToView
 
@@ -71,13 +80,15 @@ export default function Home() {
     const pending = loadPendingResults()
     if (!pending?.cities.length) return false
 
-    const { data: { session } } = await supabase.auth.getSession()
+    const session = await waitForAuthSession(isOAuthReturnPending() ? 60 : 15)
     if (!session?.user) return false
 
     setMatches(pending.cities)
     setResultMaxCities(pending.maxCities)
     clearPendingResults()
+    clearOAuthReturn()
     setAwaitingAuthToView(false)
+    setRestoringAfterOAuth(false)
     setAuthOpen(false)
     setAuthGoogleOnly(false)
     return true
@@ -226,25 +237,35 @@ export default function Home() {
     if (pending?.cities.length) {
       setAwaitingAuthToView(true)
       setResultMaxCities(pending.maxCities)
+      if (isOAuthReturnPending()) {
+        setRestoringAfterOAuth(true)
+      }
     }
 
-    void revealPendingResults()
+    let cancelled = false
 
-    if (authListenerReady.current) return
-    authListenerReady.current = true
+    async function tryRevealAfterOAuth() {
+      for (let i = 0; i < 40 && !cancelled; i++) {
+        if (await revealPendingResults()) return
+        await new Promise((r) => setTimeout(r, 150))
+      }
+      if (!cancelled) {
+        clearOAuthReturn()
+        setRestoringAfterOAuth(false)
+      }
+    }
+
+    void tryRevealAfterOAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session?.user) return
-      if (
-        event === 'SIGNED_IN' ||
-        event === 'INITIAL_SESSION' ||
-        event === 'TOKEN_REFRESHED'
-      ) {
-        void revealPendingResults()
-      }
+      if (event !== 'SIGNED_IN' || !session?.user) return
+      void revealPendingResults()
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [revealPendingResults])
 
   async function handleAnalyzeRequest(data: AnalyzeRequest) {
@@ -255,6 +276,8 @@ export default function Home() {
     setMatches(null)
     setError(null)
     setAwaitingAuthToView(false)
+    setRestoringAfterOAuth(false)
+    clearOAuthReturn()
     clearPendingResults()
   }
 
@@ -262,6 +285,16 @@ export default function Home() {
     setAuthGoogleOnly(true)
     setAuthMode('login')
     setAuthOpen(true)
+  }
+
+  async function handleUnlockPro() {
+    try {
+      await startProCheckout()
+    } catch {
+      setAuthGoogleOnly(false)
+      setAuthMode('login')
+      setAuthOpen(true)
+    }
   }
 
   return (
@@ -304,6 +337,22 @@ export default function Home() {
           minHeight: '100vh', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 20, padding: 20,
         }}>
+          {restoringAfterOAuth ? (
+            <>
+              <div style={{
+                width: 48, height: 48,
+                border: '3px solid #1a1a26',
+                borderTopColor: '#c8f05a',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+              }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+              <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center' }}>
+                Finishing sign-in…
+              </p>
+            </>
+          ) : (
+            <>
           <p style={{ color: '#c8f05a', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', fontWeight: 600 }}>
             ✦ Analysis complete
           </p>
@@ -341,6 +390,8 @@ export default function Home() {
           >
             ← New search
           </button>
+            </>
+          )}
         </div>
       )}
 
@@ -350,6 +401,7 @@ export default function Home() {
           streaming={loading}
           maxCities={resultMaxCities}
           onReset={handleResetMatches}
+          onUnlockPro={handleUnlockPro}
         />
       )}
 

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { markOAuthReturn, waitForAuthSession } from '@/lib/wait-for-session'
 
 /** Handles OAuth redirect; session is established before returning to home. */
 export default function AuthCallbackPage() {
@@ -14,6 +15,7 @@ export default function AuthCallbackPage() {
     async function redirectHome() {
       if (done) return
       done = true
+      markOAuthReturn()
       router.replace('/')
     }
 
@@ -30,21 +32,14 @@ export default function AuthCallbackPage() {
         }
       }
 
-      // Ensure session is persisted before leaving this page (avoids race on /).
-      for (let i = 0; i < 25; i++) {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          await redirectHome()
-          return
-        }
-        await new Promise((r) => setTimeout(r, 80))
+      const session = await waitForAuthSession(50, 100)
+      if (session?.user) {
+        await redirectHome()
+        return
       }
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (
-          session?.user &&
-          (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')
-        ) {
+        if (event === 'SIGNED_IN' && session?.user) {
           subscription.unsubscribe()
           void redirectHome()
         }
@@ -52,7 +47,7 @@ export default function AuthCallbackPage() {
 
       window.setTimeout(() => {
         void redirectHome()
-      }, 6000)
+      }, 8000)
     }
 
     finish()

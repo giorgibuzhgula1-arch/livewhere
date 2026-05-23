@@ -43,7 +43,7 @@ export interface AnalyzeRequest {
 export interface Profile {
   id: string;
   email: string;
-  plan: 'free' | 'pro';
+  plan: 'free' | 'pro' | 'lifetime';
   searches_this_month: number;
   stripe_customer_id?: string;
 }

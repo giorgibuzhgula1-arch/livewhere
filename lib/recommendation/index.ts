@@ -427,6 +427,7 @@ const DISPLAY: Record<string, { continent: string; flag: string }> = {
 }
 
 export const RESULT_COUNT = 3
+export const PRO_RESULT_COUNT = 12
 
 const OPENAI_MODEL = "gpt-4o-mini"
 const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
@@ -501,9 +502,9 @@ function scores(value: unknown): CityResult["scores"] {
   }
 }
 
-function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities): string {
+function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities, count: number): string {
   return [
-    "Recommend exactly the top 3 cities for this user.",
+    `Recommend exactly the top ${count} cities for this user.`,
     "Use current 2025 tax, rent, cost of living, safety, healthcare, climate, and nightlife knowledge.",
     "Prioritize the user's highest priorities most strongly. Include practical reasoning, tax assumptions, and a monthly cost breakdown.",
     "Do not mention uncertainty unless it changes the recommendation. Tax info should be practical but not legal advice.",
@@ -559,7 +560,11 @@ function normalizeCity(city: Partial<CityResult>, idx: number, salary: number): 
   }
 }
 
-export async function recommendCities(body: AnalyzeRequest): Promise<CityResult[]> {
+export async function recommendCities(
+  body: AnalyzeRequest,
+  count: number = RESULT_COUNT
+): Promise<CityResult[]> {
+  const resultCount = Math.max(1, Math.min(PRO_RESULT_COUNT, Math.round(count)))
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured")
@@ -583,14 +588,14 @@ export async function recommendCities(body: AnalyzeRequest): Promise<CityResult[
     body: JSON.stringify({
       model: OPENAI_MODEL,
       temperature: 0.3,
-      max_tokens: 2500,
+      max_tokens: resultCount > 6 ? 8000 : 2500,
       messages: [
         {
           role: "system",
           content:
             "You are LiveWhere's relocation analyst. Return only structured recommendation data. Use realistic 2025 estimates and keep all numeric fields in USD/month or percentages as requested.",
         },
-        { role: "user", content: formatPrompt(body, priorities) },
+        { role: "user", content: formatPrompt(body, priorities, resultCount) },
       ],
       response_format: {
         type: "json_schema",
@@ -604,8 +609,8 @@ export async function recommendCities(body: AnalyzeRequest): Promise<CityResult[
             properties: {
               cities: {
                 type: "array",
-                minItems: RESULT_COUNT,
-                maxItems: RESULT_COUNT,
+                minItems: resultCount,
+                maxItems: resultCount,
                 items: {
                   type: "object",
                   additionalProperties: false,
@@ -674,11 +679,11 @@ export async function recommendCities(body: AnalyzeRequest): Promise<CityResult[
   const payload = await res.json() as OpenAIChatResponse
   const recommendations = extractOpenAIJson(payload)
   const cities = recommendations?.cities
-  if (!cities || cities.length < RESULT_COUNT) {
-    throw new Error("OpenAI API did not return three city recommendations")
+  if (!cities || cities.length < resultCount) {
+    throw new Error(`OpenAI API did not return ${resultCount} city recommendations`)
   }
 
   return cities
-    .slice(0, RESULT_COUNT)
+    .slice(0, resultCount)
     .map((city, idx) => normalizeCity(city, idx, body.salary))
 }

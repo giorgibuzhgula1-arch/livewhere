@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import CityCard from './CityCard'
 import CityModal from './CityModal'
 import { CityResult } from '@/lib/types'
 import { getSiteUrl } from '@/lib/site-url'
+import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
 
 function buildShareLine(city: CityResult): string {
   return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
@@ -17,17 +18,36 @@ interface Props {
   streaming?: boolean
   /** When set (free tier), hide "Loading more cities…" once this many are shown. */
   maxCities?: number | null
+  onUnlockPro?: () => void
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
 
-export default function Results({ cities, onReset, streaming = false, maxCities = null }: Props) {
+export default function Results({
+  cities,
+  onReset,
+  streaming = false,
+  maxCities = null,
+  onUnlockPro,
+}: Props) {
   const showStreamingIndicator =
     streaming && (maxCities == null || cities.length < maxCities)
   const [filter, setFilter] = useState('all')
   const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [plan, setPlan] = useState<UserPlan>('free')
   const shareCardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchUserPlan().then((p) => {
+      if (!cancelled) setPlan(p)
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  const paid = isPaidPlan(plan)
+  const locked = !paid
 
   const filtered = filter === 'all' ? cities : cities.filter(c => c.continent === filter)
   const top = cities[0]
@@ -73,7 +93,7 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
           )}
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {top && (
+          {top && paid && (
             <button
               type="button"
               onClick={() => shareCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
@@ -97,7 +117,7 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
       </div>
 
       {/* AI Insight */}
-      {top && (
+      {top && paid && (
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           style={{
@@ -116,7 +136,7 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
         </motion.div>
       )}
 
-      {top && (
+      {top && paid && (
         <motion.div
           ref={shareCardRef}
           id="share-match"
@@ -222,7 +242,23 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
         </motion.div>
       )}
 
+      {locked && (
+        <div style={{
+          background: 'rgba(200,240,90,0.06)',
+          border: '1px solid rgba(200,240,90,0.2)',
+          borderRadius: 14,
+          padding: '16px 20px',
+          marginBottom: 24,
+          fontSize: 14,
+          lineHeight: 1.6,
+          color: 'rgba(240,237,232,0.7)',
+        }}>
+          You&apos;re viewing city names only. Upgrade to Pro to unlock tax rates, costs, take-home pay, and all 12 matches.
+        </div>
+      )}
+
       {/* Continent filter */}
+      {paid && cities.length > 3 && (
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
         {CONTINENTS.map(c => (
           <button key={c} onClick={() => setFilter(c)}
@@ -237,6 +273,7 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
           </button>
         ))}
       </div>
+      )}
 
       {/* Cities grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
@@ -247,7 +284,15 @@ export default function Results({ cities, onReset, streaming = false, maxCities 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
           >
-            <CityCard city={city} rank={i + 1} onClick={() => setSelectedCity(city)} />
+            <CityCard
+              city={city}
+              rank={i + 1}
+              locked={locked}
+              onUnlock={onUnlockPro}
+              onClick={() => {
+                if (!locked) setSelectedCity(city)
+              }}
+            />
           </motion.div>
         ))}
       </div>

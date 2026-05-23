@@ -27,6 +27,13 @@ export async function POST(req: NextRequest) {
         })
         .eq('id', userId)
     }
+
+    if (userId && session.mode === 'payment' && checkoutType === 'report') {
+      await supabaseAdmin
+        .from('profiles')
+        .update({ plan: 'lifetime' })
+        .eq('id', userId)
+    }
   }
 
   if (event.type === 'customer.subscription.deleted') {

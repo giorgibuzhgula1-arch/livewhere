@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { recommendCities, RESULT_COUNT } from '@/lib/recommendation'
+import { recommendCities } from '@/lib/recommendation'
+import { resultCountForPlan } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AnalyzeRequest, UserPriorities } from '@/lib/types'
 
@@ -63,10 +64,11 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        send({ type: 'limits', maxCities: RESULT_COUNT })
+        const resultCount = resultCountForPlan(plan)
+        send({ type: 'limits', maxCities: resultCount })
         send({ type: 'status', text: 'Asking OpenAI for your top city matches…' })
 
-        const cities = await recommendCities(request)
+        const cities = await recommendCities(request, resultCount)
 
         if (userId) {
           await supabaseAdmin.from('searches').insert({
