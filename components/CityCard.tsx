@@ -37,28 +37,29 @@ function cardShellStyle(rank: number, cursor: string) {
 
 function CityIdentity({ city, countryCode }: { city: CityResult; countryCode: string }) {
   return (
-    <div style={{ marginBottom: 4 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <span style={{ fontSize: 32, lineHeight: 1 }} aria-hidden>{city.flag}</span>
-        <span style={{
-          fontSize: 13,
-          fontWeight: 700,
-          letterSpacing: 2,
-          color: '#c8f05a',
-          background: 'rgba(200,240,90,0.12)',
-          border: '1px solid rgba(200,240,90,0.25)',
-          padding: '5px 10px',
-          borderRadius: 6,
-          fontFamily: "'DM Sans', sans-serif",
-        }}>
-          {countryCode}
-        </span>
-      </div>
-      <div style={{
-        fontSize: 22,
+    <div style={{ marginBottom: 16, opacity: 1 }}>
+      <span style={{
+        display: 'inline-block',
+        fontSize: 14,
         fontWeight: 700,
-        lineHeight: 1.25,
+        letterSpacing: 2.5,
+        color: '#c8f05a',
+        background: 'rgba(200,240,90,0.12)',
+        border: '1px solid rgba(200,240,90,0.3)',
+        padding: '6px 12px',
+        borderRadius: 6,
+        fontFamily: "'DM Sans', sans-serif",
+        marginBottom: 10,
+        opacity: 1,
+      }}>
+        {countryCode}
+      </span>
+      <div style={{
+        fontSize: 26,
+        fontWeight: 700,
+        lineHeight: 1.2,
         color: '#f0ede8',
+        opacity: 1,
         fontFamily: "'DM Sans', sans-serif",
       }}>
         {city.name}
@@ -187,12 +188,12 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
       <div style={cardShellStyle(rank, 'default')}>
         <CityIdentity city={city} countryCode={countryCode} />
 
-        <div style={{ position: 'relative', marginTop: 12, minHeight: 200 }}>
+        <div style={{ position: 'relative', minHeight: 200 }}>
           <div
             aria-hidden
             style={{
-              filter: 'blur(7px)',
-              opacity: 0.85,
+              filter: 'blur(8px)',
+              opacity: 0.3,
               userSelect: 'none',
               pointerEvents: 'none',
             }}
@@ -209,11 +210,6 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
             justifyContent: 'center',
             gap: 12,
             padding: 16,
-            background: 'rgba(10,10,15,0.45)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.06)',
           }}>
             <div style={{ fontSize: 28, lineHeight: 1 }} aria-hidden>🔒</div>
             <button
