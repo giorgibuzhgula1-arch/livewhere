@@ -49,18 +49,18 @@ export default function Pricing({ onUpgrade }: Props) {
   const plans = [
     {
       name: 'Free', price: '$0', period: 'forever',
-      features: ['Top 3 city results', 'Basic score breakdown', '3 searches/month'],
+      features: ['Top 3 city names only', '3 searches/month'],
       btn: 'Get started free', style: 'ghost', popular: false
     },
     {
       name: 'Pro', price: '$9', period: 'per month',
-      features: ['Full 200+ city database', 'Real tax calculator', 'Unlimited searches', 'PDF reports', 'City comparisons', 'Visa difficulty scores'],
+      features: ['Top 12 cities full analysis', 'Real tax calculator', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
       btn: loadingPlan === 'pro' ? 'Loading...' : 'Start Pro — $9/mo', style: 'primary', popular: true
     },
     {
-      name: 'One-time Report', price: '$19', period: 'single report',
-      features: ['Full PDF analysis', 'Top 20 cities for you', 'Tax & cost breakdown', 'No subscription needed'],
-      btn: loadingPlan === 'report' ? 'Loading...' : 'Buy report', style: 'ghost', popular: false
+      name: 'Lifetime', price: '$99', period: 'one-time payment',
+      features: ['Top 12 cities full analysis', 'Lifetime access', 'PDF report', 'Unlimited re-runs', 'Priority support'],
+      btn: loadingPlan === 'report' ? 'Loading...' : 'Get Lifetime Access', style: 'ghost', popular: false
     },
   ]
 
@@ -89,7 +89,7 @@ export default function Pricing({ onUpgrade }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 20 }}>
         {plans.map(plan => {
           const isProPlan = plan.name === 'Pro'
-          const isReportPlan = plan.name === 'One-time Report'
+          const isReportPlan = plan.name === 'Lifetime'
           const isLoading = (isProPlan && loadingPlan === 'pro') || (isReportPlan && loadingPlan === 'report')
 
           return (

@@ -40,15 +40,21 @@ export async function POST(req: NextRequest) {
     }
 
     const appUrl = getAppUrl()
-    const priceId =
-      checkoutType === 'report' ? process.env.STRIPE_REPORT_PRICE_ID : process.env.STRIPE_PRO_PRICE_ID
+    const proPriceId = process.env.STRIPE_PRO_PRICE_ID
 
-    if (!priceId || !appUrl) {
+    if (!appUrl) {
       return NextResponse.json(
         {
           error:
-            'Stripe env vars are not configured. Required: STRIPE_PRO_PRICE_ID (for pro) or STRIPE_REPORT_PRICE_ID (for report), and one of NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_VERCEL_URL, VERCEL_PROJECT_PRODUCTION_URL, or VERCEL_URL',
+            'App URL is not configured. Set one of NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_VERCEL_URL, VERCEL_PROJECT_PRODUCTION_URL, or VERCEL_URL',
         },
+        { status: 500 }
+      )
+    }
+
+    if (checkoutType === 'pro' && !proPriceId) {
+      return NextResponse.json(
+        { error: 'Stripe env vars are not configured. Required: STRIPE_PRO_PRICE_ID' },
         { status: 500 }
       )
     }
@@ -74,12 +80,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const lineItems =
+      checkoutType === 'report'
+        ? [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: 'LiveWhere Lifetime Access',
+                  description: 'One-time $99 payment — lifetime access',
+                },
+                unit_amount: 9900,
+              },
+              quantity: 1,
+            },
+          ]
+        : [{ price: proPriceId!, quantity: 1 }]
+
     const session = await stripe.checkout.sessions.create({
       ...(customerId ? { customer: customerId } : {}),
       ...(!customerId && email ? { customer_email: email } : {}),
       mode: checkoutType === 'report' ? 'payment' : 'subscription',
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: lineItems,
       success_url: `${appUrl}/?upgraded=true`,
       cancel_url: `${appUrl}/`,
       metadata: { userId: userId ?? '', checkoutType },
