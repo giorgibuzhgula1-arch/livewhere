@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Quiz from '@/components/Quiz'
@@ -59,14 +59,20 @@ export default function Home() {
   const [authGoogleOnly, setAuthGoogleOnly] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
-  const [awaitingAuthToView, setAwaitingAuthToView] = useState(false)
+  const [awaitingAuthToView, setAwaitingAuthToView] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return Boolean(loadPendingResults()?.cities.length)
+  })
+  const authListenerReady = useRef(false)
 
   const showLanding = matches === null && !loading && !awaitingAuthToView
 
-  const revealPendingResults = useCallback(async () => {
+  const revealPendingResults = useCallback(async (): Promise<boolean> => {
     const pending = loadPendingResults()
     if (!pending?.cities.length) return false
-    if (!(await isLoggedIn())) return false
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return false
 
     setMatches(pending.cities)
     setResultMaxCities(pending.maxCities)
@@ -214,13 +220,30 @@ export default function Home() {
     }
   }, [promptSignInToView])
 
+  // Restore UI + results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
-    revealPendingResults()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        revealPendingResults()
+    const pending = loadPendingResults()
+    if (pending?.cities.length) {
+      setAwaitingAuthToView(true)
+      setResultMaxCities(pending.maxCities)
+    }
+
+    void revealPendingResults()
+
+    if (authListenerReady.current) return
+    authListenerReady.current = true
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session?.user) return
+      if (
+        event === 'SIGNED_IN' ||
+        event === 'INITIAL_SESSION' ||
+        event === 'TOKEN_REFRESHED'
+      ) {
+        void revealPendingResults()
       }
     })
+
     return () => subscription.unsubscribe()
   }, [revealPendingResults])
 

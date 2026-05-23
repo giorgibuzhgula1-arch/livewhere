@@ -9,16 +9,52 @@ export default function AuthCallbackPage() {
   const router = useRouter()
 
   useEffect(() => {
+    let done = false
+
+    async function redirectHome() {
+      if (done) return
+      done = true
+      router.replace('/')
+    }
+
     async function finish() {
       const params = new URLSearchParams(window.location.search)
       const code = params.get('code')
+
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code)
-      } else {
-        await supabase.auth.getSession()
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (error) {
+          console.error('OAuth callback:', error)
+          await redirectHome()
+          return
+        }
       }
-      router.replace('/')
+
+      // Ensure session is persisted before leaving this page (avoids race on /).
+      for (let i = 0; i < 25; i++) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          await redirectHome()
+          return
+        }
+        await new Promise((r) => setTimeout(r, 80))
+      }
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (
+          session?.user &&
+          (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')
+        ) {
+          subscription.unsubscribe()
+          void redirectHome()
+        }
+      })
+
+      window.setTimeout(() => {
+        void redirectHome()
+      }, 6000)
     }
+
     finish()
   }, [router])
 
