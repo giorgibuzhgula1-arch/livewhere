@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Quiz from '@/components/Quiz'
@@ -12,10 +12,10 @@ import { parseStreamingBufferToCities } from '@/lib/parse-streaming-cities'
 import { supabase } from '@/lib/supabase'
 import { CityResult, AnalyzeRequest } from '@/lib/types'
 import {
-  savePendingAnalyze,
-  loadPendingAnalyze,
-  clearPendingAnalyze,
-} from '@/lib/pending-analyze'
+  savePendingResults,
+  loadPendingResults,
+  clearPendingResults,
+} from '@/lib/pending-results'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -46,23 +46,54 @@ function parseSseEvents(chunk: string): { events: StreamPayload[]; rest: string 
   return { events, rest }
 }
 
+async function isLoggedIn(): Promise<boolean> {
+  const { data: { session } } = await supabase.auth.getSession()
+  return Boolean(session?.user)
+}
+
 export default function Home() {
   const [matches, setMatches] = useState<CityResult[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup')
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [authGoogleOnly, setAuthGoogleOnly] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
-  const resumeStarted = useRef(false)
+  const [awaitingAuthToView, setAwaitingAuthToView] = useState(false)
 
-  const showLanding = matches === null && !loading
+  const showLanding = matches === null && !loading && !awaitingAuthToView
+
+  const revealPendingResults = useCallback(async () => {
+    const pending = loadPendingResults()
+    if (!pending?.cities.length) return false
+    if (!(await isLoggedIn())) return false
+
+    setMatches(pending.cities)
+    setResultMaxCities(pending.maxCities)
+    clearPendingResults()
+    setAwaitingAuthToView(false)
+    setAuthOpen(false)
+    setAuthGoogleOnly(false)
+    return true
+  }, [])
+
+  const promptSignInToView = useCallback((cities: CityResult[], maxCities: number | null) => {
+    savePendingResults(cities, maxCities)
+    setMatches(null)
+    setAwaitingAuthToView(true)
+    setAuthGoogleOnly(true)
+    setAuthMode('login')
+    setAuthOpen(true)
+  }, [])
 
   const runAnalyze = useCallback(async (data: AnalyzeRequest) => {
     setLoading(true)
     setError(null)
+    setAwaitingAuthToView(false)
+    clearPendingResults()
     setMatches([])
     setResultMaxCities(null)
+
     let accumulatedAi = ''
     let usedDataEngine = false
     try {
@@ -81,11 +112,7 @@ export default function Home() {
       if (res.status === 403) {
         const json = await res.json().catch(() => ({}))
         setMatches(null)
-        savePendingAnalyze(data)
-        setAuthGoogleOnly(true)
-        setAuthOpen(true)
-        setAuthMode('login')
-        setError(json.error || 'Sign in to continue')
+        setError(json.error || 'Free plan limit reached. Upgrade to Pro for unlimited searches.')
         return
       }
 
@@ -108,25 +135,36 @@ export default function Home() {
       let finished = false
       let streamError: string | null = null
       let streamMaxCities: number | null = null
+      const loggedIn = await isLoggedIn()
 
       const capMatches = (list: CityResult[]) =>
         streamMaxCities != null && list.length > streamMaxCities
           ? list.slice(0, streamMaxCities)
           : list
 
-      const applyPayload = (payload: StreamPayload) => {
+      const finishWithCities = async (cities: CityResult[]) => {
+        const capped = capMatches(cities)
+        if (await isLoggedIn()) {
+          setMatches(capped)
+          setAwaitingAuthToView(false)
+        } else {
+          promptSignInToView(capped, streamMaxCities)
+        }
+      }
+
+      const applyPayload = async (payload: StreamPayload) => {
         if (payload.type === 'limits') {
           streamMaxCities = payload.maxCities
           setResultMaxCities(payload.maxCities)
         } else if (payload.type === 'status') {
           usedDataEngine = true
         } else if (payload.type === 'delta') {
-          if (!usedDataEngine) {
+          if (!usedDataEngine && loggedIn) {
             accumulatedAi += payload.text
             setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
           }
         } else if (payload.type === 'done') {
-          setMatches(capMatches(payload.cities))
+          await finishWithCities(payload.cities)
           finished = true
         } else if (payload.type === 'error') {
           streamError = payload.error
@@ -144,7 +182,7 @@ export default function Home() {
         buffer = rest
 
         for (const payload of events) {
-          applyPayload(payload)
+          await applyPayload(payload)
         }
       }
 
@@ -152,7 +190,7 @@ export default function Home() {
       if (buffer.trim()) {
         const { events } = parseSseEvents(buffer + '\n\n')
         for (const payload of events) {
-          applyPayload(payload)
+          await applyPayload(payload)
         }
       }
 
@@ -160,7 +198,7 @@ export default function Home() {
         if (accumulatedAi.trim()) {
           const recovered = capMatches(parseStreamingBufferToCities(accumulatedAi, data))
           if (recovered.length > 0) {
-            setMatches(recovered)
+            await finishWithCities(recovered)
           } else {
             setError('Analysis ended before results were ready')
           }
@@ -174,54 +212,39 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [])
-
-  const tryResumePendingAnalyze = useCallback(async () => {
-    const pending = loadPendingAnalyze()
-    if (!pending || resumeStarted.current) return
-
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) return
-
-    resumeStarted.current = true
-    clearPendingAnalyze()
-    setAuthOpen(false)
-    setAuthGoogleOnly(false)
-    await runAnalyze(pending)
-    resumeStarted.current = false
-  }, [runAnalyze])
+  }, [promptSignInToView])
 
   useEffect(() => {
-    tryResumePendingAnalyze()
+    revealPendingResults()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
-        tryResumePendingAnalyze()
+        revealPendingResults()
       }
     })
     return () => subscription.unsubscribe()
-  }, [tryResumePendingAnalyze])
+  }, [revealPendingResults])
 
   async function handleAnalyzeRequest(data: AnalyzeRequest) {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) {
-      savePendingAnalyze(data)
-      setAuthGoogleOnly(true)
-      setAuthMode('login')
-      setAuthOpen(true)
-      return
-    }
     await runAnalyze(data)
   }
 
   function handleResetMatches() {
     setMatches(null)
     setError(null)
+    setAwaitingAuthToView(false)
+    clearPendingResults()
+  }
+
+  function openSignInToView() {
+    setAuthGoogleOnly(true)
+    setAuthMode('login')
+    setAuthOpen(true)
   }
 
   return (
     <main style={{ position: 'relative' }}>
       <Navbar onAuthClick={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('login') }} />
-      
+
       {showLanding && (
         <>
           <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
@@ -253,6 +276,51 @@ export default function Home() {
         </div>
       )}
 
+      {awaitingAuthToView && !loading && matches === null && (
+        <div style={{
+          minHeight: '100vh', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: 20, padding: 20,
+        }}>
+          <p style={{ color: '#c8f05a', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', fontWeight: 600 }}>
+            ✦ Analysis complete
+          </p>
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 'clamp(24px,4vw,36px)',
+            fontWeight: 700,
+            textAlign: 'center',
+            maxWidth: 480,
+          }}>
+            Your top city matches are ready
+          </h2>
+          <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
+            Sign in with Google to view your personalized results (top 3 cities).
+          </p>
+          <button
+            type="button"
+            onClick={openSignInToView}
+            style={{
+              background: '#c8f05a', color: '#0a0a0f', border: 'none',
+              padding: '14px 28px', borderRadius: 12, fontSize: 15, fontWeight: 700,
+              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Sign in to view results
+          </button>
+          <button
+            type="button"
+            onClick={handleResetMatches}
+            style={{
+              background: 'transparent', border: 'none',
+              color: 'rgba(240,237,232,0.45)', fontSize: 13,
+              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            ← New search
+          </button>
+        </div>
+      )}
+
       {matches !== null && matches.length > 0 && (
         <Results
           cities={matches}
@@ -262,7 +330,7 @@ export default function Home() {
         />
       )}
 
-      {matches !== null && matches.length === 0 && !loading && (
+      {matches !== null && matches.length === 0 && !loading && !awaitingAuthToView && (
         <div style={{
           minHeight: '100vh', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 16, padding: 20
@@ -272,7 +340,7 @@ export default function Home() {
           </p>
           <button
             type="button"
-            onClick={() => { setMatches(null); setError(null) }}
+            onClick={handleResetMatches}
             style={{
               background: '#1a1a26', border: '1px solid rgba(255,255,255,0.07)',
               color: '#c8f05a', padding: '12px 24px', borderRadius: 12, fontSize: 14,
@@ -301,7 +369,9 @@ export default function Home() {
         googleOnly={authGoogleOnly}
         onClose={() => {
           setAuthOpen(false)
-          setAuthGoogleOnly(false)
+          if (!loadPendingResults()) {
+            setAuthGoogleOnly(false)
+          }
         }}
         onModeSwitch={() => setAuthMode(m => m === 'login' ? 'signup' : 'login')}
       />
