@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Quiz from '@/components/Quiz'
@@ -15,11 +15,19 @@ import {
   savePendingResults,
   loadPendingResults,
   clearPendingResults,
+  hasPendingResults,
 } from '@/lib/pending-results'
 import {
+  savePendingAnalyze,
+  loadPendingAnalyze,
+  clearPendingAnalyze,
+} from '@/lib/pending-analyze'
+import {
   waitForAuthSession,
-  clearOAuthReturn,
+  clearPostAuthRestoreState,
   isOAuthReturnPending,
+  markPendingAuthRestore,
+  shouldRestoreAfterAuth,
 } from '@/lib/wait-for-session'
 import { startProCheckout } from '@/lib/start-pro-checkout'
 
@@ -71,7 +79,13 @@ export default function Home() {
   })
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(() => {
     if (typeof window === 'undefined') return false
-    return isOAuthReturnPending() && Boolean(loadPendingResults()?.cities.length)
+    const restoreRequested =
+      isOAuthReturnPending() ||
+      new URLSearchParams(window.location.search).get('restore') === 'results'
+    return (
+      restoreRequested &&
+      (Boolean(loadPendingResults()?.cities.length) || loadPendingAnalyze() !== null)
+    )
   })
 
   const showLanding = matches === null && !loading && !awaitingAuthToView
@@ -91,16 +105,21 @@ export default function Home() {
     setMatches(pending.cities)
     setResultMaxCities(pending.maxCities)
     clearPendingResults()
-    clearOAuthReturn()
+    clearPendingAnalyze()
+    clearPostAuthRestoreState()
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)
     setAuthOpen(false)
     setAuthGoogleOnly(false)
+    if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
+      window.history.replaceState(null, '', '/')
+    }
     return true
   }, [])
 
   const promptSignInToView = useCallback((cities: CityResult[], maxCities: number | null) => {
     savePendingResults(cities, maxCities)
+    markPendingAuthRestore()
     setMatches(null)
     setAwaitingAuthToView(true)
     setAuthGoogleOnly(true)
@@ -112,6 +131,7 @@ export default function Home() {
     setLoading(true)
     setError(null)
     setAwaitingAuthToView(false)
+    savePendingAnalyze(data)
     clearPendingResults()
     setMatches([])
     setResultMaxCities(null)
@@ -169,6 +189,8 @@ export default function Home() {
         if (await isLoggedIn()) {
           setMatches(capped)
           setAwaitingAuthToView(false)
+          clearPendingAnalyze()
+          clearPostAuthRestoreState()
         } else {
           promptSignInToView(capped, streamMaxCities)
         }
@@ -236,38 +258,65 @@ export default function Home() {
     }
   }, [promptSignInToView])
 
-  // Restore UI + results after OAuth redirect (full page remount loses React state).
+  const runAnalyzeRef = useRef(runAnalyze)
+  runAnalyzeRef.current = runAnalyze
+  const restoreAttemptedRef = useRef(false)
+
+  // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
+    if (restoreAttemptedRef.current) return
+    restoreAttemptedRef.current = true
+    const restoreRequested =
+      typeof window !== 'undefined' &&
+      (new URLSearchParams(window.location.search).get('restore') === 'results' ||
+        isOAuthReturnPending() ||
+        shouldRestoreAfterAuth())
+
     const pending = loadPendingResults()
     if (pending?.cities.length) {
       setAwaitingAuthToView(true)
       setResultMaxCities(pending.maxCities)
-      if (isOAuthReturnPending()) {
+      if (restoreRequested) {
         setRestoringAfterOAuth(true)
       }
+    } else if (restoreRequested && loadPendingAnalyze()) {
+      setRestoringAfterOAuth(true)
     }
 
     let cancelled = false
 
-    async function tryRevealAfterOAuth() {
-      if (!loadPendingResults()?.cities.length) {
-        clearOAuthReturn()
+    async function tryRestoreAfterAuth() {
+      if (!restoreRequested && !hasPendingResults() && !loadPendingAnalyze()) {
+        clearPostAuthRestoreState()
         setRestoringAfterOAuth(false)
         return
       }
 
-      await waitForAuthSession(isOAuthReturnPending() ? 50 : 15, 100)
+      await waitForAuthSession(restoreRequested ? 50 : 15, 100)
       if (cancelled) return
 
       if (await revealPendingResults()) return
 
+      const quiz = loadPendingAnalyze()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (quiz && session?.user) {
+        clearPostAuthRestoreState()
+        setRestoringAfterOAuth(false)
+        setAwaitingAuthToView(false)
+        if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
+          window.history.replaceState(null, '', '/')
+        }
+        await runAnalyzeRef.current(quiz)
+        return
+      }
+
       if (!cancelled) {
-        clearOAuthReturn()
+        clearPostAuthRestoreState()
         setRestoringAfterOAuth(false)
       }
     }
 
-    void tryRevealAfterOAuth()
+    void tryRestoreAfterAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (
@@ -294,8 +343,9 @@ export default function Home() {
     setError(null)
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)
-    clearOAuthReturn()
+    clearPostAuthRestoreState()
     clearPendingResults()
+    clearPendingAnalyze()
   }
 
   function openSignInToView() {

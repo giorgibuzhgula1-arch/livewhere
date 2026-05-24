@@ -3,7 +3,11 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { markOAuthReturn, waitForAuthSession } from '@/lib/wait-for-session'
+import {
+  markOAuthReturn,
+  waitForAuthSession,
+  getPostAuthRedirectPath,
+} from '@/lib/wait-for-session'
 
 /** Handles OAuth redirect; session is established before returning to home. */
 export default function AuthCallbackPage() {
@@ -12,11 +16,11 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     let done = false
 
-    async function redirectHome() {
+    async function redirectAfterAuth() {
       if (done) return
       done = true
       markOAuthReturn()
-      router.replace('/')
+      router.replace(getPostAuthRedirectPath())
     }
 
     async function finish() {
@@ -27,7 +31,7 @@ export default function AuthCallbackPage() {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           console.error('OAuth callback:', error)
-          router.replace('/')
+          router.replace(getPostAuthRedirectPath())
           return
         }
         window.history.replaceState(null, '', window.location.pathname)
@@ -35,7 +39,7 @@ export default function AuthCallbackPage() {
 
       const session = await waitForAuthSession(80, 100)
       if (session?.user) {
-        await redirectHome()
+        await redirectAfterAuth()
         return
       }
 
@@ -45,13 +49,13 @@ export default function AuthCallbackPage() {
           (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
         ) {
           subscription.unsubscribe()
-          void redirectHome()
+          void redirectAfterAuth()
         }
       })
 
       window.setTimeout(() => {
         subscription.unsubscribe()
-        void redirectHome()
+        void redirectAfterAuth()
       }, 10000)
     }
 

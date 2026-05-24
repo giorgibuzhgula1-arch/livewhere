@@ -1,21 +1,59 @@
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
+import { hasPendingAnalyze } from '@/lib/pending-analyze'
+import { hasPendingResults } from '@/lib/pending-results'
 
 export const OAUTH_RETURN_KEY = 'livewhere_oauth_return'
+export const PENDING_AUTH_RESTORE_KEY = 'livewhere_pending_auth_restore'
+
+function readFlag(key: string): boolean {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(key) === '1' || sessionStorage.getItem(key) === '1'
+}
+
+function writeFlag(key: string): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(key, '1')
+  sessionStorage.setItem(key, '1')
+}
+
+function clearFlag(key: string): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(key)
+  sessionStorage.removeItem(key)
+}
 
 export function markOAuthReturn(): void {
-  if (typeof window === 'undefined') return
-  sessionStorage.setItem(OAUTH_RETURN_KEY, '1')
+  writeFlag(OAUTH_RETURN_KEY)
 }
 
 export function clearOAuthReturn(): void {
-  if (typeof window === 'undefined') return
-  sessionStorage.removeItem(OAUTH_RETURN_KEY)
+  clearFlag(OAUTH_RETURN_KEY)
 }
 
 export function isOAuthReturnPending(): boolean {
-  if (typeof window === 'undefined') return false
-  return sessionStorage.getItem(OAUTH_RETURN_KEY) === '1'
+  return readFlag(OAUTH_RETURN_KEY)
+}
+
+/** Set before Google redirect so callback knows to return to results. */
+export function markPendingAuthRestore(): void {
+  writeFlag(PENDING_AUTH_RESTORE_KEY)
+}
+
+export function clearPendingAuthRestore(): void {
+  clearFlag(PENDING_AUTH_RESTORE_KEY)
+}
+
+export function shouldRestoreAfterAuth(): boolean {
+  return (
+    readFlag(PENDING_AUTH_RESTORE_KEY) ||
+    hasPendingResults() ||
+    hasPendingAnalyze()
+  )
+}
+
+export function getPostAuthRedirectPath(): string {
+  return shouldRestoreAfterAuth() ? '/?restore=results' : '/'
 }
 
 const SESSION_EVENTS = new Set(['SIGNED_IN', 'INITIAL_SESSION', 'TOKEN_REFRESHED'])
@@ -70,4 +108,9 @@ export async function waitForAuthSession(
       }
     }, delayMs)
   })
+}
+
+export function clearPostAuthRestoreState(): void {
+  clearOAuthReturn()
+  clearPendingAuthRestore()
 }
