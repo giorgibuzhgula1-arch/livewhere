@@ -80,7 +80,12 @@ export default function Home() {
     const pending = loadPendingResults()
     if (!pending?.cities.length) return false
 
-    const session = await waitForAuthSession(isOAuthReturnPending() ? 60 : 15)
+    const { data: { session: existing } } = await supabase.auth.getSession()
+    const session =
+      existing?.user
+        ? existing
+        : await waitForAuthSession(isOAuthReturnPending() ? 40 : 10, 100)
+
     if (!session?.user) return false
 
     setMatches(pending.cities)
@@ -245,10 +250,17 @@ export default function Home() {
     let cancelled = false
 
     async function tryRevealAfterOAuth() {
-      for (let i = 0; i < 40 && !cancelled; i++) {
-        if (await revealPendingResults()) return
-        await new Promise((r) => setTimeout(r, 150))
+      if (!loadPendingResults()?.cities.length) {
+        clearOAuthReturn()
+        setRestoringAfterOAuth(false)
+        return
       }
+
+      await waitForAuthSession(isOAuthReturnPending() ? 50 : 15, 100)
+      if (cancelled) return
+
+      if (await revealPendingResults()) return
+
       if (!cancelled) {
         clearOAuthReturn()
         setRestoringAfterOAuth(false)
@@ -258,7 +270,12 @@ export default function Home() {
     void tryRevealAfterOAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event !== 'SIGNED_IN' || !session?.user) return
+      if (
+        !session?.user ||
+        (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED')
+      ) {
+        return
+      }
       void revealPendingResults()
     })
 

@@ -27,27 +27,32 @@ export default function AuthCallbackPage() {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           console.error('OAuth callback:', error)
-          await redirectHome()
+          router.replace('/')
           return
         }
+        window.history.replaceState(null, '', window.location.pathname)
       }
 
-      const session = await waitForAuthSession(50, 100)
+      const session = await waitForAuthSession(80, 100)
       if (session?.user) {
         await redirectHome()
         return
       }
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
+        if (
+          session?.user &&
+          (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
+        ) {
           subscription.unsubscribe()
           void redirectHome()
         }
       })
 
       window.setTimeout(() => {
+        subscription.unsubscribe()
         void redirectHome()
-      }, 8000)
+      }, 10000)
     }
 
     finish()
