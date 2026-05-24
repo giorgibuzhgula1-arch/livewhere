@@ -1,78 +1,132 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
+  confirmAuthSessionReady,
+  loadOAuthNext,
   markOAuthReturn,
-  waitForAuthSession,
-  getPostAuthRedirectPath,
+  clearOAuthNext,
 } from '@/lib/wait-for-session'
 
-/** Handles OAuth redirect; session is established before returning to home. */
+function safeNextPath(raw: string | null): string {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/'
+  return raw
+}
+
+/**
+ * Client-side OAuth callback. Exchanges the code in-browser (PKCE verifier lives
+ * here), waits for a confirmed session, then hard-navigates so cookies persist on mobile.
+ */
 export default function AuthCallbackPage() {
-  const router = useRouter()
+  const [status, setStatus] = useState('Signing you in…')
 
   useEffect(() => {
-    let done = false
+    let cancelled = false
+    let redirecting = false
 
-    async function redirectAfterAuth() {
-      if (done) return
-      done = true
+    function hardRedirect(path: string) {
+      if (redirecting || cancelled) return
+      redirecting = true
       markOAuthReturn()
-      router.replace(getPostAuthRedirectPath())
+      clearOAuthNext()
+      window.location.replace(path)
     }
 
     async function finish() {
       const params = new URLSearchParams(window.location.search)
+      const oauthError = params.get('error')
       const code = params.get('code')
+      const next = safeNextPath(params.get('next') || loadOAuthNext())
+
+      if (oauthError) {
+        console.error('OAuth error:', oauthError, params.get('error_description'))
+        hardRedirect('/?auth_error=oauth')
+        return
+      }
 
       if (code) {
+        setStatus('Completing sign-in…')
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
-          console.error('OAuth callback:', error)
-          router.replace(getPostAuthRedirectPath())
+          console.error('exchangeCodeForSession:', error.message)
+          hardRedirect('/?auth_error=oauth')
           return
         }
         window.history.replaceState(null, '', window.location.pathname)
       }
 
-      const session = await waitForAuthSession(80, 100)
+      setStatus('Saving your session…')
+      const session = await confirmAuthSessionReady(80, 125)
+      if (cancelled) return
+
       if (session?.user) {
-        await redirectAfterAuth()
+        setStatus('Redirecting…')
+        // Brief pause lets mobile browsers flush auth cookies before navigation.
+        await new Promise((r) => setTimeout(r, 200))
+        hardRedirect(next)
         return
       }
 
+      setStatus('Waiting for session…')
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (
           session?.user &&
           (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
         ) {
           subscription.unsubscribe()
-          void redirectAfterAuth()
+          void (async () => {
+            const ready = await confirmAuthSessionReady(20, 100)
+            if (ready?.user) {
+              await new Promise((r) => setTimeout(r, 200))
+              hardRedirect(next)
+            }
+          })()
         }
       })
 
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
         subscription.unsubscribe()
-        void redirectAfterAuth()
-      }, 10000)
+        if (cancelled || redirecting) return
+        const retry = await confirmAuthSessionReady(10, 150)
+        if (retry?.user) {
+          hardRedirect(next)
+        } else {
+          hardRedirect('/?auth_error=session')
+        }
+      }, 12000)
     }
 
-    finish()
-  }, [router])
+    void finish()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div style={{
       minHeight: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 16,
       color: 'rgba(240,237,232,0.45)',
       fontFamily: "'DM Sans', sans-serif",
       fontSize: 14,
+      padding: 20,
+      textAlign: 'center',
     }}>
-      Signing you in…
+      <div style={{
+        width: 40,
+        height: 40,
+        border: '3px solid #1a1a26',
+        borderTopColor: '#c8f05a',
+        borderRadius: '50%',
+        animation: 'oauth-spin 1s linear infinite',
+      }} />
+      <style>{`@keyframes oauth-spin { to { transform: rotate(360deg) } }`}</style>
+      {status}
     </div>
   )
 }

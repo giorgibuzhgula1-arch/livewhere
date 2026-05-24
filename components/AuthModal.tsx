@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { getSiteUrl } from '@/lib/site-url'
-import { markPendingAuthRestore } from '@/lib/wait-for-session'
+import { markPendingAuthRestore, saveOAuthNext } from '@/lib/wait-for-session'
 
 interface Props {
   isOpen: boolean
@@ -31,13 +31,15 @@ export default function AuthModal({
   async function signInWithGoogle() {
     setLoading(true)
     setError(null)
+    const nextPath = googleOnly ? '/?restore=results' : '/'
+    saveOAuthNext(nextPath)
     if (googleOnly) {
       markPendingAuthRestore()
     }
-    const redirectTo =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback`
-        : `${getSiteUrl()}/auth/callback`
+
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : getSiteUrl()
+    const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',

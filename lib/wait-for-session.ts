@@ -5,6 +5,7 @@ import { hasPendingResults } from '@/lib/pending-results'
 
 export const OAUTH_RETURN_KEY = 'livewhere_oauth_return'
 export const PENDING_AUTH_RESTORE_KEY = 'livewhere_pending_auth_restore'
+export const OAUTH_NEXT_KEY = 'livewhere_oauth_next'
 
 function readFlag(key: string): boolean {
   if (typeof window === 'undefined') return false
@@ -54,6 +55,22 @@ export function shouldRestoreAfterAuth(): boolean {
 
 export function getPostAuthRedirectPath(): string {
   return shouldRestoreAfterAuth() ? '/?restore=results' : '/'
+}
+
+/** Persist post-login destination — Supabase strips query params from callback URL on mobile. */
+export function saveOAuthNext(path: string): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(OAUTH_NEXT_KEY, path)
+}
+
+export function loadOAuthNext(): string {
+  if (typeof window === 'undefined') return '/'
+  return localStorage.getItem(OAUTH_NEXT_KEY) || getPostAuthRedirectPath()
+}
+
+export function clearOAuthNext(): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(OAUTH_NEXT_KEY)
 }
 
 const SESSION_EVENTS = new Set(['SIGNED_IN', 'INITIAL_SESSION', 'TOKEN_REFRESHED'])
@@ -113,4 +130,24 @@ export async function waitForAuthSession(
 export function clearPostAuthRestoreState(): void {
   clearOAuthReturn()
   clearPendingAuthRestore()
+  clearOAuthNext()
+}
+
+/**
+ * After exchangeCodeForSession, wait until getSession AND getUser both succeed.
+ * Required on mobile where cookie writes can lag behind the redirect.
+ */
+export async function confirmAuthSessionReady(
+  maxAttempts = 80,
+  delayMs = 125
+): Promise<Session | null> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user) {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (user && !error) return session
+    }
+    await new Promise((r) => setTimeout(r, delayMs))
+  }
+  return waitForAuthSession(40, delayMs)
 }

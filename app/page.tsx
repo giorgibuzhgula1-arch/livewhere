@@ -25,9 +25,9 @@ import {
 import {
   waitForAuthSession,
   clearPostAuthRestoreState,
-  isOAuthReturnPending,
   markPendingAuthRestore,
   shouldRestoreAfterAuth,
+  saveOAuthNext,
 } from '@/lib/wait-for-session'
 import { startProCheckout } from '@/lib/start-pro-checkout'
 
@@ -80,8 +80,8 @@ export default function Home() {
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(() => {
     if (typeof window === 'undefined') return false
     const restoreRequested =
-      isOAuthReturnPending() ||
-      new URLSearchParams(window.location.search).get('restore') === 'results'
+      new URLSearchParams(window.location.search).get('restore') === 'results' ||
+      shouldRestoreAfterAuth()
     return (
       restoreRequested &&
       (Boolean(loadPendingResults()?.cities.length) || loadPendingAnalyze() !== null)
@@ -98,7 +98,7 @@ export default function Home() {
     const session =
       existing?.user
         ? existing
-        : await waitForAuthSession(isOAuthReturnPending() ? 40 : 10, 100)
+        : await waitForAuthSession(shouldRestoreAfterAuth() ? 40 : 10, 100)
 
     if (!session?.user) return false
 
@@ -119,6 +119,7 @@ export default function Home() {
 
   const promptSignInToView = useCallback((cities: CityResult[], maxCities: number | null) => {
     savePendingResults(cities, maxCities)
+    saveOAuthNext('/?restore=results')
     markPendingAuthRestore()
     setMatches(null)
     setAwaitingAuthToView(true)
@@ -269,7 +270,6 @@ export default function Home() {
     const restoreRequested =
       typeof window !== 'undefined' &&
       (new URLSearchParams(window.location.search).get('restore') === 'results' ||
-        isOAuthReturnPending() ||
         shouldRestoreAfterAuth())
 
     const pending = loadPendingResults()
@@ -349,6 +349,8 @@ export default function Home() {
   }
 
   function openSignInToView() {
+    saveOAuthNext('/?restore=results')
+    markPendingAuthRestore()
     setAuthGoogleOnly(true)
     setAuthMode('login')
     setAuthOpen(true)
