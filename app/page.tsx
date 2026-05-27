@@ -36,9 +36,17 @@ import { startProCheckout } from '@/lib/start-pro-checkout'
 type StreamPayload =
   | { type: 'delta'; text: string }
   | { type: 'status'; text: string }
+  | { type: 'city'; city: CityResult }
   | { type: 'done'; cities: CityResult[] }
   | { type: 'error'; error: string }
   | { type: 'limits'; maxCities: number | null }
+
+function mergeStreamedCity(list: CityResult[], city: CityResult): CityResult[] {
+  const key = `${city.name}|${city.country}`
+  const next = list.filter((c) => `${c.name}|${c.country}` !== key)
+  next.push(city)
+  return next.sort((a, b) => b.score - a.score)
+}
 
 function parseSseEvents(chunk: string): { events: StreamPayload[]; rest: string } {
   const normalized = chunk.replace(/\r\n/g, '\n').replace(/^\uFEFF/, '')
@@ -202,8 +210,13 @@ export default function Home() {
           setResultMaxCities(payload.maxCities)
         } else if (payload.type === 'status') {
           usedDataEngine = true
+        } else if (payload.type === 'city') {
+          usedDataEngine = true
+          if (loggedIn) {
+            setMatches((prev) => capMatches(mergeStreamedCity(prev ?? [], payload.city)))
+          }
         } else if (payload.type === 'delta') {
-          if (!usedDataEngine && loggedIn) {
+          if (loggedIn) {
             accumulatedAi += payload.text
             setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
           }

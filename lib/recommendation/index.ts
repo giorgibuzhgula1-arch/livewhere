@@ -8,6 +8,7 @@
  * - Climate High(4-5) = კლიმატი მნიშვნელოვანია, ზომიერი (15-25°C) იგებს
  */
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
+import { peelCompleteObjectsFromJsonArray } from '@/lib/parse-streaming-cities'
 
 export type CityRow = {
   name: string
@@ -560,9 +561,175 @@ function normalizeCity(city: Partial<CityResult>, idx: number, salary: number): 
   }
 }
 
-export async function recommendCities(
+function cityRecommendationsJsonSchema(resultCount: number) {
+  return {
+    type: "json_schema" as const,
+    json_schema: {
+      name: "city_recommendations",
+      strict: true,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["cities"],
+        properties: {
+          cities: {
+            type: "array",
+            minItems: resultCount,
+            maxItems: resultCount,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: [
+                "name",
+                "country",
+                "continent",
+                "flag",
+                "score",
+                "taxRate",
+                "monthlyRent",
+                "monthlyCost",
+                "takeHomeMonthly",
+                "monthlySavings",
+                "pros",
+                "cons",
+                "tags",
+                "visa",
+                "scores",
+                "aiInsight",
+              ],
+              properties: {
+                name: { type: "string" },
+                country: { type: "string" },
+                continent: { type: "string" },
+                flag: { type: "string" },
+                score: { type: "number", minimum: 0, maximum: 100 },
+                taxRate: { type: "number", minimum: 0, maximum: 60 },
+                monthlyRent: { type: "number", minimum: 0 },
+                monthlyCost: { type: "number", minimum: 0 },
+                takeHomeMonthly: { type: "number", minimum: 0 },
+                monthlySavings: { type: "number" },
+                pros: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 },
+                cons: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 3 },
+                tags: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 4 },
+                visa: { type: "string" },
+                scores: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["tax", "housing", "climate", "health", "nightlife", "safety"],
+                  properties: {
+                    tax: { type: "number", minimum: 0, maximum: 100 },
+                    housing: { type: "number", minimum: 0, maximum: 100 },
+                    climate: { type: "number", minimum: 0, maximum: 100 },
+                    health: { type: "number", minimum: 0, maximum: 100 },
+                    nightlife: { type: "number", minimum: 0, maximum: 100 },
+                    safety: { type: "number", minimum: 0, maximum: 100 },
+                  },
+                },
+                aiInsight: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
+  }
+}
+
+function buildOpenAIRequestBody(
   body: AnalyzeRequest,
-  count: number = RESULT_COUNT
+  priorities: UserPriorities,
+  resultCount: number,
+  stream: boolean
+) {
+  return {
+    model: OPENAI_MODEL,
+    temperature: 0.3,
+    max_tokens: resultCount > 6 ? 8000 : 2500,
+    stream,
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are LiveWhere's relocation analyst. Return only structured recommendation data. Use realistic 2025 estimates and keep all numeric fields in USD/month or percentages as requested.",
+      },
+      { role: "user", content: formatPrompt(body, priorities, resultCount) },
+    ],
+    response_format: cityRecommendationsJsonSchema(resultCount),
+  }
+}
+
+export type RecommendStreamHandlers = {
+  onDelta?: (text: string) => void
+  onCity?: (city: CityResult) => void
+}
+
+function emitNewCitiesFromBuffer(
+  buffer: string,
+  body: AnalyzeRequest,
+  seen: Set<string>,
+  handlers: RecommendStreamHandlers
+): CityResult[] {
+  const emitted: CityResult[] = []
+  const peeled = peelCompleteObjectsFromJsonArray(buffer)
+  for (const raw of peeled) {
+    const partial = raw as Partial<CityResult>
+    const name = typeof partial.name === "string" ? partial.name.trim() : ""
+    if (!name) continue
+    const country = typeof partial.country === "string" ? partial.country.trim() : "Unknown"
+    const key = `${name}|${country}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const city = normalizeCity(partial, seen.size - 1, body.salary)
+    emitted.push(city)
+    handlers.onCity?.(city)
+  }
+  return emitted
+}
+
+async function readOpenAIStream(
+  body: ReadableStream<Uint8Array>,
+  onContentDelta: (text: string) => void
+): Promise<string> {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let sseBuffer = ""
+  let content = ""
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    sseBuffer += decoder.decode(value, { stream: true })
+
+    const lines = sseBuffer.split("\n")
+    sseBuffer = lines.pop() ?? ""
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith("data:")) continue
+      const data = trimmed.slice(trimmed.indexOf(":") + 1).trim()
+      if (!data || data === "[DONE]") continue
+      try {
+        const json = JSON.parse(data) as {
+          choices?: Array<{ delta?: { content?: string | null } }>
+        }
+        const delta = json.choices?.[0]?.delta?.content
+        if (delta) {
+          content += delta
+          onContentDelta(delta)
+        }
+      } catch {
+        /* ignore malformed SSE chunks */
+      }
+    }
+  }
+
+  return content
+}
+
+export async function streamRecommendCities(
+  body: AnalyzeRequest,
+  count: number = RESULT_COUNT,
+  handlers: RecommendStreamHandlers = {}
 ): Promise<CityResult[]> {
   const resultCount = Math.max(1, Math.min(PRO_RESULT_COUNT, Math.round(count)))
   const apiKey = process.env.OPENAI_API_KEY
@@ -585,90 +752,7 @@ export async function recommendCities(
       "content-type": "application/json",
       authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      temperature: 0.3,
-      max_tokens: resultCount > 6 ? 8000 : 2500,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are LiveWhere's relocation analyst. Return only structured recommendation data. Use realistic 2025 estimates and keep all numeric fields in USD/month or percentages as requested.",
-        },
-        { role: "user", content: formatPrompt(body, priorities, resultCount) },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "city_recommendations",
-          strict: true,
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            required: ["cities"],
-            properties: {
-              cities: {
-                type: "array",
-                minItems: resultCount,
-                maxItems: resultCount,
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: [
-                    "name",
-                    "country",
-                    "continent",
-                    "flag",
-                    "score",
-                    "taxRate",
-                    "monthlyRent",
-                    "monthlyCost",
-                    "takeHomeMonthly",
-                    "monthlySavings",
-                    "pros",
-                    "cons",
-                    "tags",
-                    "visa",
-                    "scores",
-                    "aiInsight",
-                  ],
-                  properties: {
-                    name: { type: "string" },
-                    country: { type: "string" },
-                    continent: { type: "string" },
-                    flag: { type: "string" },
-                    score: { type: "number", minimum: 0, maximum: 100 },
-                    taxRate: { type: "number", minimum: 0, maximum: 60 },
-                    monthlyRent: { type: "number", minimum: 0 },
-                    monthlyCost: { type: "number", minimum: 0 },
-                    takeHomeMonthly: { type: "number", minimum: 0 },
-                    monthlySavings: { type: "number" },
-                    pros: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 },
-                    cons: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 3 },
-                    tags: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 4 },
-                    visa: { type: "string" },
-                    scores: {
-                      type: "object",
-                      additionalProperties: false,
-                      required: ["tax", "housing", "climate", "health", "nightlife", "safety"],
-                      properties: {
-                        tax: { type: "number", minimum: 0, maximum: 100 },
-                        housing: { type: "number", minimum: 0, maximum: 100 },
-                        climate: { type: "number", minimum: 0, maximum: 100 },
-                        health: { type: "number", minimum: 0, maximum: 100 },
-                        nightlife: { type: "number", minimum: 0, maximum: 100 },
-                        safety: { type: "number", minimum: 0, maximum: 100 },
-                      },
-                    },
-                    aiInsight: { type: "string" },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    }),
+    body: JSON.stringify(buildOpenAIRequestBody(body, priorities, resultCount, true)),
   })
 
   if (!res.ok) {
@@ -676,14 +760,49 @@ export async function recommendCities(
     throw new Error(`OpenAI API request failed (${res.status})${detail ? `: ${detail}` : ""}`)
   }
 
-  const payload = await res.json() as OpenAIChatResponse
-  const recommendations = extractOpenAIJson(payload)
-  const cities = recommendations?.cities
-  if (!cities || cities.length < resultCount) {
-    throw new Error(`OpenAI API did not return ${resultCount} city recommendations`)
+  if (!res.body) {
+    throw new Error("OpenAI API returned no response body")
   }
 
-  return cities
-    .slice(0, resultCount)
-    .map((city, idx) => normalizeCity(city, idx, body.salary))
+  const seen = new Set<string>()
+  const streamed: CityResult[] = []
+  let accumulated = ""
+
+  const content = await readOpenAIStream(res.body, (delta) => {
+    accumulated += delta
+    handlers.onDelta?.(delta)
+    for (const city of emitNewCitiesFromBuffer(accumulated, body, seen, handlers)) {
+      streamed.push(city)
+    }
+  })
+
+  if (!content.trim()) {
+    throw new Error("OpenAI API returned empty content")
+  }
+
+  const finalJson = extractOpenAIJson({ choices: [{ message: { content } }] })
+  const cities = finalJson?.cities
+  if (cities && cities.length >= resultCount) {
+    return cities
+      .slice(0, resultCount)
+      .map((city, idx) => normalizeCity(city, idx, body.salary))
+  }
+
+  if (streamed.length >= resultCount) {
+    return streamed.slice(0, resultCount)
+  }
+
+  emitNewCitiesFromBuffer(content, body, seen, handlers)
+  if (streamed.length >= resultCount) {
+    return streamed.slice(0, resultCount)
+  }
+
+  throw new Error(`OpenAI API did not return ${resultCount} city recommendations`)
+}
+
+export async function recommendCities(
+  body: AnalyzeRequest,
+  count: number = RESULT_COUNT
+): Promise<CityResult[]> {
+  return streamRecommendCities(body, count)
 }
