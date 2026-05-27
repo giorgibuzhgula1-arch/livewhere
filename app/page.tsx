@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Quiz from '@/components/Quiz'
-import Results from '@/components/Results'
 import HowItWorks from '@/components/HowItWorks'
 import Pricing from '@/components/Pricing'
-import AuthModal from '@/components/AuthModal'
+
+const Results = dynamic(() => import('@/components/Results'), { ssr: false })
+const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
 import { parseStreamingBufferToCities } from '@/lib/parse-streaming-cities'
 import { supabase } from '@/lib/supabase'
 import { CityResult, AnalyzeRequest } from '@/lib/types'

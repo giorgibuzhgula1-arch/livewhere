@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { getSiteUrl } from '@/lib/site-url'
+import { dmSans, playfair } from '@/lib/fonts'
 import './globals.css'
 
 const GA_MEASUREMENT_ID = 'G-8BKJ3L5SQB'
@@ -20,8 +21,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
+      <body className={dmSans.className}>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"

@@ -1,7 +1,22 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/** Paths that skip Supabase session refresh (faster TTFB on marketing pages). */
+function shouldSkipAuth(pathname: string): boolean {
+  if (pathname === '/') return true
+  if (pathname.startsWith('/blog')) return true
+  if (pathname === '/sitemap.xml') return true
+  if (pathname === '/favicon.ico') return true
+  return false
+}
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  if (shouldSkipAuth(pathname)) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -26,7 +41,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  // Cookie-only session read/refresh — no network round-trip like getUser().
+  await supabase.auth.getSession()
 
   return response
 }

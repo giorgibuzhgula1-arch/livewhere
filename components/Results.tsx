@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import CityCard from './CityCard'
-import CityModal from './CityModal'
+
+const CityModal = dynamic(() => import('./CityModal'), { ssr: false })
 import { CityResult } from '@/lib/types'
 import { getSiteUrl } from '@/lib/site-url'
 import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
