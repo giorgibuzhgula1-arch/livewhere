@@ -65,6 +65,8 @@ async function isLoggedIn(): Promise<boolean> {
   return Boolean(session?.user)
 }
 
+const OAUTH_RESTORE_MAX_MS = 3000
+
 export default function Home() {
   const [matches, setMatches] = useState<CityResult[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -267,6 +269,25 @@ export default function Home() {
   runAnalyzeRef.current = runAnalyze
   const restoreAttemptedRef = useRef(false)
 
+  // Never show "Finishing sign-in…" longer than 3s — then go home.
+  useEffect(() => {
+    if (!restoringAfterOAuth) return
+
+    const timeoutId = window.setTimeout(() => {
+      setRestoringAfterOAuth(false)
+      setAwaitingAuthToView(false)
+      clearPostAuthRestoreState()
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('restore') === 'results') {
+          window.location.replace('/')
+        }
+      }
+    }, OAUTH_RESTORE_MAX_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [restoringAfterOAuth])
+
   // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
     if (restoreAttemptedRef.current) return
@@ -296,7 +317,7 @@ export default function Home() {
         return
       }
 
-      await waitForAuthSession(restoreRequested ? 50 : 15, 100)
+      await waitForAuthSession(25, 100)
       if (cancelled) return
 
       if (await revealPendingResults()) return
