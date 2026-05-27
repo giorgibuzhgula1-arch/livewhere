@@ -117,16 +117,20 @@ export default function Home() {
     return true
   }, [])
 
-  const promptSignInToView = useCallback((cities: CityResult[], maxCities: number | null) => {
-    savePendingResults(cities, maxCities)
+  const openGoogleSignInForAnalyze = useCallback(() => {
     saveOAuthNext('/?restore=results')
     markPendingAuthRestore()
-    setMatches(null)
-    setAwaitingAuthToView(true)
     setAuthGoogleOnly(true)
     setAuthMode('login')
     setAuthOpen(true)
   }, [])
+
+  const promptSignInToView = useCallback((cities: CityResult[], maxCities: number | null) => {
+    savePendingResults(cities, maxCities)
+    setMatches(null)
+    setAwaitingAuthToView(true)
+    openGoogleSignInForAnalyze()
+  }, [openGoogleSignInForAnalyze])
 
   const runAnalyze = useCallback(async (data: AnalyzeRequest) => {
     setLoading(true)
@@ -325,7 +329,14 @@ export default function Home() {
       ) {
         return
       }
-      void revealPendingResults()
+      void (async () => {
+        if (await revealPendingResults()) return
+        const quiz = loadPendingAnalyze()
+        if (!quiz) return
+        setAuthOpen(false)
+        setAuthGoogleOnly(false)
+        await runAnalyzeRef.current(quiz)
+      })()
     })
 
     return () => {
@@ -335,6 +346,12 @@ export default function Home() {
   }, [revealPendingResults])
 
   async function handleAnalyzeRequest(data: AnalyzeRequest) {
+    savePendingAnalyze(data)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) {
+      openGoogleSignInForAnalyze()
+      return
+    }
     await runAnalyze(data)
   }
 
@@ -349,11 +366,7 @@ export default function Home() {
   }
 
   function openSignInToView() {
-    saveOAuthNext('/?restore=results')
-    markPendingAuthRestore()
-    setAuthGoogleOnly(true)
-    setAuthMode('login')
-    setAuthOpen(true)
+    openGoogleSignInForAnalyze()
   }
 
   async function handleUnlockPro() {
