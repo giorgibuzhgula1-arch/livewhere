@@ -57,13 +57,11 @@ export default function AuthCallbackPage() {
       }
 
       setStatus('Saving your session…')
-      const session = await confirmAuthSessionReady(80, 125)
+      const session = await confirmAuthSessionReady(12, 100)
       if (cancelled) return
 
       if (session?.user) {
         setStatus('Redirecting…')
-        // Brief pause lets mobile browsers flush auth cookies before navigation.
-        await new Promise((r) => setTimeout(r, 200))
         hardRedirect(next)
         return
       }
@@ -76,9 +74,8 @@ export default function AuthCallbackPage() {
         ) {
           subscription.unsubscribe()
           void (async () => {
-            const ready = await confirmAuthSessionReady(20, 100)
+            const ready = await confirmAuthSessionReady(8, 100)
             if (ready?.user) {
-              await new Promise((r) => setTimeout(r, 200))
               hardRedirect(next)
             }
           })()
@@ -88,13 +85,13 @@ export default function AuthCallbackPage() {
       window.setTimeout(async () => {
         subscription.unsubscribe()
         if (cancelled || redirecting) return
-        const retry = await confirmAuthSessionReady(10, 150)
+        const retry = await confirmAuthSessionReady(5, 100)
         if (retry?.user) {
           hardRedirect(next)
         } else {
           hardRedirect('/?auth_error=session')
         }
-      }, 12000)
+      }, 1500)
     }
 
     void finish()

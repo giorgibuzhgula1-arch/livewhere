@@ -65,7 +65,7 @@ async function isLoggedIn(): Promise<boolean> {
   return Boolean(session?.user)
 }
 
-const OAUTH_RESTORE_MAX_MS = 3000
+const OAUTH_RESTORE_MAX_MS = 1500
 
 export default function Home() {
   const [matches, setMatches] = useState<CityResult[] | null>(null)
@@ -79,16 +79,7 @@ export default function Home() {
     if (typeof window === 'undefined') return false
     return Boolean(loadPendingResults()?.cities.length)
   })
-  const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(() => {
-    if (typeof window === 'undefined') return false
-    const restoreRequested =
-      new URLSearchParams(window.location.search).get('restore') === 'results' ||
-      shouldRestoreAfterAuth()
-    return (
-      restoreRequested &&
-      (Boolean(loadPendingResults()?.cities.length) || loadPendingAnalyze() !== null)
-    )
-  })
+  const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
 
   const showLanding = matches === null && !loading && !awaitingAuthToView
 
@@ -269,7 +260,7 @@ export default function Home() {
   runAnalyzeRef.current = runAnalyze
   const restoreAttemptedRef = useRef(false)
 
-  // Never show "Finishing sign-in…" longer than 3s — then go home.
+  // Never show "Finishing sign-in…" longer than 1.5s — then go home.
   useEffect(() => {
     if (!restoringAfterOAuth) return
 
@@ -301,11 +292,6 @@ export default function Home() {
     if (pending?.cities.length) {
       setAwaitingAuthToView(true)
       setResultMaxCities(pending.maxCities)
-      if (restoreRequested) {
-        setRestoringAfterOAuth(true)
-      }
-    } else if (restoreRequested && loadPendingAnalyze()) {
-      setRestoringAfterOAuth(true)
     }
 
     let cancelled = false
@@ -317,8 +303,26 @@ export default function Home() {
         return
       }
 
-      await waitForAuthSession(25, 100)
+      const { data: { session: existing } } = await supabase.auth.getSession()
+      if (existing?.user) {
+        setRestoringAfterOAuth(false)
+        if (await revealPendingResults()) return
+        const quiz = loadPendingAnalyze()
+        if (quiz && !cancelled) {
+          clearPostAuthRestoreState()
+          setAwaitingAuthToView(false)
+          if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
+            window.history.replaceState(null, '', '/')
+          }
+          await runAnalyzeRef.current(quiz)
+        }
+        return
+      }
+
+      setRestoringAfterOAuth(true)
+      await waitForAuthSession(15, 100)
       if (cancelled) return
+      setRestoringAfterOAuth(false)
 
       if (await revealPendingResults()) return
 
@@ -326,7 +330,6 @@ export default function Home() {
       const { data: { session } } = await supabase.auth.getSession()
       if (quiz && session?.user) {
         clearPostAuthRestoreState()
-        setRestoringAfterOAuth(false)
         setAwaitingAuthToView(false)
         if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
           window.history.replaceState(null, '', '/')
@@ -337,7 +340,6 @@ export default function Home() {
 
       if (!cancelled) {
         clearPostAuthRestoreState()
-        setRestoringAfterOAuth(false)
       }
     }
 
@@ -351,6 +353,7 @@ export default function Home() {
         return
       }
       void (async () => {
+        setRestoringAfterOAuth(false)
         if (await revealPendingResults()) return
         const quiz = loadPendingAnalyze()
         if (!quiz) return
