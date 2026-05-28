@@ -41,6 +41,17 @@ export default function Hero({ onStart }: Props) {
       </motion.h1>
 
       <motion.p
+        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+        style={{
+          fontSize: 16, color: 'rgba(240,237,232,0.5)', maxWidth: 520,
+          lineHeight: 1.5, marginTop: -12, marginBottom: 28, fontWeight: 400,
+          letterSpacing: 0.2
+        }}
+      >
+        The smartest relocation decision platform
+      </motion.p>
+
+      <motion.p
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         style={{
           fontSize: 18, color: 'rgba(240,237,232,0.45)', maxWidth: 520,
