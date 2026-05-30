@@ -816,3 +816,61 @@ export async function recommendCities(
 ): Promise<CityResult[]> {
   return streamRecommendCities(body, count)
 }
+
+function makeTeaser(row: CityRow, score: number): CityResult {
+  const meta = metaFor(row)
+  return {
+    name: row.name,
+    country: row.country,
+    continent: meta.continent,
+    flag: meta.flag,
+    score,
+    taxRate: 0,
+    monthlyRent: 0,
+    monthlyCost: 0,
+    takeHomeMonthly: 0,
+    monthlySavings: 0,
+    pros: [],
+    cons: [],
+    tags: [],
+    visa: "",
+    scores: { tax: 0, housing: 0, climate: 0, health: 0, nightlife: 0, safety: 0 },
+    aiInsight: "",
+    locked: true,
+  }
+}
+
+/**
+ * Build cheap locked-teaser cities to pad the free-tier grid up to the full
+ * count without asking the model to generate expensive detail for cards the
+ * user can't open. Locked cards only render the continent and match score, so
+ * teasers carry no premium data. Cities are spread across the region-grouped
+ * table for continent variety, with descending scores below the #1 match.
+ */
+export function buildTeaserCities(
+  exclude: Set<string>,
+  count: number,
+  startScore: number
+): CityResult[] {
+  if (count <= 0) return []
+  const candidates = CITIES.filter((c) => !exclude.has(`${c.name}|${c.country}`))
+  if (candidates.length === 0) return []
+
+  const step = Math.max(1, Math.floor(candidates.length / count))
+  const picked: CityRow[] = []
+  const usedIdx = new Set<number>()
+  for (let i = 0; picked.length < count && i < candidates.length; i += step) {
+    if (!usedIdx.has(i)) {
+      usedIdx.add(i)
+      picked.push(candidates[i])
+    }
+  }
+  for (let i = 0; picked.length < count && i < candidates.length; i++) {
+    if (!usedIdx.has(i)) {
+      usedIdx.add(i)
+      picked.push(candidates[i])
+    }
+  }
+
+  return picked.map((row, idx) => makeTeaser(row, clamp(Math.round(startScore - idx * 3), 45, 99)))
+}

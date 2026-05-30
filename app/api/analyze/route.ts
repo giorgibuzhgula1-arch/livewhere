@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { streamRecommendCities } from '@/lib/recommendation'
-import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT } from '@/lib/plan'
+import { streamRecommendCities, buildTeaserCities } from '@/lib/recommendation'
+import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
@@ -93,20 +93,27 @@ export async function POST(req: NextRequest) {
 
       try {
         const resultCount = resultCountForPlan(plan)
+        const paid = isPaidPlan(plan)
+        // Free users only ever see ONE city in full, so we generate a small
+        // detailed set instead of all 12 rich objects (the cause of the ~1 min
+        // analyses). The locked grid is padded with cheap teasers below.
+        const detailedCount = paid ? resultCount : FREE_DETAILED_COUNT
+
         send({ type: 'limits', maxCities: resultCount })
         send({ type: 'status', text: 'Finding your top city matches…' })
 
-        const paid = isPaidPlan(plan)
-
-        // During streaming we don't yet know which city has the highest score,
-        // so free users get locked teasers for every city. The authoritative
-        // `done` payload below reveals the true #1 match in full.
-        const cities = await streamRecommendCities(request, resultCount, {
+        // Stream the #1 match unlocked the moment it parses so the free user
+        // sees their top card within a few seconds; later matches stream as
+        // locked teasers. Paid users get every city unlocked progressively.
+        let emitted = 0
+        const cities = await streamRecommendCities(request, detailedCount, {
           onCity(city) {
+            const unlock = paid || emitted < FREE_UNLOCKED_COUNT
             send({
               type: 'city',
-              city: paid ? { ...city, locked: false } : sanitizeLockedCity(city),
+              city: unlock ? { ...city, locked: false } : sanitizeLockedCity(city),
             })
+            emitted++
           },
         })
 
@@ -114,11 +121,18 @@ export async function POST(req: NextRequest) {
         if (paid) {
           clientCities = cities.map((city) => ({ ...city, locked: false }))
         } else {
-          // Highest score first; only the top FREE_UNLOCKED_COUNT stay unlocked.
-          const sorted = [...cities].sort((a, b) => b.score - a.score)
-          clientCities = sorted.map((city, index) =>
-            index < FREE_UNLOCKED_COUNT ? { ...city, locked: false } : sanitizeLockedCity(city)
-          )
+          // Keep the first generated match as the unlocked #1 (matches what we
+          // streamed, so the top card never flashes), then sanitize the rest
+          // and pad the grid up to the full count with locked teasers.
+          const unlocked = cities
+            .slice(0, FREE_UNLOCKED_COUNT)
+            .map((city) => ({ ...city, locked: false }))
+          const lockedReal = cities.slice(FREE_UNLOCKED_COUNT).map(sanitizeLockedCity)
+          const used = new Set(cities.map((c) => `${c.name}|${c.country}`))
+          const padCount = Math.max(0, resultCount - unlocked.length - lockedReal.length)
+          const topScore = unlocked[0]?.score ?? 90
+          const teasers = buildTeaserCities(used, padCount, topScore - 4)
+          clientCities = [...unlocked, ...lockedReal, ...teasers]
         }
 
         if (userId) {

@@ -7,6 +7,13 @@ export const PAID_RESULT_COUNT = 12
 export const FREE_RESULT_COUNT = 12
 /** How many cities a free user can see in full detail (the rest are locked/blurred). */
 export const FREE_UNLOCKED_COUNT = 1
+/**
+ * How many fully-detailed cities the AI actually generates for a free search.
+ * Free users only ever see ONE city in full, so generating all 12 rich objects
+ * was pure waste and the main cause of slow (~1 min) analyses. We generate a
+ * small detailed set and pad the locked grid with teasers instead.
+ */
+export const FREE_DETAILED_COUNT = 3
 
 export function isPaidPlan(plan: UserPlan | string | null | undefined): boolean {
   return plan === 'pro' || plan === 'lifetime'
