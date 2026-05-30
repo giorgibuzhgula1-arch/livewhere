@@ -216,7 +216,12 @@ export default function Home() {
           usedDataEngine = true
         } else if (payload.type === 'city') {
           usedDataEngine = true
-          if (loggedIn) {
+          // Free-tier cities stream in as locked teasers before the server
+          // knows which one is the #1 match. Painting them now would render
+          // the eventual top match locked, then flash to unlocked when the
+          // authoritative `done` payload arrives. So only paint streamed
+          // cities that are already unlocked; free tier waits for `done`.
+          if (loggedIn && !payload.city.locked) {
             setMatches((prev) => capMatches(mergeStreamedCity(prev ?? [], payload.city)))
           }
         } else if (payload.type === 'delta') {
