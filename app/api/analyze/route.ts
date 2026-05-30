@@ -30,6 +30,7 @@ function sanitizeLockedCity(city: CityResult): CityResult {
     visa: '',
     scores: { tax: 0, housing: 0, climate: 0, health: 0, nightlife: 0, safety: 0 },
     aiInsight: '',
+    locked: true,
   }
 }
 
@@ -96,18 +97,29 @@ export async function POST(req: NextRequest) {
         send({ type: 'status', text: 'Finding your top city matches…' })
 
         const paid = isPaidPlan(plan)
-        let streamIndex = 0
-        const gateForClient = (city: CityResult, index: number): CityResult =>
-          paid || index < FREE_UNLOCKED_COUNT ? city : sanitizeLockedCity(city)
 
+        // During streaming we don't yet know which city has the highest score,
+        // so free users get locked teasers for every city. The authoritative
+        // `done` payload below reveals the true #1 match in full.
         const cities = await streamRecommendCities(request, resultCount, {
           onCity(city) {
-            send({ type: 'city', city: gateForClient(city, streamIndex) })
-            streamIndex += 1
+            send({
+              type: 'city',
+              city: paid ? { ...city, locked: false } : sanitizeLockedCity(city),
+            })
           },
         })
 
-        const clientCities = cities.map((city, index) => gateForClient(city, index))
+        let clientCities: CityResult[]
+        if (paid) {
+          clientCities = cities.map((city) => ({ ...city, locked: false }))
+        } else {
+          // Highest score first; only the top FREE_UNLOCKED_COUNT stay unlocked.
+          const sorted = [...cities].sort((a, b) => b.score - a.score)
+          clientCities = sorted.map((city, index) =>
+            index < FREE_UNLOCKED_COUNT ? { ...city, locked: false } : sanitizeLockedCity(city)
+          )
+        }
 
         if (userId) {
           await supabaseAdmin.from('searches').insert({

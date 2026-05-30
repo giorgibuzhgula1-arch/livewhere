@@ -1,7 +1,6 @@
 'use client'
 
 import { CityResult } from '@/lib/types'
-import { countryCodeFromFlag } from '@/lib/country-code'
 import { visaScoreForCountry, visaScoreColor } from '@/lib/visa-data'
 
 interface Props {
@@ -34,39 +33,6 @@ function cardShellStyle(rank: number, cursor: string) {
     position: 'relative' as const,
     overflow: 'hidden' as const,
   }
-}
-
-function CityIdentity({ city, countryCode }: { city: CityResult; countryCode: string }) {
-  return (
-    <div style={{ marginBottom: 16, opacity: 1, filter: 'none' }}>
-      <span style={{
-        display: 'inline-block',
-        fontSize: 14,
-        fontWeight: 700,
-        letterSpacing: 2.5,
-        color: '#c8f05a',
-        background: 'rgba(200,240,90,0.12)',
-        border: '1px solid rgba(200,240,90,0.3)',
-        padding: '6px 12px',
-        borderRadius: 6,
-        fontFamily: "'DM Sans', sans-serif",
-        marginBottom: 10,
-        opacity: 1,
-      }}>
-        {countryCode}
-      </span>
-      <div style={{
-        fontSize: 26,
-        fontWeight: 700,
-        lineHeight: 1.2,
-        color: '#f0ede8',
-        opacity: 1,
-        fontFamily: "'DM Sans', sans-serif",
-      }}>
-        {city.name}
-      </div>
-    </div>
-  )
 }
 
 function CityDetails({ city, color }: { city: CityResult; color: string }) {
@@ -132,63 +98,57 @@ function VisaBadge({ country }: { country: string }) {
   )
 }
 
-function LockedCityDetails({ city, color }: { city: CityResult; color: string }) {
-  return (
-    <div style={{ paddingTop: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{city.score}</div>
-          <div style={{ fontSize: 10, color: 'rgba(240,237,232,0.45)', textTransform: 'uppercase', letterSpacing: 1 }}>match score</div>
-        </div>
-      </div>
-      <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16 }}>{city.country} · {city.continent}</div>
-      <div style={{ filter: 'blur(8px)', opacity: 0.3, userSelect: 'none', pointerEvents: 'none' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-          {[
-            { label: 'Take-home/mo', val: fmt(city.takeHomeMonthly) },
-            { label: 'Monthly cost', val: fmt(city.monthlyCost) },
-            { label: 'Tax rate', val: `${city.taxRate}%` },
-            { label: 'Monthly saving', val: `${city.monthlySavings > 0 ? '+' : ''}${fmt(Math.abs(city.monthlySavings))}`, color: city.monthlySavings > 0 ? '#c8f05a' : '#f05a8c' },
-          ].map(({ label, val, color: vc }) => (
-            <div key={label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '10px 12px' }}>
-              <div style={{ fontSize: 10, color: 'rgba(240,237,232,0.45)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: vc }}>{val}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {city.tags.slice(0, 2).map(tag => (
-            <span key={tag} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(200,240,90,0.1)', color: '#c8f05a' }}>{tag}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function CityCard({ city, rank, onClick, locked = false, onUnlock }: Props) {
   const color = getScoreColor(city.score)
-  const countryCode = countryCodeFromFlag(city.flag)
 
   if (locked) {
+    const region = city.continent && city.continent !== 'Other' ? city.continent : 'another region'
     return (
       <div style={cardShellStyle(rank, 'default')}>
-        <CityIdentity city={city} countryCode={countryCode} />
-        <div style={{ position: 'relative', minHeight: 200 }}>
-          <div aria-hidden style={{ userSelect: 'none', pointerEvents: 'none' }}>
-            <LockedCityDetails city={city} color={color} />
+        {/* Header: hidden identity (continent only) + visible match score */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+          <div>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase',
+              color: 'rgba(240,237,232,0.55)', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: 6,
+            }}>
+              🔒 Locked
+            </span>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', marginTop: 10, lineHeight: 1.2 }}>
+              City in {region}
+            </div>
           </div>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16 }}>
-            <div style={{ fontSize: 28, lineHeight: 1 }} aria-hidden>🔒</div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onUnlock?.() }}
-              style={{ background: '#c8f05a', color: '#0a0a0f', border: 'none', padding: '12px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", boxShadow: '0 4px 20px rgba(0,0,0,0.35)' }}
-            >
-              Unlock with Pro — $19/mo
-            </button>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>
+              {city.score}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(240,237,232,0.45)', textTransform: 'uppercase', letterSpacing: 1 }}>
+              match score
+            </div>
           </div>
         </div>
+
+        {/* Blurred placeholder stats teaser */}
+        <div aria-hidden style={{ filter: 'blur(7px)', opacity: 0.25, userSelect: 'none', pointerEvents: 'none', marginBottom: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {['Take-home/mo', 'Monthly cost', 'Tax rate', 'Monthly saving'].map((label) => (
+              <div key={label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 10, color: 'rgba(240,237,232,0.45)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>$0,000</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onUnlock?.() }}
+          style={{ width: '100%', background: '#c8f05a', color: '#0a0a0f', border: 'none', padding: '12px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+        >
+          Unlock with Pro — $19/mo
+        </button>
       </div>
     )
   }

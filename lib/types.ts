@@ -22,6 +22,8 @@ export interface CityResult {
     safety: number;
   };
   aiInsight: string;
+  /** Set by the server: true when this card is locked (free tier, not the #1 match). */
+  locked?: boolean;
 }
 
 export interface UserPriorities {

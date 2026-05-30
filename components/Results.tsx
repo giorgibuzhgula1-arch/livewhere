@@ -8,7 +8,7 @@ import CityCard from './CityCard'
 const CityModal = dynamic(() => import('./CityModal'), { ssr: false })
 import { CityResult } from '@/lib/types'
 import { getSiteUrl } from '@/lib/site-url'
-import { fetchUserPlan, isPaidPlan, FREE_UNLOCKED_COUNT, type UserPlan } from '@/lib/plan'
+import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
 
 function buildShareLine(city: CityResult): string {
   return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
@@ -57,12 +57,19 @@ export default function Results({
 
   const paid = isPaidPlan(plan)
   const locked = !paid
-  const isUnlocked = (city: CityResult) =>
-    paid || cities.findIndex(c => c.name === city.name) < FREE_UNLOCKED_COUNT
+  const isUnlocked = (city: CityResult) => paid || !city.locked
   const monthlyIncome = typeof salary === 'number' && salary > 0 ? Math.round(salary / 12) : undefined
 
-  const filtered = filter === 'all' ? cities : cities.filter(c => c.continent === filter)
-  const top = cities[0]
+  // Always show unlocked card(s) first, then by descending score.
+  const ordered = [...cities].sort((a, b) => {
+    const au = isUnlocked(a) ? 1 : 0
+    const bu = isUnlocked(b) ? 1 : 0
+    if (au !== bu) return bu - au
+    return b.score - a.score
+  })
+
+  const filtered = filter === 'all' ? ordered : ordered.filter(c => c.continent === filter)
+  const top = ordered[0]
   const shareLine = top ? buildShareLine(top) : ''
   const siteUrl = getSiteUrl()
 
