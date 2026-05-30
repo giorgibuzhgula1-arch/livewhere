@@ -87,18 +87,24 @@ function asNum(v: unknown, fallback = 0): number {
   return fallback
 }
 
+/** Rescale a 0–10 rating to 0–100 (the model sometimes returns 9 instead of 90). */
+function scale100(n: number): number {
+  const scaled = n > 0 && n <= 10 ? n * 10 : n
+  return Math.max(0, Math.min(100, Math.round(scaled)))
+}
+
 function normalizeScores(raw: unknown): CityResult['scores'] {
   if (!raw || typeof raw !== 'object') {
     return { tax: 0, housing: 0, climate: 0, health: 0, nightlife: 0, safety: 0 }
   }
   const o = raw as Record<string, unknown>
   return {
-    tax: asNum(o.tax),
-    housing: asNum(o.housing),
-    climate: asNum(o.climate),
-    health: asNum(o.health),
-    nightlife: asNum(o.nightlife),
-    safety: asNum(o.safety),
+    tax: scale100(asNum(o.tax)),
+    housing: scale100(asNum(o.housing)),
+    climate: scale100(asNum(o.climate)),
+    health: scale100(asNum(o.health)),
+    nightlife: scale100(asNum(o.nightlife)),
+    safety: scale100(asNum(o.safety)),
   }
 }
 
@@ -114,7 +120,7 @@ export function normalizePeeledCity(raw: unknown, salary: number): CityResult | 
   const taxRate = asNum(o.taxRate)
   const monthlyRent = asNum(o.monthlyRent)
   const monthlyCost = asNum(o.monthlyCost)
-  const score = asNum(o.score, 50)
+  const score = scale100(asNum(o.score, 50))
 
   const takeHomeYearly = Math.round(salary * (1 - taxRate / 100))
   const takeHomeMonthly = Math.round(takeHomeYearly / 12)

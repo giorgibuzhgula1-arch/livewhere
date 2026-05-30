@@ -69,6 +69,24 @@ export default function Navbar({ onAuthClick }: Props) {
       </Link>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <Link
+          href="/news"
+          style={{
+            fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+          }}
+        >
+          News
+        </Link>
+        <Link
+          href="/blog"
+          style={{
+            fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+          }}
+        >
+          Blog
+        </Link>
         <div style={{
           background: 'rgba(200,240,90,0.1)', border: '1px solid rgba(200,240,90,0.3)',
           color: '#c8f05a', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500

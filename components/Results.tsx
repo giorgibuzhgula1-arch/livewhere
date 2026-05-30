@@ -8,7 +8,7 @@ import CityCard from './CityCard'
 const CityModal = dynamic(() => import('./CityModal'), { ssr: false })
 import { CityResult } from '@/lib/types'
 import { getSiteUrl } from '@/lib/site-url'
-import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
+import { fetchUserPlan, isPaidPlan, FREE_UNLOCKED_COUNT, type UserPlan } from '@/lib/plan'
 
 function buildShareLine(city: CityResult): string {
   return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
@@ -21,6 +21,10 @@ interface Props {
   /** When set (free tier), hide "Loading more cities…" once this many are shown. */
   maxCities?: number | null
   onUnlockPro?: () => void
+  /** Gross annual salary from the quiz — feeds the visa recommendation. */
+  salary?: number
+  currency?: string
+  lifestyle?: string[]
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
@@ -31,6 +35,9 @@ export default function Results({
   streaming = false,
   maxCities = null,
   onUnlockPro,
+  salary,
+  currency = 'USD',
+  lifestyle,
 }: Props) {
   const showStreamingIndicator =
     streaming && (maxCities == null || cities.length < maxCities)
@@ -50,6 +57,9 @@ export default function Results({
 
   const paid = isPaidPlan(plan)
   const locked = !paid
+  const isUnlocked = (city: CityResult) =>
+    paid || cities.findIndex(c => c.name === city.name) < FREE_UNLOCKED_COUNT
+  const monthlyIncome = typeof salary === 'number' && salary > 0 ? Math.round(salary / 12) : undefined
 
   const filtered = filter === 'all' ? cities : cities.filter(c => c.continent === filter)
   const top = cities[0]
@@ -118,8 +128,8 @@ export default function Results({
         </div>
       </div>
 
-      {/* AI Insight */}
-      {top && paid && (
+      {/* AI Insight — shown for the fully-unlocked #1 match (free + paid) */}
+      {top && isUnlocked(top) && top.aiInsight && (
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           style={{
@@ -255,7 +265,7 @@ export default function Results({
           lineHeight: 1.6,
           color: 'rgba(240,237,232,0.7)',
         }}>
-          You&apos;re viewing city names only. Upgrade to Pro to unlock tax rates, costs, take-home pay, and all 12 matches.
+          You&apos;re viewing your <strong style={{ color: '#c8f05a' }}>#1 match in full</strong> — take-home pay, costs, climate, safety, pros/cons and visa path. Upgrade to Pro to unlock all 12 matches.
         </div>
       )}
 
@@ -289,10 +299,10 @@ export default function Results({
             <CityCard
               city={city}
               rank={i + 1}
-              locked={locked}
+              locked={!isUnlocked(city)}
               onUnlock={onUnlockPro}
               onClick={() => {
-                if (!locked) setSelectedCity(city)
+                if (isUnlocked(city)) setSelectedCity(city)
               }}
             />
           </motion.div>
@@ -300,7 +310,13 @@ export default function Results({
       </div>
 
       {selectedCity && (
-        <CityModal city={selectedCity} onClose={() => setSelectedCity(null)} />
+        <CityModal
+          city={selectedCity}
+          monthlyIncome={monthlyIncome}
+          currency={currency}
+          lifestyle={lifestyle}
+          onClose={() => setSelectedCity(null)}
+        />
       )}
     </section>
   )

@@ -85,6 +85,7 @@ export default function Home() {
   const [authGoogleOnly, setAuthGoogleOnly] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
+  const [quizData, setQuizData] = useState<AnalyzeRequest | null>(null)
   const [awaitingAuthToView, setAwaitingAuthToView] = useState(() => {
     if (typeof window === 'undefined') return false
     return Boolean(loadPendingResults()?.cities.length)
@@ -105,6 +106,8 @@ export default function Home() {
 
     if (!session?.user) return false
 
+    const pendingRequest = loadPendingAnalyze()
+    if (pendingRequest) setQuizData(pendingRequest)
     setMatches(pending.cities)
     setResultMaxCities(pending.maxCities)
     clearPendingResults()
@@ -139,6 +142,7 @@ export default function Home() {
     setLoading(true)
     setError(null)
     setAwaitingAuthToView(false)
+    setQuizData(data)
     savePendingAnalyze(data)
     clearPendingResults()
     setMatches([])
@@ -487,7 +491,7 @@ export default function Home() {
             Your top city matches are ready
           </h2>
           <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
-            Sign in with Google to view your personalized results (top 3 cities).
+            Sign in with Google to view your personalized results — your #1 match in full, free.
           </p>
           <button
             type="button"
@@ -523,6 +527,9 @@ export default function Home() {
           maxCities={resultMaxCities}
           onReset={handleResetMatches}
           onUnlockPro={handleUnlockPro}
+          salary={quizData?.salary}
+          currency={quizData?.currency}
+          lifestyle={quizData?.lifestyle}
         />
       )}
 

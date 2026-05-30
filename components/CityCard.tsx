@@ -2,6 +2,7 @@
 
 import { CityResult } from '@/lib/types'
 import { countryCodeFromFlag } from '@/lib/country-code'
+import { visaScoreForCountry, visaScoreColor } from '@/lib/visa-data'
 
 interface Props {
   city: CityResult
@@ -103,12 +104,31 @@ function CityDetails({ city, color }: { city: CityResult; color: string }) {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         {city.tags.slice(0, 2).map(tag => (
           <span key={tag} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(200,240,90,0.1)', color: '#c8f05a' }}>{tag}</span>
         ))}
+        <VisaBadge country={city.country} />
       </div>
     </>
+  )
+}
+
+function VisaBadge({ country }: { country: string }) {
+  const score = visaScoreForCountry(country)
+  if (score == null) return null
+  const c = visaScoreColor(score)
+  return (
+    <span
+      title={`Visa access score: ${score}/100`}
+      style={{
+        fontSize: 11, padding: '4px 10px', borderRadius: 20,
+        background: `${c}1f`, border: `1px solid ${c}55`, color: c,
+        display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600,
+      }}
+    >
+      🛂 Visa {score}
+    </span>
   )
 }
 

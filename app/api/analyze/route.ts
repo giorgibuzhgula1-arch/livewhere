@@ -1,10 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { streamRecommendCities } from '@/lib/recommendation'
-import { resultCountForPlan } from '@/lib/plan'
+import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { AnalyzeRequest, UserPriorities } from '@/lib/types'
+import { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * For free users, every city past the unlocked preview is rendered as a
+ * locked/blurred teaser. Strip the premium fields server-side so the full
+ * analysis never reaches the client over the network — only enough to show
+ * the identity and a teaser match score remains.
+ */
+function sanitizeLockedCity(city: CityResult): CityResult {
+  return {
+    name: city.name,
+    country: city.country,
+    continent: city.continent,
+    flag: city.flag,
+    score: city.score,
+    taxRate: 0,
+    monthlyRent: 0,
+    monthlyCost: 0,
+    takeHomeMonthly: 0,
+    monthlySavings: 0,
+    pros: [],
+    cons: [],
+    tags: [],
+    visa: '',
+    scores: { tax: 0, housing: 0, climate: 0, health: 0, nightlife: 0, safety: 0 },
+    aiInsight: '',
+  }
+}
 
 function normPriorities(p: UserPriorities): UserPriorities {
   const c = (x: unknown) => Math.max(1, Math.min(5, Math.round(Number(x) || 3)))
@@ -68,11 +95,19 @@ export async function POST(req: NextRequest) {
         send({ type: 'limits', maxCities: resultCount })
         send({ type: 'status', text: 'Finding your top city matches…' })
 
+        const paid = isPaidPlan(plan)
+        let streamIndex = 0
+        const gateForClient = (city: CityResult, index: number): CityResult =>
+          paid || index < FREE_UNLOCKED_COUNT ? city : sanitizeLockedCity(city)
+
         const cities = await streamRecommendCities(request, resultCount, {
           onCity(city) {
-            send({ type: 'city', city })
+            send({ type: 'city', city: gateForClient(city, streamIndex) })
+            streamIndex += 1
           },
         })
+
+        const clientCities = cities.map((city, index) => gateForClient(city, index))
 
         if (userId) {
           await supabaseAdmin.from('searches').insert({
@@ -90,7 +125,7 @@ export async function POST(req: NextRequest) {
             .eq('id', userId)
         }
 
-        send({ type: 'done', cities })
+        send({ type: 'done', cities: clientCities })
       } catch (err) {
         console.error('Recommendation error:', err)
         send({ type: 'error', error: 'OpenAI could not generate recommendations. Please try again.' })

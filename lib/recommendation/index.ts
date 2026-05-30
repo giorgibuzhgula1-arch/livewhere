@@ -437,6 +437,16 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n))
 }
 
+/**
+ * Normalize a score to the 0–100 scale. The model sometimes returns scores on
+ * a 0–10 scale (e.g. 9 instead of 90), so any positive value of 10 or less is
+ * treated as a 0–10 rating and scaled up.
+ */
+function scale100(n: number): number {
+  const scaled = n > 0 && n <= 10 ? n * 10 : n
+  return clamp(Math.round(scaled), 0, 100)
+}
+
 function normPriority(p: unknown): number {
   const n = typeof p === "number" ? p : Number(p)
   if (!Number.isFinite(n)) return 3
@@ -494,12 +504,12 @@ function list(value: unknown, fallback: string[]): string[] {
 function scores(value: unknown): CityResult["scores"] {
   const raw = value && typeof value === "object" ? value as Record<string, unknown> : {}
   return {
-    tax: clamp(Math.round(num(raw.tax, 70)), 0, 100),
-    housing: clamp(Math.round(num(raw.housing, 70)), 0, 100),
-    climate: clamp(Math.round(num(raw.climate, 70)), 0, 100),
-    health: clamp(Math.round(num(raw.health, 70)), 0, 100),
-    nightlife: clamp(Math.round(num(raw.nightlife, 70)), 0, 100),
-    safety: clamp(Math.round(num(raw.safety, 70)), 0, 100),
+    tax: scale100(num(raw.tax, 70)),
+    housing: scale100(num(raw.housing, 70)),
+    climate: scale100(num(raw.climate, 70)),
+    health: scale100(num(raw.health, 70)),
+    nightlife: scale100(num(raw.nightlife, 70)),
+    safety: scale100(num(raw.safety, 70)),
   }
 }
 
@@ -546,7 +556,7 @@ function normalizeCity(city: Partial<CityResult>, idx: number, salary: number): 
     country,
     continent: text(city.continent, meta.continent),
     flag: text(city.flag, meta.flag),
-    score: clamp(Math.round(num(city.score, 90 - idx * 5)), 0, 100),
+    score: scale100(num(city.score, 90 - idx * 5)),
     taxRate,
     monthlyRent,
     monthlyCost,
