@@ -88,9 +88,9 @@ export async function POST(req: NextRequest) {
                 currency: 'usd',
                 product_data: {
                   name: 'LiveWhere Lifetime Access',
-                  description: 'One-time $99 payment — lifetime access',
+                  description: 'One-time $149 payment — lifetime access',
                 },
-                unit_amount: 9900,
+                unit_amount: 14900,
               },
               quantity: 1,
             },

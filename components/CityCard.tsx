@@ -165,7 +165,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
               onClick={(e) => { e.stopPropagation(); onUnlock?.() }}
               style={{ background: '#c8f05a', color: '#0a0a0f', border: 'none', padding: '12px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", boxShadow: '0 4px 20px rgba(0,0,0,0.35)' }}
             >
-              Unlock with Pro — $9/mo
+              Unlock with Pro — $19/mo
             </button>
           </div>
         </div>

@@ -34,17 +34,17 @@ export default function Pricing({ onUpgrade }: Props) {
 
   const plans = [
     {
-      name: 'Free', price: '$0', period: 'forever',
+      name: 'Free', price: '$0', originalPrice: '', period: 'forever', sale: false,
       features: ['Top 3 city names only', '3 searches/month'],
       btn: 'Get started free', style: 'ghost', popular: false
     },
     {
-      name: 'Pro', price: '$9', period: 'per month',
+      name: 'Pro', price: '$19/mo', originalPrice: '$49/mo', period: 'per month', sale: true,
       features: ['Top 12 cities full analysis', 'Real tax calculator', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
-      btn: loadingPlan === 'pro' ? 'Loading...' : 'Start Pro — $9/mo', style: 'primary', popular: true
+      btn: loadingPlan === 'pro' ? 'Loading...' : 'Start Pro — $19/mo', style: 'primary', popular: true
     },
     {
-      name: 'Lifetime', price: '$99', period: 'one-time payment',
+      name: 'Lifetime', price: '$149', originalPrice: '$299', period: 'one-time payment', sale: true,
       features: ['Top 12 cities full analysis', 'Lifetime access', 'PDF report', 'Unlimited re-runs', 'Priority support'],
       btn: loadingPlan === 'report' ? 'Loading...' : 'Get Lifetime Access', style: 'ghost', popular: false
     },
@@ -64,6 +64,12 @@ export default function Pricing({ onUpgrade }: Props) {
             <div key={plan.name} style={{ background: plan.popular ? 'rgba(200,240,90,0.05)' : '#12121a', border: plan.popular ? '1px solid rgba(200,240,90,0.3)' : '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32, textAlign: 'left', position: 'relative', zIndex: 1 }}>
               {plan.popular && <div style={{ background: '#c8f05a', color: '#0a0a0f', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', marginBottom: 20, textTransform: 'uppercase', letterSpacing: 0.5 }}>Most Popular</div>}
               <div style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', marginBottom: 8, fontWeight: 500 }}>{plan.name}</div>
+              {plan.sale && plan.originalPrice && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: 'rgba(240,237,232,0.4)', textDecoration: 'line-through' }}>{plan.originalPrice}</span>
+                  <span style={{ background: '#f05a8c', color: '#0a0a0f', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 0.5 }}>Limited time</span>
+                </div>
+              )}
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 42, fontWeight: 900, marginBottom: 4 }}>{plan.price}</div>
               <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 24 }}>{plan.period}</div>
               <ul style={{ listStyle: 'none', marginBottom: 24 }}>
