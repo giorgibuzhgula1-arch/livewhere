@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
     }
 
     const appUrl = getAppUrl()
-    const proPriceId = process.env.STRIPE_PRO_PRICE_ID
+    const secretKey = process.env.STRIPE_SECRET_KEY?.trim()
+    const proPriceId = process.env.STRIPE_PRO_PRICE_ID?.trim()
 
     if (!appUrl) {
       return NextResponse.json(
@@ -52,11 +53,57 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (!secretKey) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured: STRIPE_SECRET_KEY is missing.' },
+        { status: 500 }
+      )
+    }
+
     if (checkoutType === 'pro' && !proPriceId) {
       return NextResponse.json(
         { error: 'Stripe env vars are not configured. Required: STRIPE_PRO_PRICE_ID' },
         { status: 500 }
       )
+    }
+
+    // Resolve the checkout mode from the actual Stripe price. The Pro plan is
+    // meant to be a recurring subscription, but if STRIPE_PRO_PRICE_ID points at
+    // a one-time price, Stripe rejects `mode: 'subscription'`. Inspect the price
+    // and pick the matching mode so a mis-typed price still produces a working
+    // checkout (and surface a clear error if the price doesn't exist).
+    let mode: 'subscription' | 'payment' = checkoutType === 'report' ? 'payment' : 'subscription'
+
+    if (checkoutType === 'pro' && proPriceId) {
+      let price: import('stripe').Stripe.Price
+      try {
+        price = await stripe.prices.retrieve(proPriceId)
+      } catch (err) {
+        const e = err as { code?: string; statusCode?: number }
+        if (e?.code === 'resource_missing' || e?.statusCode === 404) {
+          const keyMode = secretKey.startsWith('sk_live_')
+            ? 'live'
+            : secretKey.startsWith('sk_test_')
+              ? 'test'
+              : 'unknown'
+          return NextResponse.json(
+            {
+              error: `Stripe price "${proPriceId}" was not found for the configured API key (${keyMode} mode). Ensure STRIPE_SECRET_KEY and STRIPE_PRO_PRICE_ID are from the SAME Stripe mode (both live or both test).`,
+            },
+            { status: 500 }
+          )
+        }
+        throw err
+      }
+
+      if (!price.active) {
+        return NextResponse.json(
+          { error: `Stripe price "${proPriceId}" is archived/inactive. Use an active recurring price for the Pro plan.` },
+          { status: 500 }
+        )
+      }
+
+      mode = price.recurring ? 'subscription' : 'payment'
     }
 
     let customerId: string | null = null
@@ -100,7 +147,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       ...(customerId ? { customer: customerId } : {}),
       ...(!customerId && email ? { customer_email: email } : {}),
-      mode: checkoutType === 'report' ? 'payment' : 'subscription',
+      mode,
       payment_method_types: ['card'],
       line_items: lineItems,
       success_url: `${appUrl}/?upgraded=true`,
@@ -114,7 +161,28 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
-    console.error('Stripe checkout session error:', error)
-    return NextResponse.json({ error: 'Failed to create Stripe checkout session' }, { status: 500 })
+    const err = error as {
+      message?: string
+      type?: string
+      code?: string
+      statusCode?: number
+      param?: string
+      raw?: { message?: string }
+    }
+    const detail = err?.message || err?.raw?.message || 'Unknown error'
+
+    console.error('Stripe checkout session error:', {
+      message: detail,
+      type: err?.type,
+      code: err?.code,
+      statusCode: err?.statusCode,
+      param: err?.param,
+    })
+    console.error('Stripe checkout full error:', error)
+
+    return NextResponse.json(
+      { error: `Failed to create Stripe checkout session: ${detail}` },
+      { status: 500 }
+    )
   }
 }

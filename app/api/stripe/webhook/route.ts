@@ -18,21 +18,26 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session
     const userId = session.metadata?.userId
     const checkoutType = session.metadata?.checkoutType
-    if (userId && session.mode === 'subscription' && checkoutType !== 'report') {
-      await supabaseAdmin
-        .from('profiles')
-        .update({
-          plan: 'pro',
-          stripe_subscription_id: session.subscription as string,
-        })
-        .eq('id', userId)
-    }
 
-    if (userId && session.mode === 'payment' && checkoutType === 'report') {
-      await supabaseAdmin
-        .from('profiles')
-        .update({ plan: 'lifetime' })
-        .eq('id', userId)
+    if (userId) {
+      if (checkoutType === 'report') {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ plan: 'lifetime' })
+          .eq('id', userId)
+      } else {
+        // Pro plan — grant access whether the configured price was a recurring
+        // subscription or a one-time payment. Store the subscription id when present.
+        await supabaseAdmin
+          .from('profiles')
+          .update({
+            plan: 'pro',
+            ...(session.subscription
+              ? { stripe_subscription_id: session.subscription as string }
+              : {}),
+          })
+          .eq('id', userId)
+      }
     }
   }
 

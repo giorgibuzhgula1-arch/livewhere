@@ -10,10 +10,12 @@ export default function Pricing({ onUpgrade }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   async function handleCheckout(checkoutType: 'pro' | 'report') {
+    // Guard against re-entrancy: never start a second checkout while one is in flight.
+    if (loadingPlan) return
+    setError(null)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { onUpgrade(); return }
     setLoadingPlan(checkoutType)
-    setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/stripe/checkout', {
@@ -29,6 +31,18 @@ export default function Pricing({ onUpgrade }: Props) {
       setError(err?.message || 'Unable to start Stripe checkout')
     } finally {
       setLoadingPlan(null)
+    }
+  }
+
+  // Single click handler so checkout is ONLY ever started by an explicit user
+  // click — never as a side effect of rendering.
+  function handlePlanClick(planName: string) {
+    if (planName === 'Pro') {
+      void handleCheckout('pro')
+    } else if (planName === 'Lifetime') {
+      void handleCheckout('report')
+    } else {
+      onUpgrade()
     }
   }
 
@@ -79,7 +93,7 @@ export default function Pricing({ onUpgrade }: Props) {
                   </li>
                 ))}
               </ul>
-              <button type="button" onClick={isProPlan ? () => handleCheckout('pro') : isLifetimePlan ? () => handleCheckout('report') : undefined} disabled={isLoading} style={{ width: '100%', padding: 14, borderRadius: 12, fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, cursor: 'pointer', border: 'none', transition: 'all 0.2s', background: plan.style === 'primary' ? '#c8f05a' : '#1a1a26', color: plan.style === 'primary' ? '#0a0a0f' : '#f0ede8', position: 'relative', zIndex: 2, pointerEvents: 'auto' }}>
+              <button type="button" onClick={() => handlePlanClick(plan.name)} disabled={isLoading} style={{ width: '100%', padding: 14, borderRadius: 12, fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, cursor: 'pointer', border: 'none', transition: 'all 0.2s', background: plan.style === 'primary' ? '#c8f05a' : '#1a1a26', color: plan.style === 'primary' ? '#0a0a0f' : '#f0ede8', position: 'relative', zIndex: 2, pointerEvents: 'auto' }}>
                 {plan.btn}
               </button>
             </div>
