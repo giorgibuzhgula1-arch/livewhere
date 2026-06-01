@@ -28,10 +28,15 @@ The LiveWhere calculator shows this comparison in detail based on your selected 
 **Related Guides**
 
 [Best Cities for $2,000/month](/cities/best-cities-for-2000-budget)
+
 [Best Cities for $5,000/month](/cities/best-cities-for-5000-budget)
+
 [Best Cities for Remote Workers](/cities/best-cities-for-remote-workers)
+
 [Best Cities by Salary](/cities/by-salary)
+
 [Best Cities by Lifestyle](/cities/by-lifestyle)
+
 [Relocation Decision Tool](/tools/relocation)
 
 **Key takeaway:** A $3,000/month budget can either feel limiting or very comfortable depending on the city. The difference is not the amount — it is how efficiently the city converts that budget into lifestyle quality.
