@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 function shouldSkipAuth(pathname: string): boolean {
   if (pathname === '/') return true
   if (pathname.startsWith('/blog')) return true
+  if (pathname.startsWith('/cities')) return true
   if (pathname === '/sitemap.xml') return true
   if (pathname === '/favicon.ico') return true
   return false
