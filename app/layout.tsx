@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import RefClickTracker from '@/components/RefClickTracker'
 import { getSiteUrl } from '@/lib/site-url'
 import { dmSans, playfair } from '@/lib/fonts'
 import './globals.css'
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
         <div className="orb orb1" aria-hidden />
         <div className="orb orb2" aria-hidden />
+        <RefClickTracker />
         <div className="app-shell">{children}</div>
       </body>
     </html>

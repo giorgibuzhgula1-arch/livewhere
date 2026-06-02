@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { REF_COOKIE_NAME, normalizeReferralCode } from '@/lib/affiliate'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
@@ -144,6 +145,16 @@ export async function POST(req: NextRequest) {
           ]
         : [{ price: proPriceId!, quantity: 1 }]
 
+    const refRaw = req.cookies.get(REF_COOKIE_NAME)?.value
+    const refCode = refRaw ? normalizeReferralCode(refRaw) : ''
+    const sessionMetadata: Record<string, string> = {
+      userId: userId ?? '',
+      checkoutType,
+    }
+    if (refCode) {
+      sessionMetadata.ref_code = refCode
+    }
+
     const session = await stripe.checkout.sessions.create({
       ...(customerId ? { customer: customerId } : {}),
       ...(!customerId && email ? { customer_email: email } : {}),
@@ -152,7 +163,21 @@ export async function POST(req: NextRequest) {
       line_items: lineItems,
       success_url: `${appUrl}/?upgraded=true`,
       cancel_url: `${appUrl}/`,
-      metadata: { userId: userId ?? '', checkoutType },
+      metadata: sessionMetadata,
+      ...(refCode
+        ? {
+            payment_intent_data: {
+              metadata: { ref_code: refCode, checkoutType },
+            },
+            ...(mode === 'subscription'
+              ? {
+                  subscription_data: {
+                    metadata: { ref_code: refCode, checkoutType },
+                  },
+                }
+              : {}),
+          }
+        : {}),
     })
 
     if (!session.url) {
