@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getAllPostsMeta } from '@/lib/blog'
+import { getAllCities } from '@/lib/cities'
 import { getSiteUrl } from '@/lib/site-url'
 
 function lastModifiedFromDate(dateStr: string): Date | undefined {
@@ -11,6 +12,7 @@ function lastModifiedFromDate(dateStr: string): Date | undefined {
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSiteUrl()
   const posts = getAllPostsMeta()
+  const cityGuides = getAllCities()
 
   const routes: MetadataRoute.Sitemap = [
     {
@@ -23,11 +25,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    {
+      url: `${base}/city-guides`,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
     ...posts.map((post) => ({
       url: `${base}/blog/${post.slug}`,
       lastModified: lastModifiedFromDate(post.date),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
+    })),
+    ...cityGuides.map((guide) => ({
+      url: `${base}/city-guides/${guide.slug}`,
+      lastModified: lastModifiedFromDate(guide.date),
+      changeFrequency: 'monthly' as const,
+      priority: 0.75,
     })),
   ]
 

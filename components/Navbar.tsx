@@ -79,7 +79,7 @@ export default function Navbar({ onAuthClick }: Props) {
           News
         </Link>
         <Link
-          href="/cities"
+          href="/city-guides"
           style={{
             fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
             fontFamily: "'DM Sans', sans-serif", fontWeight: 500,

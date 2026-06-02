@@ -1,8 +1,9 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { SALARY_CLUSTER_NAME } from '@/lib/salary-cluster'
 
-const citiesDirectory = path.join(process.cwd(), 'content/cities')
+const citiesDirectory = path.join(process.cwd(), 'content/city-guides')
 
 export type CityGuideMeta = {
   slug: string
@@ -10,6 +11,7 @@ export type CityGuideMeta = {
   date: string
   description: string
   city_slugs: string[]
+  cluster?: string
 }
 
 export type CityGuide = CityGuideMeta & {
@@ -39,6 +41,7 @@ export function getCityBySlug(slug: string): CityGuide | null {
   const date = typeof data.date === 'string' ? data.date : ''
   const description =
     typeof data.description === 'string' ? data.description : ''
+  const cluster = typeof data.cluster === 'string' ? data.cluster : undefined
 
   return {
     slug,
@@ -46,6 +49,7 @@ export function getCityBySlug(slug: string): CityGuide | null {
     date,
     description,
     city_slugs: parseCitySlugs(data.city_slugs),
+    cluster,
     content,
   }
 }
@@ -62,9 +66,14 @@ export function getAllCities(): CityGuideMeta[] {
         date: guide.date,
         description: guide.description,
         city_slugs: guide.city_slugs,
+        ...(guide.cluster ? { cluster: guide.cluster } : {}),
       }
     })
     .filter((x): x is CityGuideMeta => x !== null)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   return guides
+}
+
+export function getSalaryClusterGuides(): CityGuideMeta[] {
+  return getAllCities().filter((guide) => guide.cluster === SALARY_CLUSTER_NAME)
 }
