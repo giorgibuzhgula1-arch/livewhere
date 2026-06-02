@@ -20,6 +20,7 @@ export default function Pricing({ onUpgrade }: Props) {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
         body: JSON.stringify({ userId: user?.id, email: user?.email, checkoutType })
       })

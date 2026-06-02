@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  conversionFromCheckoutSession,
+  recordAffiliateConversion,
+} from '@/lib/record-affiliate-conversion'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import Stripe from 'stripe'
@@ -18,6 +22,16 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session
     const userId = session.metadata?.userId
     const checkoutType = session.metadata?.checkoutType
+
+    const affiliateInput = conversionFromCheckoutSession({
+      id: session.id,
+      metadata: session.metadata ?? null,
+      amount_total: session.amount_total,
+      payment_intent: session.payment_intent,
+    })
+    if (affiliateInput) {
+      await recordAffiliateConversion(affiliateInput)
+    }
 
     if (userId) {
       if (checkoutType === 'report') {

@@ -9,12 +9,14 @@ function shouldSkipAuth(pathname: string): boolean {
   if (pathname.startsWith('/city-guides')) return true
   if (pathname.startsWith('/cities')) return true
   if (pathname.startsWith('/affiliates')) return true
+  if (pathname.startsWith('/admin')) return true
   if (pathname === '/sitemap.xml') return true
   if (pathname === '/favicon.ico') return true
   return false
 }
 
-function applyReferralCookie(request: NextRequest, response: NextResponse) {
+/** Set referral cookie after all other middleware cookie writes (Supabase recreates the response). */
+function setReferralCookieOnResponse(request: NextRequest, response: NextResponse) {
   const ref = request.nextUrl.searchParams.get('ref')
   if (!ref) return response
 
@@ -35,12 +37,10 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (shouldSkipAuth(pathname)) {
-    return applyReferralCookie(request, NextResponse.next({ request }))
+    return setReferralCookieOnResponse(request, NextResponse.next({ request }))
   }
 
   let response = NextResponse.next({ request })
-
-  response = applyReferralCookie(request, response)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,7 +66,7 @@ export async function middleware(request: NextRequest) {
 
   await supabase.auth.getSession()
 
-  return response
+  return setReferralCookieOnResponse(request, response)
 }
 
 export const config = {
