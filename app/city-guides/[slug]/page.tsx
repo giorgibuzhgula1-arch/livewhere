@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { ComponentPropsWithoutRef } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { getCityBySlug, getCitySlugs } from '@/lib/cities'
 import { getCitiesBySlugs, type CityData } from '@/lib/cities-data'
 import { SALARY_CLUSTER_NAME } from '@/lib/salary-cluster'
@@ -11,6 +13,14 @@ import styles from '../city-guides.module.css'
 export const dynamic = 'force-static'
 
 const TABLE_MARKER = '<!-- CITY_TABLE -->'
+
+const markdownComponents = {
+  table: (props: ComponentPropsWithoutRef<'table'>) => (
+    <div className={styles.bodyTableWrap}>
+      <table {...props} />
+    </div>
+  ),
+}
 
 type Props = {
   params: { slug: string }
@@ -198,7 +208,9 @@ export default function CityGuidePage({ params }: Props) {
 
       {intro ? (
         <div className={styles.body}>
-          <ReactMarkdown>{intro}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            {intro}
+          </ReactMarkdown>
         </div>
       ) : null}
 
@@ -206,7 +218,9 @@ export default function CityGuidePage({ params }: Props) {
 
       {conclusion ? (
         <div className={styles.body}>
-          <ReactMarkdown>{conclusion}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            {conclusion}
+          </ReactMarkdown>
         </div>
       ) : null}
 

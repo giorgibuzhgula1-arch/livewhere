@@ -52,13 +52,15 @@ Rather than focusing only on the cheapest destinations, we prioritized places wh
 
 ## Best Places to Live on $5,000/Month
 
-| Place                   | Rent          | Safety | Weather   | Healthcare | Lifestyle      |
-| ----------------------- | ------------- | ------ | --------- | ---------- | -------------- |
-| Crete, Greece           | Low           | High   | Excellent | Good       | Mediterranean  |
-| Algarve, Portugal       | Moderate      | High   | Excellent | Excellent  | International  |
-| Santa Familia, Belize   | Moderate      | Good   | Excellent | Good       | Tropical       |
-| Puerto Vallarta, Mexico | Moderate–High | High   | Excellent | Good       | Expat Friendly |
-| Marsaxlokk, Malta       | Moderate      | High   | Excellent | Excellent  | Coastal        |
+| Place                   | Rent          | Safety | Weather   | Healthcare | Internet Speed | Tax  | Visa Friendly | Nomad Score |
+| ----------------------- | ------------- | ------ | --------- | ---------- | -------------- | ---- | ------------- | ----------- |
+| Crete, Greece           | Low           | High   | Excellent | Good       | 180 Mbps       | 22%  | Yes           | 7/10        |
+| Algarve, Portugal       | Moderate      | High   | Excellent | Excellent  | 420 Mbps       | 28%  | Yes           | 8/10        |
+| Santa Familia, Belize   | Moderate      | Good   | Excellent | Good       | 60 Mbps        | 0%   | Yes           | 6/10        |
+| Puerto Vallarta, Mexico | Moderate–High | High   | Excellent | Good       | 200 Mbps       | 30%  | Yes           | 8/10        |
+| Marsaxlokk, Malta       | Moderate      | High   | Excellent | Excellent  | 350 Mbps       | 24%  | Yes           | 7/10        |
+
+<!-- CITY_TABLE -->
 
 ## Crete, Greece
 
