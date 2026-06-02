@@ -149,7 +149,7 @@ function GuideCta() {
         These guides are a starting point. LiveWhere analyzes your income, priorities, and
         lifestyle to rank cities just for you.
       </p>
-      <Link href="/tool" className={styles.ctaButton}>
+      <Link href="/" className={styles.ctaButton}>
         Find my perfect city →
       </Link>
     </section>
