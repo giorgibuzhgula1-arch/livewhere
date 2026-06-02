@@ -2,7 +2,7 @@
 title: "Best Cities for $5,000/Month Budget in 2026"
 date: "2026-06-01"
 description: "This guide explores destinations where a $5,000 monthly budget delivers the strongest combination of lifestyle, affordability, and long-term livability."
-city_slugs: []
+city_slugs: ["crete", "algarve", "santa-familia", "puerto-vallarta", "marsaxlokk"]
 cluster: "Salary Cluster"
 ---
 
@@ -51,14 +51,6 @@ This guide focuses on destinations that consistently perform well across five ke
 Rather than focusing only on the cheapest destinations, we prioritized places where a $5,000 monthly budget creates a comfortable and sustainable lifestyle.
 
 ## Best Places to Live on $5,000/Month
-
-| Place                   | Rent          | Safety | Weather   | Healthcare | Internet Speed | Tax  | Visa Friendly | Nomad Score |
-| ----------------------- | ------------- | ------ | --------- | ---------- | -------------- | ---- | ------------- | ----------- |
-| Crete, Greece           | Low           | High   | Excellent | Good       | 180 Mbps       | 22%  | Yes           | 7/10        |
-| Algarve, Portugal       | Moderate      | High   | Excellent | Excellent  | 420 Mbps       | 28%  | Yes           | 8/10        |
-| Santa Familia, Belize   | Moderate      | Good   | Excellent | Good       | 60 Mbps        | 0%   | Yes           | 6/10        |
-| Puerto Vallarta, Mexico | Moderate–High | High   | Excellent | Good       | 200 Mbps       | 30%  | Yes           | 8/10        |
-| Marsaxlokk, Malta       | Moderate      | High   | Excellent | Excellent  | 350 Mbps       | 24%  | Yes           | 7/10        |
 
 <!-- CITY_TABLE -->
 
