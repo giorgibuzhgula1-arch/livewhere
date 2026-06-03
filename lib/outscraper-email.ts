@@ -34,15 +34,13 @@ export function parseOutscraperEmailPayload(payload: OutscraperResponse): string
   return null
 }
 
-/** Find a contact email for a channel/brand name via Outscraper. */
-export async function findEmailViaOutscraper(
-  channelName: string
-): Promise<string | null> {
-  const query = channelName.trim()
-  if (!query) return null
+/** Find contact email via Outscraper (query: domain, site, or YouTube channel URL). */
+export async function findEmailViaOutscraper(query: string): Promise<string | null> {
+  const q = query.trim()
+  if (!q) return null
 
   const url = new URL(OUTSCRAPER_ENDPOINT)
-  url.searchParams.set('query', query)
+  url.searchParams.set('query', q)
   url.searchParams.set('limit', '1')
   url.searchParams.set('async', 'false')
 
@@ -65,26 +63,6 @@ export async function findEmailViaOutscraper(
   return parseOutscraperEmailPayload(payload)
 }
 
-/** Throttle sequential Outscraper lookups to reduce rate-limit errors. */
-export async function findEmailsViaOutscraperBatch(
-  channelNames: string[],
-  options?: { delayMs?: number }
-): Promise<Map<string, string | null>> {
-  const delayMs = options?.delayMs ?? 400
-  const results = new Map<string, string | null>()
-
-  for (const name of channelNames) {
-    try {
-      const email = await findEmailViaOutscraper(name)
-      results.set(name, email)
-    } catch (err) {
-      console.error(`Outscraper failed for "${name}":`, err)
-      results.set(name, null)
-    }
-    if (delayMs > 0) {
-      await new Promise((r) => setTimeout(r, delayMs))
-    }
-  }
-
-  return results
+export function youtubeChannelUrl(channelId: string): string {
+  return `https://youtube.com/channel/${channelId}`
 }
