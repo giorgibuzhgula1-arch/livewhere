@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { type CSSProperties, type FormEvent, useCallback, useEffect, useState } from 'react'
-
-const ADMIN_STORAGE_KEY = 'lw_admin_secret'
+import AdminNav from '@/components/AdminNav'
+import { ADMIN_STORAGE_KEY, adminHeaders } from '@/lib/admin-client'
 
 type AffiliateRow = {
   id: string
@@ -17,13 +17,6 @@ type AffiliateRow = {
   total_earnings: number
   status: string
   created_at: string
-}
-
-function adminHeaders(secret: string): HeadersInit {
-  return {
-    Authorization: `Bearer ${secret}`,
-    'Content-Type': 'application/json',
-  }
 }
 
 function formatMoney(n: number) {
@@ -205,6 +198,7 @@ export default function AdminAffiliatesPage() {
       </header>
 
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <AdminNav />
         <h1 style={titleStyle}>Affiliate admin</h1>
         <p style={mutedStyle}>
           Create affiliates, send welcome emails via Resend, and track performance.

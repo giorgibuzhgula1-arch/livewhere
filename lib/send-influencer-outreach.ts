@@ -1,21 +1,21 @@
-import { affiliateWelcomeEmailContent } from '@/lib/emails/affiliate-welcome'
+import { influencerOutreachEmailContent } from '@/lib/emails/influencer-outreach'
 import { getResendClient, getResendFromAddress } from '@/lib/resend'
 
-export async function sendAffiliateWelcomeEmail(params: {
+export async function sendInfluencerOutreachEmail(params: {
   to: string
-  name: string
+  channelName: string
+  niche: string
   referralUrl: string
-  commissionRate?: number
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const resend = getResendClient()
   if (!resend) {
     return { ok: false, error: 'RESEND_API_KEY is not configured' }
   }
 
-  const { subject, html, text } = affiliateWelcomeEmailContent({
-    name: params.name,
+  const { subject, html, text } = influencerOutreachEmailContent({
+    channelName: params.channelName,
+    niche: params.niche,
     referralUrl: params.referralUrl,
-    commissionRate: params.commissionRate,
   })
 
   const { data, error } = await resend.emails.send({
@@ -27,7 +27,7 @@ export async function sendAffiliateWelcomeEmail(params: {
   })
 
   if (error) {
-    console.error('Resend affiliate welcome failed:', error)
+    console.error('Resend influencer outreach failed:', error)
     return { ok: false, error: error.message || 'Failed to send email' }
   }
 
