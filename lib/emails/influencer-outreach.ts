@@ -18,13 +18,15 @@ export function influencerOutreachEmailContent(params: {
 
 ${intro}
 
-My name is Jessica Miller and I help manage LiveWhere.io.
+We already have over 17,500 users actively using the platform to make smarter relocation decisions.
+
+I'm Jessica from the Partnerships Team at LiveWhere.io.
 
 I wanted to reach out because I think LiveWhere could genuinely be useful for many people in your audience.
 
 LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.
 
-We already have over 17,500 users actively using the platform to make smarter relocation decisions.
+LiveWhere is especially useful for people interested in remote work, relocation, expat life, retirement abroad, and finding better places to live based on their budget and priorities.
 
 We're currently expanding our affiliate program and would love to explore a partnership with you.
 
@@ -39,13 +41,13 @@ What we offer:
 
 You can learn more here: https://livewhere.io/affiliates
 
-If you're interested, I'd be happy to create your affiliate account and send everything you need to get started.
+If this sounds interesting, I'd be happy to create your affiliate account and send over your tracking link so you can take a look.
 
 Thank you for your time.
 
 Best regards,
-Jessica Miller
-LiveWhere.io`
+Jessica
+Partnerships Team, LiveWhere.io`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -54,10 +56,11 @@ LiveWhere.io`
   <div style="max-width:600px;margin:0 auto;padding:24px;">
     <p style="margin:0 0 16px;">Hi ${params.firstName},</p>
     <p style="margin:0 0 16px;">${escapeHtml(intro)}</p>
-    <p style="margin:0 0 16px;">My name is Jessica Miller and I help manage LiveWhere.io.</p>
+    <p style="margin:0 0 16px;">We already have over 17,500 users actively using the platform to make smarter relocation decisions.</p>
+    <p style="margin:0 0 16px;">I'm Jessica from the Partnerships Team at LiveWhere.io.</p>
     <p style="margin:0 0 16px;">I wanted to reach out because I think LiveWhere could genuinely be useful for many people in your audience.</p>
     <p style="margin:0 0 16px;">LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.</p>
-    <p style="margin:0 0 16px;">We already have over 17,500 users actively using the platform to make smarter relocation decisions.</p>
+    <p style="margin:0 0 16px;">LiveWhere is especially useful for people interested in remote work, relocation, expat life, retirement abroad, and finding better places to live based on their budget and priorities.</p>
     <p style="margin:0 0 16px;">We're currently expanding our affiliate program and would love to explore a partnership with you.</p>
     <p style="margin:0 0 8px;"><strong>What we offer:</strong></p>
     <ul style="margin:0 0 16px;padding-left:20px;">
@@ -70,9 +73,9 @@ LiveWhere.io`
       <li>Automated payouts</li>
     </ul>
     <p style="margin:0 0 16px;">You can learn more here: <a href="https://livewhere.io/affiliates">https://livewhere.io/affiliates</a></p>
-    <p style="margin:0 0 16px;">If you're interested, I'd be happy to create your affiliate account and send everything you need to get started.</p>
+    <p style="margin:0 0 16px;">If this sounds interesting, I'd be happy to create your affiliate account and send over your tracking link so you can take a look.</p>
     <p style="margin:0 0 16px;">Thank you for your time.</p>
-    <p style="margin:0;">Best regards,<br>Jessica Miller<br>LiveWhere.io</p>
+    <p style="margin:0;">Best regards,<br>Jessica<br>Partnerships Team, LiveWhere.io</p>
   </div>
 </body>
 </html>`
