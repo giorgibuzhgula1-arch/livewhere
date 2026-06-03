@@ -262,8 +262,28 @@ function OutreachPanel({ secret }: { secret: string }) {
       </p>
 
       <section style={cardStyle}>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <label style={{ ...labelStyle, flex: '1 1 220px' }}>
+        <div style={searchFormStyle}>
+          <div>
+            <span style={fieldLabelStyle}>Platform</span>
+            <div style={platformFilterRowStyle} role="group" aria-label="Search platform">
+              {PLATFORM_OPTIONS.map((opt) => {
+                const active = platform === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setPlatform(opt.value)}
+                    style={active ? platformFilterBtnActiveStyle : platformFilterBtnStyle}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <label style={labelStyle}>
             Keyword
             <input
               value={keyword}
@@ -273,25 +293,12 @@ function OutreachPanel({ secret }: { secret: string }) {
               style={inputStyle}
             />
           </label>
-          <label style={{ ...labelStyle, flex: '0 1 160px' }}>
-            Platform
-            <select
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value as OutreachPlatformFilter)}
-              style={inputStyle}
-            >
-              {PLATFORM_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
+
           <button
             type="button"
             onClick={() => void handleSearch()}
             disabled={searching || !keyword.trim()}
-            style={primaryBtnStyle}
+            style={{ ...primaryBtnStyle, alignSelf: 'flex-start' }}
           >
             {searching ? 'Searching…' : 'Find Influencers'}
           </button>
@@ -438,6 +445,45 @@ const cardStyle: CSSProperties = {
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: 16,
   padding: 24,
+}
+
+const searchFormStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 20,
+}
+
+const fieldLabelStyle: CSSProperties = {
+  display: 'block',
+  fontSize: 13,
+  fontWeight: 600,
+  color: 'rgba(240,237,232,0.7)',
+  marginBottom: 10,
+}
+
+const platformFilterRowStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 10,
+}
+
+const platformFilterBtnStyle: CSSProperties = {
+  padding: '10px 18px',
+  borderRadius: 10,
+  border: '1px solid rgba(255,255,255,0.18)',
+  background: '#0a0a0f',
+  color: 'rgba(240,237,232,0.75)',
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+}
+
+const platformFilterBtnActiveStyle: CSSProperties = {
+  ...platformFilterBtnStyle,
+  background: 'rgba(200,240,90,0.15)',
+  border: '1px solid rgba(200,240,90,0.5)',
+  color: '#c8f05a',
 }
 
 const labelStyle: CSSProperties = {
