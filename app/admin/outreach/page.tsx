@@ -247,12 +247,31 @@ function OutreachPanel({ secret }: { secret: string }) {
 
       const sent = data.sentCount ?? 0
       const failed = data.failedCount ?? 0
-      setSuccess(
-        failed > 0
-          ? `Sent ${sent} email(s). ${failed} failed — check console or retry.`
-          : `Sent ${sent} personalized outreach email(s) from Jessica Miller.`
-      )
-      setSelected(new Set())
+      const failureDetails = (data.failed ?? []) as {
+        channelName: string
+        email: string
+        error: string
+      }[]
+
+      if (sent > 0 && failed === 0) {
+        setSuccess(`Sent ${sent} personalized outreach email(s) from Jessica Miller.`)
+      } else if (sent > 0 && failed > 0) {
+        setSuccess(`Sent ${sent} email(s).`)
+        setError(
+          failureDetails
+            .map((f) => `${f.channelName} (${f.email}): ${f.error}`)
+            .join('\n')
+        )
+      } else {
+        setError(
+          failureDetails.length > 0
+            ? failureDetails
+                .map((f) => `${f.channelName} (${f.email}): ${f.error}`)
+                .join('\n')
+            : 'All outreach emails failed. Check server logs for details.'
+        )
+      }
+      if (sent > 0) setSelected(new Set())
     } catch {
       setError('Could not send outreach emails')
     } finally {
@@ -546,6 +565,8 @@ const errorStyle: CSSProperties = {
   color: '#f05a8c',
   fontSize: 14,
   marginTop: 16,
+  whiteSpace: 'pre-wrap',
+  lineHeight: 1.5,
 }
 
 const successStyle: CSSProperties = {

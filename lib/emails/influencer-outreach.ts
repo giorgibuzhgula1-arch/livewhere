@@ -24,6 +24,8 @@ I wanted to reach out because I think LiveWhere could genuinely be useful for ma
 
 LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.
 
+We already have over 17,500 users actively using the platform to make smarter relocation decisions.
+
 We're currently expanding our affiliate program and would love to explore a partnership with you.
 
 What we offer:
@@ -55,6 +57,7 @@ LiveWhere.io`
     <p style="margin:0 0 16px;">My name is Jessica Miller and I help manage LiveWhere.io.</p>
     <p style="margin:0 0 16px;">I wanted to reach out because I think LiveWhere could genuinely be useful for many people in your audience.</p>
     <p style="margin:0 0 16px;">LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.</p>
+    <p style="margin:0 0 16px;">We already have over 17,500 users actively using the platform to make smarter relocation decisions.</p>
     <p style="margin:0 0 16px;">We're currently expanding our affiliate program and would love to explore a partnership with you.</p>
     <p style="margin:0 0 8px;"><strong>What we offer:</strong></p>
     <ul style="margin:0 0 16px;padding-left:20px;">

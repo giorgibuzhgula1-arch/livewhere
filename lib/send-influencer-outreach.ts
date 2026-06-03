@@ -1,6 +1,39 @@
 import { influencerOutreachEmailContent } from '@/lib/emails/influencer-outreach'
 import { getResendClient, getResendFromAddress } from '@/lib/resend'
 
+type ResendSendError = {
+  message?: string
+  statusCode?: number
+  name?: string
+}
+
+function outreachFromAddress(): string {
+  const custom = process.env.RESEND_OUTREACH_FROM?.trim()
+  if (custom) return custom
+
+  const base = getResendFromAddress()
+  const emailMatch = base.match(/<([^>]+)>/)
+  const bareMatch = base.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  const email = emailMatch?.[1] ?? (bareMatch ? base : null)
+
+  if (email) {
+    return `Jessica Miller <${email}>`
+  }
+
+  return base
+}
+
+export function formatResendSendError(error: ResendSendError): string {
+  const msg = error.message?.trim() || 'Failed to send email'
+  if (
+    error.statusCode === 403 &&
+    /testing emails|verify a domain/i.test(msg)
+  ) {
+    return `${msg} Add RESEND_FROM_EMAIL in env using your verified domain (e.g. Jessica Miller <hello@livewhere.io>).`
+  }
+  return msg
+}
+
 export async function sendInfluencerOutreachEmail(params: {
   to: string
   firstName: string
@@ -16,11 +49,7 @@ export async function sendInfluencerOutreachEmail(params: {
     personalizedIntro: params.personalizedIntro,
   })
 
-  const customFrom = process.env.RESEND_OUTREACH_FROM?.trim()
-  const baseFrom = getResendFromAddress()
-  const emailMatch = baseFrom.match(/<([^>]+)>/)
-  const fromEmail = emailMatch?.[1] ?? baseFrom
-  const from = customFrom || `Jessica Miller <${fromEmail}>`
+  const from = outreachFromAddress()
 
   const { data, error } = await resend.emails.send({
     from,
@@ -32,8 +61,15 @@ export async function sendInfluencerOutreachEmail(params: {
   })
 
   if (error) {
-    console.error('Resend influencer outreach failed:', error)
-    return { ok: false, error: error.message || 'Failed to send email' }
+    const resendErr = error as ResendSendError
+    console.error('Resend influencer outreach failed:', {
+      to: params.to,
+      from,
+      statusCode: resendErr.statusCode,
+      name: resendErr.name,
+      message: resendErr.message,
+    })
+    return { ok: false, error: formatResendSendError(resendErr) }
   }
 
   return { ok: true, id: data?.id ?? '' }

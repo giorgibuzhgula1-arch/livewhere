@@ -104,17 +104,20 @@ export async function POST(req: NextRequest) {
         })
 
         if (!emailResult.ok) {
+          console.error('[outreach send] Resend failed:', {
+            channelName,
+            email,
+            error: emailResult.error,
+          })
           failed.push({ channelName, email, error: emailResult.error })
           continue
         }
 
         sent.push({ channelName, email, referralUrl })
       } catch (err) {
-        failed.push({
-          channelName,
-          email,
-          error: err instanceof Error ? err.message : 'Send failed',
-        })
+        const message = err instanceof Error ? err.message : 'Send failed'
+        console.error('[outreach send] exception:', { channelName, email, message, err })
+        failed.push({ channelName, email, error: message })
       }
     }
 
