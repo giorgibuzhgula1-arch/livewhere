@@ -1,6 +1,6 @@
 'use client'
 
-import { type CSSProperties, useMemo, useState } from 'react'
+import { type CSSProperties, useMemo, useRef, useState } from 'react'
 import AdminGate from '@/components/AdminGate'
 import { adminHeaders } from '@/lib/admin-client'
 import {
@@ -8,13 +8,14 @@ import {
   filterOutreachByCountry,
 } from '@/lib/outreach-country-filter'
 import { openFindEmailSearch } from '@/lib/outreach-find-email'
+import { parseOutreachCsv } from '@/lib/parse-outreach-csv'
 import {
   platformLabel,
   type OutreachInfluencer,
   type OutreachPlatformFilter,
 } from '@/lib/outreach-types'
 
-type EmailSource = 'bio' | 'outscraper' | null
+type EmailSource = 'bio' | 'outscraper' | 'csv' | null
 
 type InfluencerRow = OutreachInfluencer & {
   emailSource: EmailSource
@@ -51,8 +52,10 @@ function OutreachPanel({ secret }: { secret: string }) {
   const [searching, setSearching] = useState(false)
   const [sending, setSending] = useState(false)
   const [enriching, setEnriching] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const csvInputRef = useRef<HTMLInputElement>(null)
 
   const withoutEmail = useMemo(() => rows.filter((r) => !r.email), [rows])
 
@@ -138,6 +141,55 @@ function OutreachPanel({ secret }: { secret: string }) {
 
   const allSelectableSelected =
     withEmail.length > 0 && withEmail.every((r) => selected.has(r.channelId))
+
+  async function handleCsvUpload(file: File) {
+    setImporting(true)
+    setError(null)
+    setSuccess(null)
+    setSelected(new Set())
+
+    try {
+      const text = await file.text()
+      const defaultKeyword = keyword.trim() || 'csv import'
+      const { influencers, skipped, errors } = parseOutreachCsv(text, defaultKeyword)
+
+      if (errors.length > 0 && influencers.length === 0) {
+        setError(errors.join('\n'))
+        return
+      }
+
+      const raw = filterOutreachByCountry(influencers)
+      const imported: InfluencerRow[] = raw.map((row) => ({
+        ...row,
+        emailSource: row.email ? ('csv' as const) : null,
+      }))
+
+      setRows((prev) => {
+        const byId = new Map(prev.map((r) => [r.channelId, r]))
+        for (const row of imported) byId.set(row.channelId, row)
+        const next = Array.from(byId.values()).sort((a, b) => b.subscribers - a.subscribers)
+        if (next.some((r) => !r.email)) {
+          void enrichChannels(next, { quiet: true })
+        }
+        return next
+      })
+
+      const hidden = influencers.length - raw.length
+      const parts = [
+        `Imported ${imported.length} influencer(s) from CSV.`,
+        skipped > 0 ? `${skipped} row(s) skipped (no channel name).` : null,
+        hidden > 0 ? `${hidden} hidden by country filter.` : null,
+        errors.length > 0 ? errors.join(' ') : null,
+      ].filter(Boolean)
+
+      setSuccess(parts.join(' '))
+    } catch {
+      setError('Could not read or parse the CSV file')
+    } finally {
+      setImporting(false)
+      if (csvInputRef.current) csvInputRef.current.value = ''
+    }
+  }
 
   async function handleSearch() {
     if (!keyword.trim()) return
@@ -283,8 +335,9 @@ function OutreachPanel({ secret }: { secret: string }) {
     <>
       <h1 style={titleStyle}>Influencer outreach</h1>
       <p style={mutedStyle}>
-        Search by keyword across platforms. YouTube uses the YouTube API; Instagram and TikTok
-        use Google SERP discovery via Outscraper. Emails are validated against the creator name
+        Search by keyword across platforms, or import an Outscraper YouTube CSV. YouTube search uses
+        the YouTube API; Instagram and TikTok use Google SERP via Outscraper. Emails are validated
+        against the creator name
         (government, institutional, and unrelated addresses are filtered out).
       </p>
 
@@ -329,6 +382,31 @@ function OutreachPanel({ secret }: { secret: string }) {
           >
             {searching ? 'Searching…' : 'Find Influencers'}
           </button>
+
+          <div style={csvImportRowStyle}>
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void handleCsvUpload(file)
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => csvInputRef.current?.click()}
+              disabled={importing}
+              style={ghostBtnStyle}
+            >
+              {importing ? 'Importing…' : 'Import CSV'}
+            </button>
+            <span style={csvHintStyle}>
+              Outscraper YouTube export: channel name, email, subscribers, channel URL, etc.
+              Uses keyword above when the file has no query column.
+            </span>
+          </div>
         </div>
       </section>
 
@@ -410,6 +488,11 @@ function OutreachPanel({ secret }: { secret: string }) {
                                 via Outscraper
                               </span>
                             )}
+                            {row.emailSource === 'csv' && (
+                              <span style={{ fontSize: 10, color: 'rgba(240,237,232,0.4)' }}>
+                                from CSV
+                              </span>
+                            )}
                           </div>
                         ) : enriching ? (
                           <span style={{ color: 'rgba(240,237,232,0.45)', fontSize: 12 }}>
@@ -478,6 +561,22 @@ const searchFormStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 20,
+}
+
+const csvImportRowStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: 12,
+  paddingTop: 4,
+  borderTop: '1px solid rgba(255,255,255,0.06)',
+}
+
+const csvHintStyle: CSSProperties = {
+  flex: '1 1 220px',
+  fontSize: 12,
+  color: 'rgba(240,237,232,0.4)',
+  lineHeight: 1.45,
 }
 
 const fieldLabelStyle: CSSProperties = {

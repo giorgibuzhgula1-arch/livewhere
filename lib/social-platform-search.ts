@@ -8,7 +8,13 @@ import { parseFollowerCount } from '@/lib/parse-follower-count'
 
 const MIN_FOLLOWERS = 5_000
 const MAX_FOLLOWERS = 200_000
+/** Target creators returned after parsing/filtering (cap). */
 const MAX_RESULTS = 50
+/**
+ * Outscraper `pagesPerQuery` for IG/TikTok discovery (~10 Google organic links/page).
+ * Passed to google-search-v3; there is no separate results limit/count param.
+ */
+export const SOCIAL_OUTSCRAPER_PAGES_PER_QUERY = 5
 
 const INSTAGRAM_BLOCK =
   /^(p|reel|reels|explore|stories|tv|accounts|about|developer|directory|legal)$/i
@@ -52,18 +58,12 @@ function parseTikTokUsername(link: string): string | null {
   }
 }
 
-async function searchPlatformViaGoogle(
+function organicToInfluencers(
   platform: 'instagram' | 'tiktok',
-  keyword: string
-): Promise<OutreachInfluencer[]> {
+  keyword: string,
+  organic: ReturnType<typeof collectOrganicResults>
+): OutreachInfluencer[] {
   const q = keyword.trim()
-  if (!q) return []
-
-  const site = platform === 'instagram' ? 'instagram.com' : 'tiktok.com'
-  const searchQuery = `${q} influencer site:${site}`
-  const payload = await fetchOutscraperGoogleSearch(searchQuery)
-  const organic = collectOrganicResults(payload)
-
   const seen = new Set<string>()
   const results: OutreachInfluencer[] = []
 
@@ -113,14 +113,42 @@ async function searchPlatformViaGoogle(
   return results
 }
 
+async function fetchOrganicForQueries(queries: string[]) {
+  const payloads = await Promise.all(
+    queries.map((searchQuery) =>
+      fetchOutscraperGoogleSearch(searchQuery, {
+        pagesPerQuery: SOCIAL_OUTSCRAPER_PAGES_PER_QUERY,
+      })
+    )
+  )
+  return payloads.flatMap((payload) => collectOrganicResults(payload))
+}
+
+async function searchInstagramViaGoogle(keyword: string): Promise<OutreachInfluencer[]> {
+  const q = keyword.trim()
+  if (!q) return []
+
+  const queries = [`${q} site:instagram.com`, `${q} creator site:instagram.com`]
+  const organic = await fetchOrganicForQueries(queries)
+  return organicToInfluencers('instagram', q, organic)
+}
+
+async function searchTikTokViaGoogle(keyword: string): Promise<OutreachInfluencer[]> {
+  const q = keyword.trim()
+  if (!q) return []
+
+  const organic = await fetchOrganicForQueries([`${q} influencer site:tiktok.com`])
+  return organicToInfluencers('tiktok', q, organic)
+}
+
 export async function searchInstagramInfluencers(
   keyword: string
 ): Promise<OutreachInfluencer[]> {
-  return searchPlatformViaGoogle('instagram', keyword)
+  return searchInstagramViaGoogle(keyword)
 }
 
 export async function searchTikTokInfluencers(
   keyword: string
 ): Promise<OutreachInfluencer[]> {
-  return searchPlatformViaGoogle('tiktok', keyword)
+  return searchTikTokViaGoogle(keyword)
 }
