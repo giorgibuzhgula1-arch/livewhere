@@ -8,21 +8,27 @@ import {
   filterOutreachByCountry,
 } from '@/lib/outreach-country-filter'
 import { openFindEmailSearch } from '@/lib/outreach-find-email'
+import {
+  platformLabel,
+  type OutreachInfluencer,
+  type OutreachPlatformFilter,
+} from '@/lib/outreach-types'
 
-type EmailSource = 'youtube' | 'outscraper' | null
+type EmailSource = 'bio' | 'outscraper' | null
 
-type InfluencerRow = {
-  channelId: string
-  channelName: string
-  subscribers: number
-  country: string | null
-  email: string | null
+type InfluencerRow = OutreachInfluencer & {
   emailSource: EmailSource
-  youtubeUrl: string
-  keyword: string
 }
 
+const PLATFORM_OPTIONS: { value: OutreachPlatformFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok' },
+]
+
 function formatSubs(n: number) {
+  if (n <= 0) return '—'
   return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n)
 }
 
@@ -30,7 +36,7 @@ export default function AdminOutreachPage() {
   return (
     <AdminGate
       title="Admin — Outreach"
-      subtitle="Find YouTube influencers and send partnership emails via Resend."
+      subtitle="Find YouTube, Instagram, and TikTok influencers and send partnership emails via Resend."
     >
       {({ secret }) => <OutreachPanel secret={secret} />}
     </AdminGate>
@@ -39,6 +45,7 @@ export default function AdminOutreachPage() {
 
 function OutreachPanel({ secret }: { secret: string }) {
   const [keyword, setKeyword] = useState('')
+  const [platform, setPlatform] = useState<OutreachPlatformFilter>('all')
   const [rows, setRows] = useState<InfluencerRow[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [searching, setSearching] = useState(false)
@@ -137,7 +144,7 @@ function OutreachPanel({ secret }: { secret: string }) {
       const res = await fetch('/api/admin/outreach/search', {
         method: 'POST',
         headers: adminHeaders(secret),
-        body: JSON.stringify({ keyword: keyword.trim() }),
+        body: JSON.stringify({ keyword: keyword.trim(), platform }),
       })
       const data = await res.json()
 
@@ -150,10 +157,10 @@ function OutreachPanel({ secret }: { secret: string }) {
         return
       }
 
-      const raw = (data.influencers ?? []) as Omit<InfluencerRow, 'emailSource'>[]
+      const raw = (data.influencers ?? []) as OutreachInfluencer[]
       const visible: InfluencerRow[] = filterOutreachByCountry(raw).map((row) => ({
         ...row,
-        emailSource: row.email ? ('youtube' as const) : null,
+        emailSource: row.email ? ('bio' as const) : null,
       }))
       setRows(visible)
 
@@ -167,11 +174,11 @@ function OutreachPanel({ secret }: { secret: string }) {
             'All matching channels were hidden by the country filter (India, Russia, Africa).'
           )
         } else {
-          setSuccess('No channels found in the 5K–200K subscriber range for this keyword.')
+          setSuccess('No influencers found for this keyword and platform.')
         }
       }
     } catch {
-      setError('Could not reach YouTube search API')
+      setError('Could not complete influencer search')
     } finally {
       setSearching(false)
     }
@@ -201,7 +208,7 @@ function OutreachPanel({ secret }: { secret: string }) {
         channelName: r.channelName,
         email: r.email!,
         keyword: r.keyword,
-        youtubeUrl: r.youtubeUrl,
+        profileUrl: r.profileUrl,
       }))
 
     if (recipients.length === 0) {
@@ -249,14 +256,14 @@ function OutreachPanel({ secret }: { secret: string }) {
     <>
       <h1 style={titleStyle}>Influencer outreach</h1>
       <p style={mutedStyle}>
-        Search YouTube for channels (5K–200K subscribers). Emails come from channel descriptions
-        or Outscraper enrichment. Selected influencers get an affiliate record and a personalized
-        Resend email.
+        Search by keyword across platforms. YouTube uses the YouTube API; Instagram and TikTok
+        use Google SERP discovery via Outscraper. Emails come from bios or Outscraper enrichment
+        (5K–200K followers when available).
       </p>
 
       <section style={cardStyle}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <label style={{ ...labelStyle, flex: '1 1 280px' }}>
+          <label style={{ ...labelStyle, flex: '1 1 220px' }}>
             Keyword
             <input
               value={keyword}
@@ -265,6 +272,20 @@ function OutreachPanel({ secret }: { secret: string }) {
               placeholder="digital nomad"
               style={inputStyle}
             />
+          </label>
+          <label style={{ ...labelStyle, flex: '0 1 160px' }}>
+            Platform
+            <select
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value as OutreachPlatformFilter)}
+              style={inputStyle}
+            >
+              {PLATFORM_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </label>
           <button
             type="button"
@@ -283,8 +304,8 @@ function OutreachPanel({ secret }: { secret: string }) {
       {rows.length > 0 && (
         <section style={{ ...cardStyle, marginTop: 24 }}>
           <div style={toolbarStyle}>
-            <span style={mutedStyle}>
-              {rows.length} channel(s) · {withEmail.length} with email
+            <span style={{ ...mutedStyle, marginBottom: 0 }}>
+              {rows.length} result(s) · {withEmail.length} with email
             </span>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {withoutEmail.length > 0 && (
@@ -316,11 +337,12 @@ function OutreachPanel({ secret }: { secret: string }) {
               <thead>
                 <tr>
                   <th style={thStyle} />
-                  <th style={thStyle}>Channel</th>
-                  <th style={thStyle}>Subscribers</th>
+                  <th style={thStyle}>Platform</th>
+                  <th style={thStyle}>Name</th>
+                  <th style={thStyle}>Followers</th>
                   <th style={thStyle}>Country</th>
                   <th style={thStyle}>Email</th>
-                  <th style={thStyle}>YouTube</th>
+                  <th style={thStyle}>Profile</th>
                 </tr>
               </thead>
               <tbody>
@@ -336,6 +358,11 @@ function OutreachPanel({ secret }: { secret: string }) {
                           onChange={() => toggleSelect(row.channelId)}
                           aria-label={`Select ${row.channelName}`}
                         />
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={platformBadgeStyle(row.platform)}>
+                          {platformLabel(row.platform)}
+                        </span>
                       </td>
                       <td style={tdStyle}>{row.channelName}</td>
                       <td style={tdStyle}>{formatSubs(row.subscribers)}</td>
@@ -357,7 +384,7 @@ function OutreachPanel({ secret }: { secret: string }) {
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
                             <span style={{ color: 'rgba(240,237,232,0.35)', fontSize: 12 }}>
-                              Not in description
+                              Not found
                             </span>
                             <button
                               type="button"
@@ -371,7 +398,7 @@ function OutreachPanel({ secret }: { secret: string }) {
                       </td>
                       <td style={tdStyle}>
                         <a
-                          href={row.youtubeUrl}
+                          href={row.profileUrl}
                           target="_blank"
                           rel="noreferrer"
                           style={{ color: '#c8f05a', fontSize: 13 }}
@@ -513,4 +540,23 @@ const filterNoteStyle: CSSProperties = {
   fontSize: 12,
   color: 'rgba(240,237,232,0.4)',
   fontStyle: 'italic',
+}
+
+function platformBadgeStyle(platform: InfluencerRow['platform']): CSSProperties {
+  const colors: Record<InfluencerRow['platform'], { bg: string; border: string; color: string }> = {
+    youtube: { bg: 'rgba(255,0,0,0.12)', border: 'rgba(255,80,80,0.35)', color: '#ff6b6b' },
+    instagram: { bg: 'rgba(225,48,108,0.12)', border: 'rgba(225,48,108,0.35)', color: '#f472b6' },
+    tiktok: { bg: 'rgba(0,242,234,0.1)', border: 'rgba(0,242,234,0.3)', color: '#5eead4' },
+  }
+  const c = colors[platform]
+  return {
+    display: 'inline-block',
+    padding: '4px 10px',
+    borderRadius: 20,
+    fontSize: 11,
+    fontWeight: 600,
+    background: c.bg,
+    border: `1px solid ${c.border}`,
+    color: c.color,
+  }
 }

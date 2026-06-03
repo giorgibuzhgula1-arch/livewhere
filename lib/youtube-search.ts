@@ -1,20 +1,10 @@
 import { extractEmailFromText } from '@/lib/extract-email'
+import type { OutreachInfluencer } from '@/lib/outreach-types'
 
 const MIN_SUBSCRIBERS = 5_000
 const MAX_SUBSCRIBERS = 200_000
-/** YouTube search.list allows 1–50 per request; we paginate until this many channel IDs are collected. */
 const SEARCH_MAX_RESULTS = 50
 const YOUTUBE_API = 'https://www.googleapis.com/youtube/v3'
-
-export type YouTubeInfluencerResult = {
-  channelId: string
-  channelName: string
-  subscribers: number
-  country: string | null
-  email: string | null
-  youtubeUrl: string
-  keyword: string
-}
 
 type SearchItem = {
   id?: { channelId?: string }
@@ -73,7 +63,7 @@ function channelUrl(channel: ChannelItem): string {
 
 export async function searchYouTubeInfluencers(
   keyword: string
-): Promise<YouTubeInfluencerResult[]> {
+): Promise<OutreachInfluencer[]> {
   const q = keyword.trim()
   if (!q) return []
 
@@ -116,7 +106,7 @@ export async function searchYouTubeInfluencers(
     allChannels.push(...(channelsData.items ?? []))
   }
 
-  const results: YouTubeInfluencerResult[] = []
+  const results: OutreachInfluencer[] = []
 
   for (const channel of allChannels) {
     if (channel.statistics?.hiddenSubscriberCount) continue
@@ -131,12 +121,13 @@ export async function searchYouTubeInfluencers(
     }
 
     results.push({
-      channelId: channel.id,
+      channelId: `youtube:${channel.id}`,
       channelName: channel.snippet?.title ?? 'Unknown channel',
+      platform: 'youtube',
       subscribers,
       country: channel.snippet?.country ?? null,
       email: extractEmailFromText(channel.snippet?.description),
-      youtubeUrl: channelUrl(channel),
+      profileUrl: channelUrl(channel),
       keyword: q,
     })
   }

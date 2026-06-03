@@ -58,5 +58,8 @@ export function isExcludedOutreachCountry(country: string | null | undefined): b
 export function filterOutreachByCountry<T extends { country: string | null }>(
   rows: T[]
 ): T[] {
-  return rows.filter((row) => !isExcludedOutreachCountry(row.country))
+  return rows.filter((row) => {
+    if (!row.country) return true
+    return !isExcludedOutreachCountry(row.country)
+  })
 }
