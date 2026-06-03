@@ -34,8 +34,26 @@ export function parseOutscraperEmailPayload(payload: OutscraperResponse): string
   return null
 }
 
-/** Find contact email via Outscraper (query: domain, site, or YouTube channel URL). */
-export async function findEmailViaOutscraper(query: string): Promise<string | null> {
+export type OutscraperDebugInfo = {
+  requestQuery: string
+  requestUrl: string
+  httpStatus: number
+  rawResponse: OutscraperResponse
+  parsedEmail: string | null
+  responseQuery?: string
+}
+
+/** Build Outscraper search query for influencer email discovery. */
+export function buildOutscraperEnrichQuery(channelName: string): string {
+  const name = channelName.trim()
+  return `${name} contact email site:youtube.com OR site:twitter.com OR site:instagram.com`
+}
+
+/** Find contact email via Outscraper. */
+export async function findEmailViaOutscraper(
+  query: string,
+  options?: { debug?: boolean }
+): Promise<string | null> {
   const q = query.trim()
   if (!q) return null
 
@@ -50,6 +68,19 @@ export async function findEmailViaOutscraper(query: string): Promise<string | nu
   })
 
   const payload = (await res.json()) as OutscraperResponse
+  const parsedEmail = parseOutscraperEmailPayload(payload)
+
+  if (options?.debug) {
+    const debugInfo: OutscraperDebugInfo = {
+      requestQuery: q,
+      requestUrl: url.toString(),
+      httpStatus: res.status,
+      rawResponse: payload,
+      parsedEmail,
+      responseQuery: payload.data?.[0]?.query,
+    }
+    console.log('[Outscraper debug] emails-and-contacts', JSON.stringify(debugInfo, null, 2))
+  }
 
   if (!res.ok) {
     const msg = payload.errorMessage || `Outscraper error (${res.status})`
@@ -60,7 +91,7 @@ export async function findEmailViaOutscraper(query: string): Promise<string | nu
     throw new Error(payload.errorMessage || 'Outscraper request failed')
   }
 
-  return parseOutscraperEmailPayload(payload)
+  return parsedEmail
 }
 
 export function youtubeChannelUrl(channelId: string): string {

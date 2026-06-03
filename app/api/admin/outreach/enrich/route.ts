@@ -5,7 +5,10 @@ import {
   getAdminSecret,
   isAdminAuthorized,
 } from '@/lib/admin-auth'
-import { findEmailViaOutscraper, youtubeChannelUrl } from '@/lib/outscraper-email'
+import {
+  buildOutscraperEnrichQuery,
+  findEmailViaOutscraper,
+} from '@/lib/outscraper-email'
 
 function requireAdmin(req: NextRequest): NextResponse | null {
   if (!getAdminSecret()) return adminNotConfiguredResponse()
@@ -44,7 +47,16 @@ export async function POST(req: NextRequest) {
       let email: string | null = null
 
       try {
-        email = await findEmailViaOutscraper(youtubeChannelUrl(channelId))
+        const outscraperQuery = buildOutscraperEnrichQuery(channelName)
+        email = await findEmailViaOutscraper(outscraperQuery, { debug: i === 0 })
+        if (i === 0) {
+          console.log('[Outscraper enrich] first channel', {
+            channelId,
+            channelName,
+            outscraperQuery,
+            email,
+          })
+        }
         if (email) foundCount++
       } catch (err) {
         console.error(`Outscraper enrich failed for ${channelName}:`, err)
