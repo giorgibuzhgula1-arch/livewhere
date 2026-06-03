@@ -1,82 +1,78 @@
-const PRO_PRICE = 19
-const LIFETIME_PRICE = 149
-const COMMISSION_RATE = 0.4
+export const OUTREACH_EMAIL_SUBJECT = 'Partnership Opportunity'
 
-function formatUsd(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-  }).format(amount)
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
-export const INFLUENCER_OUTREACH_SUBJECT =
-  'Partnership opportunity — LiveWhere.io (40% commission)'
-
 export function influencerOutreachEmailContent(params: {
-  channelName: string
-  niche: string
-  referralUrl: string
+  firstName: string
+  personalizedIntro: string
 }): { subject: string; html: string; text: string } {
-  const ratePercent = Math.round(COMMISSION_RATE * 100)
-  const proCommission = formatUsd(PRO_PRICE * COMMISSION_RATE)
-  const lifetimeCommission = formatUsd(LIFETIME_PRICE * COMMISSION_RATE)
-  const nicheLabel = params.niche.trim() || 'your audience'
+  const intro = params.personalizedIntro.trim()
 
-  const text = `Hi ${params.channelName} team,
+  const text = `Hi ${params.firstName},
 
-I've been following channels in the ${nicheLabel} space and thought ${params.channelName} would be a great fit for a partnership with LiveWhere.
+${intro}
 
-LiveWhere.io helps remote workers and digital nomads discover the best cities for their budget — with AI-powered cost-of-living analysis, visa difficulty, tax insights, and personalized city rankings.
+My name is Jessica Miller and I help manage LiveWhere.io.
 
-We'd love to partner with you on an affiliate basis:
+I wanted to reach out because I think LiveWhere could genuinely be useful for many people in your audience.
 
-• ${ratePercent}% commission on every paid signup from your link
-• Pro plan ($${PRO_PRICE}/mo): ${proCommission} per conversion
-• Lifetime plan ($${LIFETIME_PRICE}): ${lifetimeCommission} per conversion
-• 30-day referral tracking — no coupon codes needed
+LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.
 
-Your unique partner link:
-${params.referralUrl}
+We're currently expanding our affiliate program and would love to explore a partnership with you.
 
-If this sounds interesting, share the link in a video description, pinned comment, or newsletter — we handle tracking and payouts automatically.
+What we offer:
+- 40% lifetime recurring commission on $19/month subscription sales
+- 40% commission on Lifetime Plan purchases ($149)
+- Free Pro access
+- Personal affiliate dashboard
+- Real-time tracking
+- Unique affiliate link
+- Automated payouts
 
-Happy to answer any questions. Just reply to this email.
+You can learn more here: https://livewhere.io/affiliates
 
-Best,
-The LiveWhere team
-https://livewhere.io`
+If you're interested, I'd be happy to create your affiliate account and send everything you need to get started.
+
+Thank you for your time.
+
+Best regards,
+Jessica Miller
+LiveWhere.io`
 
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0a0a0f;font-family:system-ui,-apple-system,sans-serif;color:#f0ede8;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:560px;background:#12121a;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px;">
-        <tr><td>
-          <p style="margin:0 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8f05a;font-weight:600;">Partnership</p>
-          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#f0ede8;">Hi ${params.channelName} team</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:rgba(240,237,232,0.75);">
-            I've been following creators in the <strong style="color:#f0ede8;">${nicheLabel}</strong> niche and think your channel is a strong match for LiveWhere.io — we help remote workers and digital nomads find the best cities for their budget with AI-powered rankings, visa scores, and real cost-of-living data.
-          </p>
-          <h2 style="margin:0 0 12px;font-size:16px;color:#f0ede8;">${ratePercent}% affiliate commission</h2>
-          <ul style="margin:0 0 20px;padding-left:20px;font-size:14px;line-height:1.7;color:rgba(240,237,232,0.75);">
-            <li>Pro ($${PRO_PRICE}/mo) → <strong style="color:#f0ede8;">${proCommission}</strong> per sale</li>
-            <li>Lifetime ($${LIFETIME_PRICE}) → <strong style="color:#f0ede8;">${lifetimeCommission}</strong> per sale</li>
-            <li>30-day referral tracking — share one link, we handle the rest</li>
-          </ul>
-          <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:rgba(240,237,232,0.45);">Your partner link</p>
-          <p style="margin:0 0 24px;padding:14px 16px;background:rgba(200,240,90,0.08);border:1px solid rgba(200,240,90,0.25);border-radius:10px;font-size:14px;word-break:break-all;">
-            <a href="${params.referralUrl}" style="color:#c8f05a;text-decoration:none;">${params.referralUrl}</a>
-          </p>
-          <p style="margin:0;font-size:14px;line-height:1.6;color:rgba(240,237,232,0.55);">Reply if you'd like more details — we'd love to collaborate.</p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
+<body style="margin:0;padding:0;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;line-height:1.6;">
+  <div style="max-width:600px;margin:0 auto;padding:24px;">
+    <p style="margin:0 0 16px;">Hi ${params.firstName},</p>
+    <p style="margin:0 0 16px;">${escapeHtml(intro)}</p>
+    <p style="margin:0 0 16px;">My name is Jessica Miller and I help manage LiveWhere.io.</p>
+    <p style="margin:0 0 16px;">I wanted to reach out because I think LiveWhere could genuinely be useful for many people in your audience.</p>
+    <p style="margin:0 0 16px;">LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.</p>
+    <p style="margin:0 0 16px;">We're currently expanding our affiliate program and would love to explore a partnership with you.</p>
+    <p style="margin:0 0 8px;"><strong>What we offer:</strong></p>
+    <ul style="margin:0 0 16px;padding-left:20px;">
+      <li>40% lifetime recurring commission on $19/month subscription sales</li>
+      <li>40% commission on Lifetime Plan purchases ($149)</li>
+      <li>Free Pro access</li>
+      <li>Personal affiliate dashboard</li>
+      <li>Real-time tracking</li>
+      <li>Unique affiliate link</li>
+      <li>Automated payouts</li>
+    </ul>
+    <p style="margin:0 0 16px;">You can learn more here: <a href="https://livewhere.io/affiliates">https://livewhere.io/affiliates</a></p>
+    <p style="margin:0 0 16px;">If you're interested, I'd be happy to create your affiliate account and send everything you need to get started.</p>
+    <p style="margin:0 0 16px;">Thank you for your time.</p>
+    <p style="margin:0;">Best regards,<br>Jessica Miller<br>LiveWhere.io</p>
+  </div>
 </body>
 </html>`
 
-  return { subject: INFLUENCER_OUTREACH_SUBJECT, html, text }
+  return { subject: OUTREACH_EMAIL_SUBJECT, html, text }
 }

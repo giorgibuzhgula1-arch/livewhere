@@ -1,4 +1,4 @@
-import { extractEmailFromText } from '@/lib/extract-email'
+import { extractCreatorEmailFromText } from '@/lib/validate-creator-email'
 import type { OutreachInfluencer, OutreachPlatform } from '@/lib/outreach-types'
 import {
   collectOrganicResults,
@@ -91,13 +91,19 @@ async function searchPlatformViaGoogle(
         ? `https://www.instagram.com/${username}/`
         : `https://www.tiktok.com/@${username}`
 
+    const channelName = cleanDisplayName(entry.title ?? '', username)
+
     results.push({
       channelId: `${platform}:${handleKey}`,
-      channelName: cleanDisplayName(entry.title ?? '', username),
+      channelName,
       platform,
       subscribers,
       country: null,
-      email: extractEmailFromText(blob),
+      email: extractCreatorEmailFromText(blob, {
+        channelName,
+        profileUrl,
+        platform,
+      }),
       profileUrl,
       keyword: q,
     })

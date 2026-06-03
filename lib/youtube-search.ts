@@ -1,4 +1,4 @@
-import { extractEmailFromText } from '@/lib/extract-email'
+import { extractCreatorEmailFromText } from '@/lib/validate-creator-email'
 import type { OutreachInfluencer } from '@/lib/outreach-types'
 
 const MIN_SUBSCRIBERS = 5_000
@@ -120,14 +120,21 @@ export async function searchYouTubeInfluencers(
       continue
     }
 
+    const channelName = channel.snippet?.title ?? 'Unknown channel'
+    const profileUrl = channelUrl(channel)
+
     results.push({
       channelId: `youtube:${channel.id}`,
-      channelName: channel.snippet?.title ?? 'Unknown channel',
+      channelName,
       platform: 'youtube',
       subscribers,
       country: channel.snippet?.country ?? null,
-      email: extractEmailFromText(channel.snippet?.description),
-      profileUrl: channelUrl(channel),
+      email: extractCreatorEmailFromText(channel.snippet?.description, {
+        channelName,
+        profileUrl,
+        platform: 'youtube',
+      }),
+      profileUrl,
       keyword: q,
     })
   }

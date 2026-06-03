@@ -82,6 +82,8 @@ function OutreachPanel({ secret }: { secret: string }) {
           channels: missing.map((r) => ({
             channelId: r.channelId,
             channelName: r.channelName,
+            profileUrl: r.profileUrl,
+            platform: r.platform,
           })),
         }),
       })
@@ -119,7 +121,11 @@ function OutreachPanel({ secret }: { secret: string }) {
         })
       )
 
-      const msg = `Outscraper found ${data.foundCount ?? byId.size} email(s) for ${data.processedCount ?? missing.length} channel(s).`
+      const rejected = data.rejectedCount ?? 0
+      const msg =
+        rejected > 0
+          ? `Outscraper found ${data.foundCount ?? byId.size} valid email(s); ${rejected} result(s) rejected as unrelated.`
+          : `Outscraper found ${data.foundCount ?? byId.size} email(s) for ${data.processedCount ?? missing.length} channel(s).`
       setSuccess(msg)
     } catch {
       if (!options?.quiet) {
@@ -205,10 +211,12 @@ function OutreachPanel({ secret }: { secret: string }) {
     const recipients = rows
       .filter((r) => selected.has(r.channelId) && r.email)
       .map((r) => ({
+        channelId: r.channelId,
         channelName: r.channelName,
         email: r.email!,
         keyword: r.keyword,
         profileUrl: r.profileUrl,
+        platform: r.platform,
       }))
 
     if (recipients.length === 0) {
@@ -242,7 +250,7 @@ function OutreachPanel({ secret }: { secret: string }) {
       setSuccess(
         failed > 0
           ? `Sent ${sent} email(s). ${failed} failed — check console or retry.`
-          : `Sent ${sent} outreach email(s) with affiliate links.`
+          : `Sent ${sent} personalized outreach email(s) from Jessica Miller.`
       )
       setSelected(new Set())
     } catch {
@@ -257,8 +265,8 @@ function OutreachPanel({ secret }: { secret: string }) {
       <h1 style={titleStyle}>Influencer outreach</h1>
       <p style={mutedStyle}>
         Search by keyword across platforms. YouTube uses the YouTube API; Instagram and TikTok
-        use Google SERP discovery via Outscraper. Emails come from bios or Outscraper enrichment
-        (5K–200K followers when available).
+        use Google SERP discovery via Outscraper. Emails are validated against the creator name
+        (government, institutional, and unrelated addresses are filtered out).
       </p>
 
       <section style={cardStyle}>

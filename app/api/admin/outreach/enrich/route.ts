@@ -9,6 +9,7 @@ import {
   buildOutscraperEnrichQuery,
   findEmailViaOutscraper,
 } from '@/lib/outscraper-email'
+import type { OutreachPlatform } from '@/lib/outreach-types'
 
 function requireAdmin(req: NextRequest): NextResponse | null {
   if (!getAdminSecret()) return adminNotConfiguredResponse()
@@ -16,7 +17,12 @@ function requireAdmin(req: NextRequest): NextResponse | null {
   return null
 }
 
-type EnrichInput = { channelId: string; channelName: string }
+type EnrichInput = {
+  channelId: string
+  channelName: string
+  profileUrl?: string
+  platform?: OutreachPlatform
+}
 
 export async function POST(req: NextRequest) {
   const denied = requireAdmin(req)
@@ -41,14 +47,21 @@ export async function POST(req: NextRequest) {
 
     const enriched: { channelId: string; email: string | null }[] = []
     let foundCount = 0
+    let rejectedCount = 0
 
     for (let i = 0; i < channels.length; i++) {
-      const { channelId, channelName } = channels[i]
+      const { channelId, channelName, profileUrl, platform } = channels[i]
       let email: string | null = null
 
       try {
         const outscraperQuery = buildOutscraperEnrichQuery(channelName)
-        email = await findEmailViaOutscraper(outscraperQuery, { debug: i === 0 })
+        const ctx = {
+          channelName: channelName.trim(),
+          profileUrl,
+          platform,
+        }
+        email = await findEmailViaOutscraper(outscraperQuery, ctx, { debug: i === 0 })
+        if (!email) rejectedCount++
         if (i === 0) {
           console.log('[Outscraper enrich] first channel', {
             channelId,
@@ -72,6 +85,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       enriched,
       foundCount,
+      rejectedCount,
       processedCount: channels.length,
     })
   } catch (err) {
