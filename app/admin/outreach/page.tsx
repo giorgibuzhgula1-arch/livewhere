@@ -306,7 +306,7 @@ function OutreachPanel({ secret }: { secret: string }) {
       }[]
 
       if (sent > 0 && failed === 0) {
-        setSuccess(`Sent ${sent} personalized outreach email(s) from Jessica Miller.`)
+        setSuccess(`Sent ${sent} personalized outreach email(s) from Jessica from LiveWhere's Partnerships Team.`)
       } else if (sent > 0 && failed > 0) {
         setSuccess(`Sent ${sent} email(s).`)
         setError(
