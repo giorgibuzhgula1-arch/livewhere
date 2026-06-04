@@ -17,7 +17,7 @@ function outreachFromAddress(): string {
   const email = emailMatch?.[1] ?? (bareMatch ? base : null)
 
   if (email) {
-    return `Jessica Miller <${email}>`
+    return `Jessica from LiveWhere's Partnerships Team <${email}>`
   }
 
   return base
@@ -29,7 +29,7 @@ export function formatResendSendError(error: ResendSendError): string {
     error.statusCode === 403 &&
     /testing emails|verify a domain/i.test(msg)
   ) {
-    return `${msg} Add RESEND_FROM_EMAIL in env using your verified domain (e.g. Jessica Miller <hello@livewhere.io>).`
+    return `${msg} Add RESEND_FROM_EMAIL in env using your verified domain (e.g. Jessica from LiveWhere's Partnerships Team <hello@livewhere.io>).`
   }
   return msg
 }
