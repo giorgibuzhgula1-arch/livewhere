@@ -104,7 +104,7 @@ export async function getRecentTitlesForCreator(options: {
 }): Promise<string[]> {
   let ytId = parseYouTubeChannelId(options.channelId, options.profileUrl)
 
-  if (!ytId && options.platform !== 'youtube') {
+  if (!ytId) {
     ytId = await findYouTubeChannelIdByName(options.channelName)
   }
 

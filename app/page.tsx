@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Quiz from '@/components/Quiz'
 import HowItWorks from '@/components/HowItWorks'
+import Testimonials from '@/components/Testimonials'
 import Pricing from '@/components/Pricing'
 
 const Results = dynamic(() => import('@/components/Results'), { ssr: false })
@@ -438,6 +439,7 @@ export default function Home() {
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
           <HowItWorks />
+          <Testimonials />
           <Pricing onUpgrade={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('signup') }} />
         </>
       )}
