@@ -60,7 +60,9 @@ export default function Testimonials() {
             }}
           >
             <div style={{ color: '#c8f05a', fontSize: 14, letterSpacing: 2 }}>{'★'.repeat(t.stars)}</div>
-            <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.75)', lineHeight: 1.7, margin: 0, flexGrow: 1 }}>"{t.text}"</p>
+            <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.75)', lineHeight: 1.7, margin: 0, flexGrow: 1 }}>
+              {'"'}{t.text}{'"'}
+            </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <img src={t.avatar} alt={t.name} width={44} height={44} style={{ borderRadius: '50%', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
