@@ -438,8 +438,8 @@ export default function Home() {
           <div id="quiz">
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
-          <HowItWorks />
           <Testimonials />
+          <HowItWorks />
           <Pricing onUpgrade={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('signup') }} />
         </>
       )}
