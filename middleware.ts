@@ -6,6 +6,7 @@ import { REF_COOKIE_MAX_AGE, REF_COOKIE_NAME, normalizeReferralCode } from '@/li
 function shouldSkipAuth(pathname: string): boolean {
   if (pathname === '/') return true
   if (pathname.startsWith('/blog')) return true
+  if (pathname.startsWith('/news')) return true
   if (pathname.startsWith('/city-guides')) return true
   if (pathname.startsWith('/cities')) return true
   if (pathname.startsWith('/affiliates')) return true
