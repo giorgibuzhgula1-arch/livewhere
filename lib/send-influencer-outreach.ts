@@ -57,7 +57,7 @@ export async function sendInfluencerOutreachEmail(params: {
     subject,
     html,
     text,
-    replyTo: process.env.RESEND_OUTREACH_REPLY_TO?.trim() || undefined,
+    replyTo: 'contact.livewhere@gmail.com',
   })
 
   if (error) {
