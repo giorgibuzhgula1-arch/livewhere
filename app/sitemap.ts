@@ -4,6 +4,8 @@ import { getAllCities } from '@/lib/cities'
 import { getNewsArticles } from '@/lib/news'
 import { getSiteUrl } from '@/lib/site-url'
 
+export const revalidate = 0
+
 function lastModifiedFromDate(dateStr: string): Date | undefined {
   if (!dateStr.trim()) return undefined
   const d = new Date(dateStr)
@@ -14,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSiteUrl()
   const posts = getAllPostsMeta()
   const cityGuides = getAllCities()
+  console.log('cityGuides', cityGuides)
   const newsArticles = getNewsArticles()
 
   const latestNewsDate = newsArticles.reduce<string>((latest, article) => {
