@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: 'LiveWhere — Find Your Perfect City',
   description: 'AI-powered city recommendation. Enter your salary, set priorities, discover the best cities for your lifestyle.',
+  alternates: {
+    canonical: 'https://www.livewhere.io',
+  },
   openGraph: {
     title: 'LiveWhere — Find Your Perfect City',
     description: 'Stop guessing where to live. Let data decide.',
