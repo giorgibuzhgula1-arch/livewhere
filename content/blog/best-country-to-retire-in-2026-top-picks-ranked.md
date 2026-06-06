@@ -1,10 +1,10 @@
 ---
-title: "Best Countries to Retire Comfortably in 2026"
+title: "Best Country to Retire in 2026: Top Picks Ranked"
 date: "2026-05-15"
 description: "Discover the best countries to retire comfortably in 2026. Compare cost of living, healthcare, taxes, safety, and visa options — find your perfect retirement destination with LiveWhere."
 ---
 
-# Best Countries to Retire Comfortably in 2026
+# Best Country to Retire in 2026: Top Picks Ranked
 
 Retirement used to mean staying put. Not anymore.
 

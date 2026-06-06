@@ -28,6 +28,11 @@ const nextConfig = {
         destination: '/city-guides/:slug',
         permanent: true,
       },
+      {
+        source: '/blog/best-countries-to-retire-2026',
+        destination: '/blog/best-country-to-retire-in-2026-top-picks-ranked',
+        permanent: true,
+      },
     ]
   },
 }
