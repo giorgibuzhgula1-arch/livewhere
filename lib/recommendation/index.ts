@@ -529,6 +529,7 @@ function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities, count: n
     `- Healthcare: ${priorities.health} (${priorityLabel(priorities.health)})`,
     `- Nightlife and culture: ${priorities.nightlife} (${priorityLabel(priorities.nightlife)})`,
     `- Safety: ${priorities.safety} (${priorityLabel(priorities.safety)})`,
+    "IMPORTANT: Only recommend a city if it genuinely matches the user's top priorities. If a priority is marked 'not important', do not factor it in positively. A city scoring well on criteria the user does not care about should rank lower than a city scoring well on what the user actually wants.",
   ].join("\n")
 }
 
