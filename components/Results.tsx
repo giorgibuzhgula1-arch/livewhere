@@ -164,28 +164,6 @@ export default function Results({
                 </button>
                 <button
                   type="button"
-                  aria-label="Share on WhatsApp"
-                  onClick={() =>
-                    openShareUrl(`https://wa.me/?text=${encodeURIComponent(shareLine)}`)
-                  }
-                  style={{
-                    flex: '1 1 120px',
-                    minHeight: 42,
-                    background: 'rgba(37,211,102,0.12)',
-                    border: '1px solid rgba(37,211,102,0.35)',
-                    color: '#afffc1',
-                    padding: '10px 14px',
-                    borderRadius: 10,
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  WhatsApp
-                </button>
-                <button
-                  type="button"
                   aria-label="Share on Reddit"
                   onClick={() =>
                     openShareUrl(
@@ -207,26 +185,6 @@ export default function Results({
                   }}
                 >
                   Reddit
-                </button>
-                <button
-                  type="button"
-                  aria-label="Copy share link"
-                  onClick={copySiteLink}
-                  style={{
-                    flex: '1 1 140px',
-                    minHeight: 42,
-                    background: linkCopied ? 'rgba(200,240,90,0.2)' : 'rgba(200,240,90,0.12)',
-                    border: `1px solid ${linkCopied ? 'rgba(200,240,90,0.55)' : 'rgba(200,240,90,0.35)'}`,
-                    color: '#c8f05a',
-                    padding: '10px 14px',
-                    borderRadius: 10,
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  {linkCopied ? 'Link copied!' : 'Copy link'}
                 </button>
               </div>
             </div>
