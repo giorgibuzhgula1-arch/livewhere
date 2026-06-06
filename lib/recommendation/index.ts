@@ -660,7 +660,7 @@ function buildOpenAIRequestBody(
       {
         role: "system",
         content:
-          "You are LiveWhere's relocation analyst. Return only structured recommendation data. Use realistic 2025 estimates and keep all numeric fields in USD/month or percentages as requested. When affordable housing is marked as very important or important, prioritize cities where monthly cost of living is under 40% of monthly take-home pay. Match cities strictly to the user's stated priorities and lifestyle tags.",
+          "You are LiveWhere's relocation analyst. Return only structured recommendation data. Use realistic 2025 estimates and keep all numeric fields in USD/month or percentages as requested. When affordable housing is marked as very important or important, prioritize cities where monthly cost of living is under 40% of monthly take-home pay. Match cities strictly to the user's stated priorities and lifestyle tags. Prioritize international cities outside the user's likely home country. For digital nomad lifestyle, recommend cities in Europe, Southeast Asia, Latin America, or Middle East where the salary goes further internationally.",
       },
       { role: "user", content: formatPrompt(body, priorities, resultCount) },
     ],
