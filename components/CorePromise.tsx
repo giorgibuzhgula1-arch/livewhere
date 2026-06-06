@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 
 const LINES = [
-  "We don't show you countries.",
+  "We don't show you Cities.",
   'We eliminate the wrong ones.',
   'And leave you with only the places you can actually thrive in.',
 ]

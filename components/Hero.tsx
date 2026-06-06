@@ -24,8 +24,7 @@ export default function Hero({ onStart }: Props) {
         Find your perfect city in 3 minutes
       </motion.div>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+      <h1
         style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: 'clamp(52px, 8vw, 100px)',
@@ -33,11 +32,24 @@ export default function Hero({ onStart }: Props) {
           letterSpacing: -2, marginBottom: 28
         }}
       >
-        Stop guessing where to live.<br />
-        <span style={{ WebkitTextStroke: '1px rgba(240,237,232,0.3)', color: 'transparent' }}>
+        <motion.span
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          style={{ display: 'block' }}
+        >
+          Stop guessing<br />
+          <span style={{ color: '#c8f05a' }}>where to live.</span>
+        </motion.span>
+        <motion.span
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+          style={{
+            display: 'block',
+            WebkitTextStroke: '1px rgba(240,237,232,0.3)',
+            color: 'transparent',
+          }}
+        >
           Let data decide.
-        </span>
-      </motion.h1>
+        </motion.span>
+      </h1>
 
       <motion.p
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
