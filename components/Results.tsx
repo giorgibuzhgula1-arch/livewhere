@@ -95,6 +95,72 @@ export default function Results({
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700 }}>
             Top matches <span style={{ color: '#c8f05a' }}>for you</span>
           </h2>
+          {top && (
+            <div style={{
+              width: '100%',
+              maxWidth: 520,
+              background: 'linear-gradient(135deg, rgba(200,240,90,0.12) 0%, rgba(200,240,90,0.04) 100%)',
+              border: '1px solid rgba(200,240,90,0.35)',
+              borderRadius: 14,
+              padding: '14px 16px',
+            }}>
+              <div style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: '#f0ede8',
+                marginBottom: 12,
+                fontFamily: "'DM Sans', sans-serif",
+              }}>
+                Share your results — it&apos;s free
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                <button
+                  type="button"
+                  aria-label="Share on X"
+                  onClick={() =>
+                    openShareUrl(
+                      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareLine)}&url=${encodeURIComponent(siteUrl)}`
+                    )
+                  }
+                  style={{
+                    flex: '1 1 140px',
+                    minHeight: 42,
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    color: '#f0ede8',
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                  }}
+                >
+                  Share on X
+                </button>
+                <button
+                  type="button"
+                  aria-label="Copy share link"
+                  onClick={copySiteLink}
+                  style={{
+                    flex: '1 1 140px',
+                    minHeight: 42,
+                    background: linkCopied ? 'rgba(200,240,90,0.2)' : 'rgba(200,240,90,0.12)',
+                    border: `1px solid ${linkCopied ? 'rgba(200,240,90,0.55)' : 'rgba(200,240,90,0.35)'}`,
+                    color: '#c8f05a',
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                  }}
+                >
+                  {linkCopied ? 'Link copied!' : 'Copy link'}
+                </button>
+              </div>
+            </div>
+          )}
           {showStreamingIndicator && (
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
