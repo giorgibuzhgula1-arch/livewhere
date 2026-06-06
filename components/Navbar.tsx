@@ -58,14 +58,15 @@ export default function Navbar({ onAuthClick }: Props) {
         }}
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: 22,
+          fontSize: 32,
           fontWeight: 900,
-          color: 'inherit',
+          color: '#f0ede8',
           textDecoration: 'none',
           cursor: 'pointer',
+          letterSpacing: -0.5,
         }}
       >
-        Live<span style={{ color: '#c8f05a' }}>Where</span>
+        <span style={{ color: '#f0ede8' }}>Live</span><span style={{ color: '#c8f05a' }}>Where</span>
       </Link>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>

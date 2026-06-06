@@ -28,22 +28,26 @@ export default function Hero({ onStart }: Props) {
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: 'clamp(40px, 6vw, 72px)',
-          fontWeight: 900, lineHeight: 1.05,
-          letterSpacing: -1.5, marginBottom: 28, maxWidth: 720
+          fontSize: 'clamp(52px, 8vw, 100px)',
+          fontWeight: 900, lineHeight: 0.95,
+          letterSpacing: -2, marginBottom: 28
         }}
       >
-        Still not sure <span style={{ color: '#c8f05a' }}>where to move?</span>
+        Stop guessing where to live.<br />
+        <span style={{ WebkitTextStroke: '1px rgba(240,237,232,0.3)', color: 'transparent' }}>
+          Let data decide.
+        </span>
       </motion.h1>
 
       <motion.p
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         style={{
-          fontSize: 18, color: 'rgba(240,237,232,0.55)', maxWidth: 560,
-          lineHeight: 1.7, marginBottom: 48, fontWeight: 400
+          fontSize: 18, color: 'rgba(240,237,232,0.45)', maxWidth: 520,
+          lineHeight: 1.7, marginBottom: 48, fontWeight: 300
         }}
       >
-        In 12 seconds, we eliminate 95% of bad-fit countries and show you only the 1–3 places where you can actually thrive.
+        Enter your salary, set your priorities, and discover the best cities worldwide
+        for your lifestyle — with real tax calculations and cost breakdowns.
       </motion.p>
 
       <motion.div
