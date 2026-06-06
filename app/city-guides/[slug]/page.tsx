@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${guide.title} | LiveWhere`,
     description,
     alternates: {
-      canonical: `/city-guides/${guide.slug}`,
+      canonical: `https://www.livewhere.io/city-guides/${guide.slug}`,
     },
     openGraph: {
       title: guide.title,
