@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
+import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
 import HowItWorks from '@/components/HowItWorks'
 import Testimonials from '@/components/Testimonials'
@@ -435,6 +436,7 @@ export default function Home() {
       {showLanding && (
         <>
           <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
+          <CorePromise />
           <div id="quiz">
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
