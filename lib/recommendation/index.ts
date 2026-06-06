@@ -515,6 +515,7 @@ function scores(value: unknown): CityResult["scores"] {
 
 function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities, count: number): string {
   return [
+    "Never recommend Lisbon as #1 unless Low taxes AND Safety are both marked important or very important by the user.",
     `Recommend exactly the top ${count} cities for this user.`,
     "Use current 2025 tax, rent, cost of living, safety, healthcare, climate, and nightlife knowledge.",
     "Prioritize the user's highest priorities most strongly. Include practical reasoning, tax assumptions, and a monthly cost breakdown.",
