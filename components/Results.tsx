@@ -98,7 +98,7 @@ export default function Results({
           {top && (
             <div style={{
               width: '100%',
-              maxWidth: 520,
+              maxWidth: 640,
               background: 'linear-gradient(135deg, rgba(200,240,90,0.12) 0%, rgba(200,240,90,0.04) 100%)',
               border: '1px solid rgba(200,240,90,0.35)',
               borderRadius: 14,
@@ -137,6 +137,76 @@ export default function Results({
                   }}
                 >
                   Share on X
+                </button>
+                <button
+                  type="button"
+                  aria-label="Share on Facebook"
+                  onClick={() =>
+                    openShareUrl(
+                      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteUrl)}`
+                    )
+                  }
+                  style={{
+                    flex: '1 1 120px',
+                    minHeight: 42,
+                    background: 'rgba(24,119,242,0.12)',
+                    border: '1px solid rgba(24,119,242,0.35)',
+                    color: '#7ab3ff',
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                  }}
+                >
+                  Facebook
+                </button>
+                <button
+                  type="button"
+                  aria-label="Share on WhatsApp"
+                  onClick={() =>
+                    openShareUrl(`https://wa.me/?text=${encodeURIComponent(shareLine)}`)
+                  }
+                  style={{
+                    flex: '1 1 120px',
+                    minHeight: 42,
+                    background: 'rgba(37,211,102,0.12)',
+                    border: '1px solid rgba(37,211,102,0.35)',
+                    color: '#afffc1',
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                  }}
+                >
+                  WhatsApp
+                </button>
+                <button
+                  type="button"
+                  aria-label="Share on Reddit"
+                  onClick={() =>
+                    openShareUrl(
+                      `https://www.reddit.com/submit?url=${encodeURIComponent(siteUrl)}&title=${encodeURIComponent(shareLine)}`
+                    )
+                  }
+                  style={{
+                    flex: '1 1 120px',
+                    minHeight: 42,
+                    background: 'rgba(255,69,0,0.12)',
+                    border: '1px solid rgba(255,69,0,0.35)',
+                    color: '#ff8c5a',
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                  }}
+                >
+                  Reddit
                 </button>
                 <button
                   type="button"
