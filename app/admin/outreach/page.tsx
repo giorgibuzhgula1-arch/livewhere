@@ -77,59 +77,75 @@ function OutreachPanel({ secret }: { secret: string }) {
       setSuccess(null)
     }
 
+    const channels = missing.map((r) => ({
+      channelId: r.channelId,
+      channelName: r.channelName,
+      profileUrl: r.profileUrl,
+      platform: r.platform,
+    }))
+
+    const BATCH_SIZE = 5
+    let totalFound = 0
+    let totalRejected = 0
+    let totalProcessed = 0
+
     try {
-      const res = await fetch('/api/admin/outreach/enrich', {
-        method: 'POST',
-        headers: adminHeaders(secret),
-        body: JSON.stringify({
-          channels: missing.map((r) => ({
-            channelId: r.channelId,
-            channelName: r.channelName,
-            profileUrl: r.profileUrl,
-            platform: r.platform,
-          })),
-        }),
-      })
-      const data = await res.json()
+      for (let i = 0; i < channels.length; i += BATCH_SIZE) {
+        const batch = channels.slice(i, i + BATCH_SIZE)
 
-      if (res.status === 401) {
-        setError('Invalid admin secret')
-        return
-      }
-      if (!res.ok) {
-        if (!options?.quiet) {
-          setError(data.error || 'Email enrichment failed')
+        const res = await fetch('/api/admin/outreach/enrich', {
+          method: 'POST',
+          headers: adminHeaders(secret),
+          body: JSON.stringify({ channels: batch }),
+        })
+        const data = await res.json()
+
+        if (res.status === 401) {
+          setError('Invalid admin secret')
+          return
         }
-        return
+        if (!res.ok) {
+          if (!options?.quiet) {
+            setError(data.error || 'Email enrichment failed')
+          }
+          return
+        }
+
+        const byId = new Map<string, string>(
+          (data.enriched ?? [])
+            .filter((e: { channelId: string; email: string | null }) => e.email)
+            .map((e: { channelId: string; email: string }) => [e.channelId, e.email])
+        )
+
+        totalFound += data.foundCount ?? byId.size
+        totalRejected += data.rejectedCount ?? 0
+        totalProcessed += data.processedCount ?? batch.length
+
+        if (byId.size > 0) {
+          setRows((prev) =>
+            prev.map((row) => {
+              const found = byId.get(row.channelId)
+              if (!found) return row
+              return { ...row, email: found, emailSource: 'outscraper' as const }
+            })
+          )
+        }
       }
 
-      const byId = new Map<string, string>(
-        (data.enriched ?? [])
-          .filter((e: { channelId: string; email: string | null }) => e.email)
-          .map((e: { channelId: string; email: string }) => [e.channelId, e.email])
-      )
-
-      if (byId.size === 0) {
+      if (totalFound === 0) {
         if (!options?.quiet) {
           setSuccess('Outscraper finished — no new emails found.')
         }
         return
       }
 
-      setRows((prev) =>
-        prev.map((row) => {
-          const found = byId.get(row.channelId)
-          if (!found) return row
-          return { ...row, email: found, emailSource: 'outscraper' as const }
-        })
-      )
-
-      const rejected = data.rejectedCount ?? 0
-      const msg =
-        rejected > 0
-          ? `Outscraper found ${data.foundCount ?? byId.size} valid email(s); ${rejected} result(s) rejected as unrelated.`
-          : `Outscraper found ${data.foundCount ?? byId.size} email(s) for ${data.processedCount ?? missing.length} channel(s).`
-      setSuccess(msg)
+      if (!options?.quiet) {
+        const msg =
+          totalRejected > 0
+            ? `Outscraper found ${totalFound} valid email(s); ${totalRejected} result(s) rejected as unrelated.`
+            : `Outscraper found ${totalFound} email(s) for ${totalProcessed} channel(s).`
+        setSuccess(msg)
+      }
     } catch {
       if (!options?.quiet) {
         setError('Could not reach Outscraper enrichment API')
