@@ -214,7 +214,7 @@ export default function CityGuidePage({ params }: Props) {
         </div>
       ) : null}
 
-      <CityComparisonTable cities={cities} />
+      {guide.show_table !== false && <CityComparisonTable cities={cities} />}
 
       {conclusion ? (
         <div className={styles.body}>

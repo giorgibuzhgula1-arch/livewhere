@@ -2,7 +2,8 @@
 title: "Safest Countries to Retire in 2026 (Low Taxes + High Quality of Life)"
 date: "2026-06-01"
 description: "Discover the safest countries to retire in 2026 with low crime, political stability, favorable taxes, and high quality of life."
-city_slugs: ["crete", "puerto-vallarta"]
+city_slugs: []
+show_table: false
 ---
 
 # Safest Countries to Retire in 2026 (Low Taxes + High Quality of Life)

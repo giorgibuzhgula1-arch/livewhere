@@ -12,6 +12,7 @@ export type CityGuideMeta = {
   description: string
   city_slugs: string[]
   cluster?: string
+  show_table?: boolean
 }
 
 export type CityGuide = CityGuideMeta & {
@@ -42,6 +43,7 @@ export function getCityBySlug(slug: string): CityGuide | null {
   const description =
     typeof data.description === 'string' ? data.description : ''
   const cluster = typeof data.cluster === 'string' ? data.cluster : undefined
+  const show_table = data.show_table === false ? false : true
 
   return {
     slug,
@@ -50,6 +52,7 @@ export function getCityBySlug(slug: string): CityGuide | null {
     description,
     city_slugs: parseCitySlugs(data.city_slugs),
     cluster,
+    show_table,
     content,
   }
 }
@@ -67,6 +70,7 @@ export function getAllCities(): CityGuideMeta[] {
         description: guide.description,
         city_slugs: guide.city_slugs,
         ...(guide.cluster ? { cluster: guide.cluster } : {}),
+        ...(guide.show_table === false ? { show_table: false } : {}),
       }
     })
     .filter((x): x is CityGuideMeta => x !== null)
