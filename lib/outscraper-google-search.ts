@@ -53,7 +53,7 @@ function flattenOutscraperData(data: unknown): Record<string, unknown>[] {
 
 async function waitForOutscraperRequest(requestId: string): Promise<unknown> {
   const pollIntervalMs = 2000
-  const maxAttempts = 30
+  const maxAttempts = 90
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt > 0) await sleep(pollIntervalMs)
