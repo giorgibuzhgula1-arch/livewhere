@@ -54,13 +54,13 @@ The island combines Mediterranean weather with modern healthcare and a very low 
 
 Malaysia stands out as one of the safest and most affordable countries in Asia. Programs like MM2H (Malaysia My Second Home) make it easy for retirees to settle long-term.
 
-With modern infrastructure, excellent healthcare, and low daily costs, retirees can live comfortably while maintaining a high standard of living.
+With modern infrastructure, excellent healthcare, and low daily costs, retirees can live comfortably while maintaining a high standard of living — similar to what we cover under the [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026) in Southeast Asia.
 
 ---
 
 ### Mexico – Close to Home with Strong Expat Communities
 
-Mexico remains a top choice, especially for North Americans. Cities like Puerto Vallarta and Mérida are known for their safety, healthcare, and strong expat networks.
+Mexico remains a top choice, especially for North Americans. Some of the [best cities to retire in 2026](/city-guides/best-cities-to-retire-2026), including Puerto Vallarta and Mérida, are known for their safety, healthcare, and strong expat networks.
 
 Its proximity, affordable cost of living, and vibrant culture make it one of the most practical and comfortable retirement destinations.
 

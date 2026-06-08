@@ -94,7 +94,7 @@ The city offers a European feel, with architecture similar to Spain and Portugal
 
 One of its highlights is the Rambla — a long coastal boulevard where people walk, cycle, and enjoy outdoor life daily.
 
-While it is one of the more expensive cities in the region, around $2,000 per month can still provide a comfortable lifestyle.
+While it is one of the more expensive cities in the region, around $2,000 per month can still provide a comfortable lifestyle — below what many couples allocate in our [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026) guide.
 
 Healthcare is excellent, and the overall quality of life is among the highest in Latin America.
 

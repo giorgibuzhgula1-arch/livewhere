@@ -14,7 +14,7 @@ And most people pay for it financially for years afterward.
 
 This guide is different. It is not a list of "beautiful cities" or "top digital nomad destinations." It is a real framework for choosing a city that actually improves your savings rate, your focus, and your long-term financial trajectory — based on your specific income level.
 
-Because the right city at $2,500/month is completely different from the right city at $6,000/month.
+Because the right city at $2,500/month is completely different from the right city at $6,000/month. Our [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026) guide sits between those tiers for many remote workers.
 
 > **See which cities match your exact salary and priorities →** [LiveWhere.io](https://www.livewhere.io)
 
@@ -120,7 +120,7 @@ Low-cost cities accelerate wealth accumulation. Higher-cost EU cities accelerate
 
 ### If You Earn $2,500/month
 
-At this income level, cost of living is your most critical variable. Your goal is maximum savings rate while maintaining the infrastructure you need to work and grow.
+At this income level, cost of living is your most critical variable. Your goal is maximum savings rate while maintaining the infrastructure you need to work and grow. Retirees on fixed income should cross-check the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) rankings alongside these picks.
 
 **🇬🇪 Tbilisi, Georgia**
 - Estimated monthly costs: $700–$1,100
@@ -299,9 +299,9 @@ Less often than most nomad content suggests. Frequent moves are expensive, disru
 
 ## Final Thoughts
 
-The single biggest lever in a remote worker's finances is not income — it is geography. A $4,000/month freelancer in Tbilisi can out-save a $7,000/month freelancer in London, year after year.
+The single biggest lever in a remote worker's finances is not income — it is geography. A $4,000/month freelancer in Tbilisi can out-save a $7,000/month freelancer in London, year after year. At $5,000+, see the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026).
 
-Choose your city the way you would make any major financial decision: income reality first, savings rate second, infrastructure third, and lifestyle last. Then test before you commit.
+Choose your city the way you would make any major financial decision: income reality first, savings rate second, infrastructure third, and lifestyle last. City-level retirees can also compare the [best cities to retire in 2026](/city-guides/best-cities-to-retire-2026) list. Then test before you commit.
 
 > **Let data decide.** Enter your salary, priorities, and lifestyle preferences and get a personalized ranked list of cities in under 60 seconds.
 > **[Try LiveWhere free →](https://www.livewhere.io)**

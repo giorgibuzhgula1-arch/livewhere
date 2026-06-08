@@ -24,7 +24,7 @@ In this guide, we compare the best countries to retire in 2026 based on cost of 
 
 Before the list, here's what actually determines whether a country works for retirees:
 
-- **Cost of living** — Does your pension or savings cover a comfortable lifestyle?
+- **Cost of living** — Does your pension or savings cover a comfortable lifestyle? Many couples start by comparing the [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026).
 - **Healthcare quality** — Is private or public healthcare accessible and affordable?
 - **Tax treatment** — Does the country tax your pension or foreign income?
 - **Safety** — Can you live without anxiety about crime?
@@ -52,7 +52,7 @@ Portugal consistently ranks #1 for American and British retirees — and it dese
 - **Retirement visa:** D7 Passive Income Visa — among the easiest in Europe
 - **Best cities:** Lisbon, Porto, Algarve, Silver Coast
 
-Portugal offers something rare: genuine European culture and infrastructure at a fraction of French or German prices. The Algarve in particular has become a world-class retirement destination — warm, safe, stunning, and packed with English-speaking expats.
+Portugal offers something rare: genuine European culture and infrastructure at a fraction of French or German prices. The Algarve in particular has become a world-class retirement destination — warm, safe, stunning, and packed with English-speaking expats. For city picks in Portugal and beyond, see the [best cities to retire in 2026](/city-guides/best-cities-to-retire-2026).
 
 **Best for:** Americans, Brits, and Canadians seeking European quality of life with significant tax savings.
 
@@ -270,7 +270,7 @@ The best country for retirement depends entirely on your specific situation:
 
 **If you want European culture:** Portugal, Spain, Italy, and Greece all offer extraordinary quality of life with tax incentives that didn't exist a decade ago.
 
-**If your budget is higher:** Couples with **$5,000/month** can access premium healthcare, central European capitals, and coastal property — see our guide to the [best places to live on $5,000/month](/cities/best-cities-for-5000-budget).
+**If your budget is higher:** Couples with **$5,000/month** can access premium healthcare, central European capitals, and coastal property — see our guide to the [best places to live on $5,000/month](/cities/best-cities-for-5000-budget). Premium planners often move to the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026) tier.
 
 ---
 

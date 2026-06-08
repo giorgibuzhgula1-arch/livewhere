@@ -22,7 +22,7 @@ Before the rankings, here is what separates a great remote work destination from
 
 - **Fast, reliable internet** — non-negotiable for video calls and uploads
 - **Legal long-term stay** — tourist visas run out; you need a real solution
-- **Low cost of living** — your salary goes much further in some countries
+- **Low cost of living** — your salary goes much further in some countries; our [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026) guide shows where $3,000 stretches furthest
 - **Low taxes** — legally keep more of what you earn
 - **Safety** — you want to focus on work, not worry about crime
 - **Community** — other remote workers, coworking spaces, social life
@@ -94,7 +94,7 @@ Thailand has been welcoming remote workers for over a decade and remains one of 
 - **Coworking:** Massive scene — Chiang Mai alone has 50+ coworking spaces
 - **Time zone:** UTC+7 — good for Australian and Asian clients
 
-Chiang Mai is arguably the world's original digital nomad hub. Affordable, safe, excellent food, strong community, and fast internet. Bangkok offers more urban energy with world-class infrastructure.
+Chiang Mai is arguably the world's original digital nomad hub. Affordable, safe, excellent food, strong community, and fast internet. Bangkok offers more urban energy with world-class infrastructure. Retirees on fixed pensions often pair Thailand with our [best cities to retire in 2026](/city-guides/best-cities-to-retire-2026) shortlist.
 
 **Best cities:** Chiang Mai (community), Bangkok (infrastructure), Koh Samui (beach)
 
@@ -290,7 +290,7 @@ The best country for you is not the same as the best country for someone else.
 
 The remote work revolution has given millions of people the freedom to choose where they live. That freedom is one of the most powerful financial and lifestyle decisions you will ever make.
 
-The countries above all offer compelling reasons to choose them. But the right answer depends entirely on your specific situation — your income, your clients, your family, your lifestyle preferences.
+The countries above all offer compelling reasons to choose them. But the right answer depends entirely on your specific situation — your income, your clients, your family, your lifestyle preferences. Higher earners often graduate to the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026); pension-focused readers should start with the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) guide.
 
 **Stop guessing. Let data decide.**
 

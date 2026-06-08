@@ -48,10 +48,10 @@ Your income is tied to local employment and you would need to find a new job
 You have significant family obligations requiring physical presence
 You are in a field that requires in-person work
 
-For remote workers and retirees with stable income, the financial case for relocation is often overwhelming. The question is not whether it makes financial sense — it usually does. The question is whether the lifestyle tradeoffs work for you personally.
+For remote workers and retirees with stable income (our [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) guide covers pension-focused moves), the financial case for relocation is often overwhelming. The question is not whether it makes financial sense — it usually does. The question is whether the lifestyle tradeoffs work for you personally.
 
 Is $5,000 a Month Enough to Live Well Abroad?
-Yes — in most of the world's best relocation destinations, $5,000 per month is an excellent income that allows a comfortable to premium lifestyle.
+Yes — in most of the world's best relocation destinations, $5,000 per month is an excellent income that allows a comfortable to premium lifestyle. Our [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026) city guide shows what that budget buys in practice.
 Here is a realistic breakdown by destination:
 Thailand (Chiang Mai or Bangkok)
 
@@ -132,7 +132,7 @@ For EU access with strong value:
 Portugal, Greece, Croatia, Hungary
 For high earners wanting 0% tax:
 UAE (Dubai), Panama, Paraguay
-For retirees wanting stability and comfort:
+For retirees wanting stability and comfort (see the [best cities to retire in 2026](/city-guides/best-cities-to-retire-2026) guide):
 Portugal, Spain, Malta, Czech Republic
 The right choice depends on your income level, lifestyle priorities, visa situation, and personal preferences — not on a universal ranking.
 
@@ -160,7 +160,7 @@ The bigger financial risk, for many people, is not moving. It is continuing to s
 
 Frequently Asked Questions
 Where does a $3,000/month salary go furthest?
-At $3,000/month, Southeast Asia offers the best lifestyle quality. Thailand (Chiang Mai), Vietnam (Da Nang), and Indonesia (Bali) all allow comfortable living with meaningful savings. Georgia and Colombia are also excellent options with $1,000–$1,500 in monthly savings realistic.
+At $3,000/month, Southeast Asia offers the best lifestyle quality — aligned with our [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026) picks. Thailand (Chiang Mai), Vietnam (Da Nang), and Indonesia (Bali) all allow comfortable living with meaningful savings. Georgia and Colombia are also excellent options with $1,000–$1,500 in monthly savings realistic.
 Where does a $5,000/month salary go furthest?
 At $5,000/month, your options expand significantly. Portugal, Mexico, Colombia, and Malaysia all offer premium lifestyles with $2,000–$3,500/month in savings. Southeast Asia at this income level allows genuinely luxurious living with maximum savings.
 Where does a $10,000/month salary go furthest?

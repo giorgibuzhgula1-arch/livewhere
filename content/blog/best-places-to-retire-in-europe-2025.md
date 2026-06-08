@@ -10,7 +10,7 @@ Europe has long been a dream destination for retirees worldwide. World-class hea
 
 But Europe has 44 countries. Where do you even start?
 
-This guide breaks down the **best places to retire in Europe in 2026** — based on cost of living, healthcare, visa options, climate, and quality of life.
+This guide breaks down the **best places to retire in Europe in 2026** — based on cost of living, healthcare, visa options, climate, and quality of life. For country-level rankings, see the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) guide.
 
 > **Find your perfect retirement destination in 60 seconds → [Try LiveWhere.io](https://www.livewhere.io)**
 
@@ -43,7 +43,7 @@ Portugal has topped retirement rankings for years — and for very good reason.
 - **Climate:** 300+ days of sunshine in Algarve
 - **Best cities:** Lisbon, Porto, Algarve, Silver Coast
 
-Portugal combines European safety and quality of life with costs significantly lower than Western Europe. The Algarve region is particularly popular with British, German, and American retirees — stunning beaches, golf courses, and a massive English-speaking community.
+Portugal combines European safety and quality of life with costs significantly lower than Western Europe. The Algarve region is particularly popular with British, German, and American retirees — stunning beaches, golf courses, and a massive English-speaking community. For city-level picks across Europe, see the [best cities to retire in 2026](/city-guides/best-cities-to-retire-2026).
 
 **Who it is best for:** Retirees wanting EU lifestyle, beach, and warm climate
 
@@ -216,6 +216,8 @@ Kraków in particular is extraordinary — a medieval old town, world-class rest
 ---
 
 ## How Much Does It Cost to Retire in Europe?
+
+Couples at $3,000/month should compare the [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026); those with more flexibility often explore the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026).
 
 | Lifestyle | Monthly Budget | Best Countries |
 |-----------|---------------|----------------|
