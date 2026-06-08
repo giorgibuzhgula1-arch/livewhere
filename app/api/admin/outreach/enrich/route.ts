@@ -11,6 +11,8 @@ import {
 } from '@/lib/outscraper-email'
 import type { OutreachPlatform } from '@/lib/outreach-types'
 
+export const maxDuration = 300
+
 function requireAdmin(req: NextRequest): NextResponse | null {
   if (!getAdminSecret()) return adminNotConfiguredResponse()
   if (!isAdminAuthorized(req)) return adminUnauthorizedResponse()
@@ -25,6 +27,8 @@ type EnrichInput = {
 }
 
 export async function POST(req: NextRequest) {
+  console.log('[enrich] route hit, OUTSCRAPER_API_KEY present:', !!process.env.OUTSCRAPER_API_KEY?.trim())
+
   const denied = requireAdmin(req)
   if (denied) return denied
 

@@ -53,7 +53,7 @@ function flattenOutscraperData(data: unknown): Record<string, unknown>[] {
 
 async function waitForOutscraperRequest(requestId: string): Promise<unknown> {
   const pollIntervalMs = 2000
-  const maxAttempts = 90
+  const maxAttempts = 30
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt > 0) await sleep(pollIntervalMs)
@@ -100,28 +100,35 @@ export async function fetchOutscraperGoogleSearch(
   url.searchParams.set('pagesPerQuery', String(pagesPerQuery))
   url.searchParams.set('async', useAsync ? 'true' : 'false')
 
-  const res = await fetch(url.toString(), {
-    headers: { 'X-API-KEY': getOutscraperApiKey() },
-    cache: 'no-store',
-  })
+  console.log('[outscraper] fetching:', url.toString())
 
-  const payload = (await res.json()) as OutscraperGoogleSearchResponse
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { 'X-API-KEY': getOutscraperApiKey() },
+      cache: 'no-store',
+    })
 
-  if (!res.ok) {
-    const msg = payload.errorMessage || `Outscraper error (${res.status})`
-    throw new Error(msg)
+    const payload = (await res.json()) as OutscraperGoogleSearchResponse
+
+    if (!res.ok) {
+      const msg = payload.errorMessage || `Outscraper error (${res.status})`
+      throw new Error(msg)
+    }
+
+    if (payload.error) {
+      throw new Error(payload.errorMessage || 'Outscraper request failed')
+    }
+
+    if (useAsync && payload.id) {
+      const data = await waitForOutscraperRequest(payload.id)
+      return { status: 'Success', data }
+    }
+
+    return payload
+  } catch (err) {
+    console.error('[outscraper] fetch failed:', err)
+    throw err
   }
-
-  if (payload.error) {
-    throw new Error(payload.errorMessage || 'Outscraper request failed')
-  }
-
-  if (useAsync && payload.id) {
-    const data = await waitForOutscraperRequest(payload.id)
-    return { status: 'Success', data }
-  }
-
-  return payload
 }
 
 export function collectOrganicResults(
