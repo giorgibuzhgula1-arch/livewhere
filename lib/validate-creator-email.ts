@@ -249,9 +249,6 @@ export function isLikelyCreatorEmail(
   if (domainLooksBlocked(domain)) return false
   if (localPartLooksGeneric(local)) return false
 
-  const tokens = identifierTokens(ctx)
-  if (!matchesCreatorIdentity(local, domain, tokens)) return false
-
   return true
 }
 
