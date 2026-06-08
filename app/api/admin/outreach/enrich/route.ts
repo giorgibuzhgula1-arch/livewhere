@@ -13,6 +13,8 @@ import type { OutreachPlatform } from '@/lib/outreach-types'
 
 export const maxDuration = 300
 
+const MAX_CHANNELS_PER_REQUEST = 10
+
 function requireAdmin(req: NextRequest): NextResponse | null {
   if (!getAdminSecret()) return adminNotConfiguredResponse()
   if (!isAdminAuthorized(req)) return adminUnauthorizedResponse()
@@ -41,9 +43,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = (await req.json()) as { channels?: EnrichInput[] }
-    const channels = (body.channels ?? []).filter(
-      (c) => c.channelId && c.channelName?.trim()
-    )
+    const channels = (body.channels ?? [])
+      .filter((c) => c.channelId && c.channelName?.trim())
+      .slice(0, MAX_CHANNELS_PER_REQUEST)
 
     if (channels.length === 0) {
       return NextResponse.json({ error: 'No channels to enrich' }, { status: 400 })

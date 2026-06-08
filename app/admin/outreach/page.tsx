@@ -52,6 +52,7 @@ function OutreachPanel({ secret }: { secret: string }) {
   const [searching, setSearching] = useState(false)
   const [sending, setSending] = useState(false)
   const [enriching, setEnriching] = useState(false)
+  const [enrichProgress, setEnrichProgress] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -72,6 +73,7 @@ function OutreachPanel({ secret }: { secret: string }) {
     if (missing.length === 0) return
 
     setEnriching(true)
+    setEnrichProgress(null)
     if (!options?.quiet) {
       setError(null)
       setSuccess(null)
@@ -84,7 +86,8 @@ function OutreachPanel({ secret }: { secret: string }) {
       platform: r.platform,
     }))
 
-    const BATCH_SIZE = 5
+    const BATCH_SIZE = 10
+    const total = channels.length
     let totalFound = 0
     let totalRejected = 0
     let totalProcessed = 0
@@ -92,6 +95,9 @@ function OutreachPanel({ secret }: { secret: string }) {
     try {
       for (let i = 0; i < channels.length; i += BATCH_SIZE) {
         const batch = channels.slice(i, i + BATCH_SIZE)
+        const batchStart = i + 1
+        const batchEnd = i + batch.length
+        setEnrichProgress(`Enriching ${batchStart}-${batchEnd} of ${total}...`)
 
         const res = await fetch('/api/admin/outreach/enrich', {
           method: 'POST',
@@ -152,6 +158,7 @@ function OutreachPanel({ secret }: { secret: string }) {
       }
     } finally {
       setEnriching(false)
+      setEnrichProgress(null)
     }
   }
 
@@ -427,6 +434,7 @@ function OutreachPanel({ secret }: { secret: string }) {
       </section>
 
       {error && <p style={errorStyle}>{error}</p>}
+      {enriching && enrichProgress && <p style={progressStyle}>{enrichProgress}</p>}
       {success && <p style={successStyle}>{success}</p>}
 
       {rows.length > 0 && (
@@ -443,7 +451,9 @@ function OutreachPanel({ secret }: { secret: string }) {
                   disabled={enriching}
                   style={ghostBtnStyle}
                 >
-                  {enriching ? 'Enriching…' : `Enrich Emails (${withoutEmail.length})`}
+                  {enriching
+                    ? enrichProgress ?? 'Enriching…'
+                    : `Enrich Emails (${withoutEmail.length})`}
                 </button>
               )}
               <button type="button" onClick={toggleSelectAll} style={ghostBtnStyle}>
@@ -512,7 +522,7 @@ function OutreachPanel({ secret }: { secret: string }) {
                           </div>
                         ) : enriching ? (
                           <span style={{ color: 'rgba(240,237,232,0.45)', fontSize: 12 }}>
-                            Enriching…
+                            {enrichProgress ?? 'Enriching…'}
                           </span>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
@@ -686,6 +696,12 @@ const errorStyle: CSSProperties = {
 
 const successStyle: CSSProperties = {
   color: '#c8f05a',
+  fontSize: 14,
+  marginTop: 16,
+}
+
+const progressStyle: CSSProperties = {
+  color: 'rgba(240,237,232,0.65)',
   fontSize: 14,
   marginTop: 16,
 }
