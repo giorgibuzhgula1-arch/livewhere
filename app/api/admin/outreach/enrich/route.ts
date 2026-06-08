@@ -13,7 +13,7 @@ import type { OutreachPlatform } from '@/lib/outreach-types'
 
 export const maxDuration = 300
 
-const MAX_CHANNELS_PER_REQUEST = 10
+const MAX_CHANNELS_PER_REQUEST = 3
 
 function requireAdmin(req: NextRequest): NextResponse | null {
   if (!getAdminSecret()) return adminNotConfiguredResponse()
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       enriched.push({ channelId, email })
 
       if (i < channels.length - 1) {
-        await new Promise((r) => setTimeout(r, 400))
+        await new Promise((r) => setTimeout(r, 200))
       }
     }
 
