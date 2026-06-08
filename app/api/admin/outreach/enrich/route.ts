@@ -8,8 +8,10 @@ import {
 import {
   buildOutscraperEnrichQuery,
   findEmailViaOutscraper,
+  findEmailViaYouTubeChannel,
 } from '@/lib/outscraper-email'
 import type { OutreachPlatform } from '@/lib/outreach-types'
+import { parseYouTubeChannelId } from '@/lib/youtube-recent-videos'
 
 export const maxDuration = 300
 
@@ -60,13 +62,31 @@ export async function POST(req: NextRequest) {
       let email: string | null = null
 
       try {
-        const outscraperQuery = buildOutscraperEnrichQuery(channelName)
         const ctx = {
           channelName: channelName.trim(),
           profileUrl,
           platform,
         }
-        email = await findEmailViaOutscraper(outscraperQuery, ctx, { debug: i === 0 })
+        const outscraperQuery = buildOutscraperEnrichQuery(channelName)
+
+        if (channelId.startsWith('youtube:')) {
+          const ytChannelId = parseYouTubeChannelId(channelId, profileUrl)
+          if (ytChannelId && !ytChannelId.startsWith('csv:')) {
+            try {
+              email = await findEmailViaYouTubeChannel(ytChannelId)
+            } catch (ytErr) {
+              console.error(
+                `YouTube Channels API failed for ${channelName} (${ytChannelId}):`,
+                ytErr
+              )
+            }
+          }
+        }
+
+        if (!email) {
+          email = await findEmailViaOutscraper(outscraperQuery, ctx, { debug: i === 0 })
+        }
+
         if (!email) rejectedCount++
         if (i === 0) {
           console.log('[Outscraper enrich] first channel', {
