@@ -14,7 +14,7 @@ When planning your retirement abroad, safety is not just a preference — it is 
 
 In 2026, retirees have more options than ever before. Lower living costs, better global mobility, and retiree-friendly tax systems have made it easier to choose a country that offers both comfort and stability.
 
-If you're still comparing all options, check our complete guide to the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) to see how these destinations rank overall.
+If you're still comparing all options, check our complete guide to the [best countries to retire in 2026](/city-guides/best-countries-to-retire-2026) to see how these destinations rank overall.
 
 ---
 
@@ -96,7 +96,7 @@ One of the biggest advantages of retiring abroad is how far your money can go. I
 
 You can afford better housing, private healthcare, frequent dining, and travel — all while living in a safer and less stressful environment.
 
-For a deeper breakdown, explore our guide to the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026).
+For a deeper breakdown, explore how far a $5,000 monthly budget goes in premium retirement destinations.
 
 ---
 
@@ -105,8 +105,6 @@ For a deeper breakdown, explore our guide to the [best places to live on $5,000 
 Choosing the safest country to retire in 2026 is not just about avoiding risk — it's about maximizing comfort, stability, and long-term happiness.
 
 Each destination on this list offers a different balance of lifestyle, cost, and security. The right choice ultimately depends on your personal preferences, budget, and priorities.
-
-For a complete comparison of all top destinations, read our full guide to the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) and find the option that fits you best.
 
 ---
 

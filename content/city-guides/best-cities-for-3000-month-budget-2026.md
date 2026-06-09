@@ -6,13 +6,13 @@ city_slugs: ["bangkok", "tbilisi", "medellin", "chiang-mai", "plovdiv"]
 cluster: "Salary Cluster"
 ---
 
-Three thousand dollars a month is a useful benchmark. It is low enough for many freelancers, retirees comparing the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked), and [remote workers](/city-guides/best-cities-for-remote-workers) to sustain a long-term lifestyle, yet high enough to live comfortably in many parts of the world.
+Three thousand dollars a month is a useful benchmark. It is low enough for many freelancers, retirees comparing the [best countries to retire in 2026](/city-guides/best-countries-to-retire-2026), and [remote workers](/city-guides/best-cities-for-remote-workers) to sustain a long-term lifestyle, yet high enough to live comfortably in many parts of the world.
 
 The real question is not whether it is enough, but where it stretches the furthest.
 
 In 2026, the typical budget distribution looks roughly like this: 40% for housing, 25% for food, 15% for transportation and utilities, and 20% for everything else. That remaining 20% is what creates flexibility — or disappears entirely in expensive cities.
 
-In more affordable locations, that same structure often shifts. Housing costs drop, and the "everything else" category becomes savings, travel, or a higher quality of life instead of just covering gaps.
+In more affordable locations, that same structure often shifts. Housing costs drop, and the "everything else" category becomes savings, travel, or a higher quality of life instead of just covering gaps — a step up from what we cover in our [best cities for a $2,000/month budget](/city-guides/best-cities-for-2000-month-budget-2026) guide.
 
 Can you live well on $3,000 a month in Europe? Yes — in many places. In a large portion of Southern, Central, and Eastern Europe, $3,000 a month (roughly €2,700) is enough to cover a one-bedroom apartment, regular dining out, public transport, utilities, and still leave room for savings. If your budget grows, our guide to the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026) covers the next tier.
 

@@ -13,7 +13,7 @@ Based on in-depth research covering cost of living, healthcare quality, safety, 
 
 We're not just listing destinations — our goal is to identify the places where you can build the best possible life within your budget.
 
-If you're still exploring all options, see our complete guide to the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) for a full comparison.
+If you're still exploring all options, use this guide as your starting point for comparing the best countries to retire in 2026.
 
 ---
 
@@ -163,8 +163,8 @@ Consulting a tax advisor before relocation is highly recommended.
 To understand real differences:
 
 * $2,000/month → Comfortable in Georgia, modest in Mexico
-* $3,000/month → Good lifestyle in Malaysia, Greece, Mexico — see our [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026) guide for city-level detail
-* $5,000/month → High-quality lifestyle in Italy, Cyprus, Uruguay — explore the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026)
+* $3,000/month → Good lifestyle in Malaysia, Greece, Mexico
+* $5,000/month → High-quality lifestyle in Italy, Cyprus, Uruguay
 
 The same budget can produce completely different lifestyles depending on the country.
 

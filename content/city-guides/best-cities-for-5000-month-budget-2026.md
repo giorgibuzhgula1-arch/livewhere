@@ -24,7 +24,7 @@ Five thousand dollars a month opens far more possibilities than many people real
 
 At this budget level, affordability is no longer the only consideration. Instead, the focus shifts toward quality of life: better housing, stronger healthcare systems, safer neighborhoods, and the freedom to enjoy daily life without constantly watching expenses.
 
-In 2026, many destinations around the world still offer exceptional value for people living on $5,000 per month. In some places, that budget provides a comfortable middle-class lifestyle. In others, it can support a level of comfort and flexibility that would require significantly more income elsewhere. Retirees comparing country-level options should also read the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) guide.
+In 2026, many destinations around the world still offer exceptional value for people living on $5,000 per month. In some places, that budget provides a comfortable middle-class lifestyle. In others, it can support a level of comfort and flexibility that would require significantly more income elsewhere. Retirees comparing country-level options should also read the [best countries to retire in 2026](/city-guides/best-countries-to-retire-2026) guide.
 
 This guide explores destinations where a $5,000 monthly budget delivers the strongest combination of lifestyle, affordability, and long-term livability.
 

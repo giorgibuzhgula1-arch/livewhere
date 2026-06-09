@@ -12,7 +12,7 @@ In many American cities, $2,000 barely covers rent. Rising housing costs, health
 
 However, not every part of the world is experiencing the same cost pressures. There are cities where $2,000 per month can provide comfortable housing, reliable healthcare, modern infrastructure, frequent dining out, and an enjoyable lifestyle — a useful baseline before exploring the [best cities for a $3,000/month budget](/city-guides/best-cities-for-3000-month-budget-2026).
 
-If you're a remote worker, retiree, digital nomad, or simply looking for a more affordable place to live, these cities offer some of the best value for money in 2026. Retirees weighing country-level tradeoffs often start with the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked).
+If you're a remote worker, retiree, digital nomad, or simply looking for a more affordable place to live, these cities offer some of the best value for money in 2026. Retirees weighing country-level tradeoffs often start with the [best countries to retire in 2026](/city-guides/best-countries-to-retire-2026).
 
 ## Best Cities for $2,000/Month
 
@@ -102,7 +102,7 @@ With a budget of $2,000 per month, many residents can enjoy a comfortable lifest
 
 Living comfortably on $2,000 per month is becoming increasingly difficult in many Western countries, but there are still cities around the world where this budget can provide an excellent quality of life.
 
-Whether you prefer the modern skyline of Kuala Lumpur, the beaches of Phuket, the English-speaking environment of Manila, the cultural richness of Bogotá, or the Caribbean charm of Santo Domingo, these destinations prove that affordable living and a high quality of life can still go hand in hand in 2026. With more income, the [best places to live on $5,000 a month](/city-guides/best-cities-for-5000-month-budget-2026) open premium options.
+Whether you prefer the modern skyline of Kuala Lumpur, the beaches of Phuket, the English-speaking environment of Manila, the cultural richness of Bogotá, or the Caribbean charm of Santo Domingo, these destinations prove that affordable living and a high quality of life can still go hand in hand in 2026.
 
 **How to use this guide:** This list is not meant to suggest the cheapest cities only, but the cities where a $2,000/month budget creates the best balance between cost, safety, comfort, and lifestyle quality. Your personal result may vary depending on priorities such as weather, work style, and housing preferences.
 

@@ -16,7 +16,7 @@ Retiring abroad can reduce your living costs, provide access to better healthcar
 
 To explore more data-driven comparisons, check our [city guides](/city-guides) and see how different destinations rank for retirement in 2026.
 
-If you're still comparing countries overall, read our full guide on the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked).
+If you're still comparing countries overall, read our full guide on the [best countries to retire in 2026](/city-guides/best-countries-to-retire-2026).
 
 ---
 
@@ -30,7 +30,7 @@ When it comes to retirement planning, you cannot simply pick a random city and m
 * Climate and lifestyle
 * Expat community and integration
 
-Each city below was selected based on its ability to offer a comfortable, safe, and enjoyable retirement experience.
+Each city below was selected based on its ability to offer a comfortable, safe, and enjoyable retirement experience. For country-level security rankings, see our guide to the [safest countries to retire](/city-guides/safest-countries-to-retire).
 
 ---
 
@@ -121,7 +121,7 @@ Choosing the best city to retire in 2026 is about more than just saving money â€
 
 Whether you prefer tropical Asia, Mediterranean Europe, or peaceful South America, each of these cities offers a unique combination of affordability, safety, and quality of life.
 
-To compare all global options, read our complete guide on the [best country to retire in 2026](/blog/best-country-to-retire-in-2026-top-picks-ranked) and find the destination that fits you best.
+To compare all global options, start with the best countries to retire in 2026 guide and find the destination that fits you best.
 
 ---
 
