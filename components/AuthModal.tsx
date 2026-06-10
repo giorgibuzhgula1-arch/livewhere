@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { getSiteUrl } from '@/lib/site-url'
 import { markPendingAuthRestore, saveOAuthNext } from '@/lib/wait-for-session'
+import { trackSignUp } from '@/lib/gtag'
 
 interface Props {
   isOpen: boolean
@@ -59,6 +60,7 @@ export default function AuthModal({
       if (mode === 'signup') {
         const { error: signUpError } = await supabase.auth.signUp({ email, password })
         if (signUpError) throw signUpError
+        trackSignUp('email')
         setSuccess(true)
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })

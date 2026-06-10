@@ -1,10 +1,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { trackCtaClick } from '@/lib/gtag'
 
 interface Props { onStart: () => void }
 
 export default function Hero({ onStart }: Props) {
+  function handleStart() {
+    trackCtaClick('hero_find_my_city')
+    onStart()
+  }
   return (
     <section style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
@@ -66,7 +71,7 @@ export default function Hero({ onStart }: Props) {
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
         style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 60 }}
       >
-        <button onClick={onStart} style={{
+        <button onClick={handleStart} style={{
           background: '#c8f05a', color: '#0a0a0f', border: 'none',
           padding: '16px 32px', borderRadius: 12, fontSize: 15,
           fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",

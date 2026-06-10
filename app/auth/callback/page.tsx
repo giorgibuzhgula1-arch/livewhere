@@ -8,6 +8,8 @@ import {
   markOAuthReturn,
   clearOAuthNext,
 } from '@/lib/wait-for-session'
+import { trackSignUp } from '@/lib/gtag'
+import type { User } from '@supabase/supabase-js'
 
 function safeNextPath(raw: string | null): string {
   if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/'
@@ -24,6 +26,16 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     let cancelled = false
     let redirecting = false
+    let signUpTracked = false
+
+    function trackNewGoogleSignUp(user: User) {
+      if (signUpTracked) return
+      const createdAt = new Date(user.created_at).getTime()
+      if (Date.now() - createdAt < 60_000) {
+        signUpTracked = true
+        trackSignUp('google')
+      }
+    }
 
     function hardRedirect(path: string) {
       if (redirecting || cancelled) return
@@ -61,6 +73,7 @@ export default function AuthCallbackPage() {
       if (cancelled) return
 
       if (session?.user) {
+        trackNewGoogleSignUp(session.user)
         setStatus('Redirecting…')
         hardRedirect(next)
         return
@@ -76,6 +89,7 @@ export default function AuthCallbackPage() {
           void (async () => {
             const ready = await confirmAuthSessionReady(8, 100)
             if (ready?.user) {
+              trackNewGoogleSignUp(ready.user)
               hardRedirect(next)
             }
           })()
@@ -87,6 +101,7 @@ export default function AuthCallbackPage() {
         if (cancelled || redirecting) return
         const retry = await confirmAuthSessionReady(5, 100)
         if (retry?.user) {
+          trackNewGoogleSignUp(retry.user)
           hardRedirect(next)
         } else {
           hardRedirect('/?auth_error=session')
