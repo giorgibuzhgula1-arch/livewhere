@@ -5,7 +5,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { dmSans, playfair } from '@/lib/fonts'
 import './globals.css'
 
-const GA_MEASUREMENT_ID = 'G-200LXWGVB6'
+const GA_MEASUREMENT_ID = 'G-FZ6NK972GX'
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
