@@ -5,7 +5,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { dmSans, playfair } from '@/lib/fonts'
 import './globals.css'
 
-const GA_MEASUREMENT_ID = 'G-8BKJ3L5SQB'
+const GA_MEASUREMENT_ID = 'G-200LXWGVB6'
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -26,8 +26,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
-      <body className={dmSans.className}>
+      <head>
         <Script
+          async
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
         />
@@ -39,6 +40,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+      </head>
+      <body className={dmSans.className}>
         <div className="orb orb1" aria-hidden />
         <div className="orb orb2" aria-hidden />
         <RefClickTracker />
