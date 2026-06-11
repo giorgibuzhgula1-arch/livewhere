@@ -431,7 +431,10 @@ export default function Home() {
 
   return (
     <main style={{ position: 'relative' }}>
-      <Navbar onAuthClick={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('login') }} />
+      <Navbar
+        onAuthClick={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('login') }}
+        onLogoClick={handleResetMatches}
+      />
 
       {showHero && (
         <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />

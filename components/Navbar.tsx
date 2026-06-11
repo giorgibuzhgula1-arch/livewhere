@@ -8,6 +8,7 @@ import type { User } from '@supabase/supabase-js'
 
 interface Props {
   onAuthClick: () => void
+  onLogoClick?: () => void
 }
 
 function userAvatar(user: User): string | null {
@@ -25,7 +26,7 @@ function userLabel(user: User): string {
   return user.email?.split('@')[0] ?? 'Account'
 }
 
-export default function Navbar({ onAuthClick }: Props) {
+export default function Navbar({ onAuthClick, onLogoClick }: Props) {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
 
@@ -53,7 +54,7 @@ export default function Navbar({ onAuthClick }: Props) {
         onClick={(e) => {
           if (pathname === '/') {
             e.preventDefault()
-            window.location.assign('/')
+            onLogoClick?.()
           }
         }}
         style={{
