@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { trackCtaClick } from '@/lib/gtag'
+import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
 
 interface Props { onStart: () => void }
 
@@ -17,7 +18,9 @@ export default function Hero({ onStart }: Props) {
       padding: '120px 20px 60px', textAlign: 'center', position: 'relative', zIndex: 1
     }}>
       <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        initial={false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
@@ -31,25 +34,29 @@ export default function Hero({ onStart }: Props) {
 
       <h1
         style={{
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: fontFamilySerif,
           fontSize: 'clamp(52px, 8vw, 100px)',
           fontWeight: 900, lineHeight: 0.95,
           letterSpacing: -2, marginBottom: 28
         }}
       >
         <motion.span
-          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
           style={{ display: 'block' }}
         >
           Stop guessing<br />
           <span style={{ color: '#c8f05a' }}>where to live.</span>
         </motion.span>
         <motion.span
-          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
           style={{
             display: 'block',
+            color: 'rgba(240,237,232,0.85)',
             WebkitTextStroke: '1px rgba(240,237,232,0.3)',
-            color: 'transparent',
           }}
         >
           Let data decide.
@@ -57,7 +64,9 @@ export default function Hero({ onStart }: Props) {
       </h1>
 
       <motion.p
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+        initial={false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
         style={{
           fontSize: 18, color: 'rgba(240,237,232,0.45)', maxWidth: 520,
           lineHeight: 1.7, marginBottom: 48, fontWeight: 300
@@ -68,13 +77,15 @@ export default function Hero({ onStart }: Props) {
       </motion.p>
 
       <motion.div
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+        initial={false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
         style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 60 }}
       >
         <button onClick={handleStart} style={{
           background: '#c8f05a', color: '#0a0a0f', border: 'none',
           padding: '16px 32px', borderRadius: 12, fontSize: 15,
-          fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+          fontWeight: 600, cursor: 'pointer', fontFamily: fontFamilySans,
           transition: 'all 0.2s'
         }}>
           Find My City →
@@ -84,7 +95,7 @@ export default function Hero({ onStart }: Props) {
             background: 'transparent', color: '#f0ede8',
             border: '1px solid rgba(255,255,255,0.07)',
             padding: '16px 32px', borderRadius: 12, fontSize: 15,
-            fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif"
+            fontWeight: 500, cursor: 'pointer', fontFamily: fontFamilySans
           }}>
           See how it works
         </button>
@@ -92,7 +103,9 @@ export default function Hero({ onStart }: Props) {
 
       {/* Stats bar */}
       <motion.div
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+        initial={false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
         style={{
           display: 'flex', background: '#12121a',
           border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden'
@@ -108,7 +121,7 @@ export default function Hero({ onStart }: Props) {
             padding: '20px 36px', textAlign: 'center',
             borderRight: i < 3 ? '1px solid rgba(255,255,255,0.07)' : 'none'
           }}>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: '#c8f05a' }}>
+            <div style={{ fontFamily: fontFamilySerif, fontSize: 28, fontWeight: 700, color: '#c8f05a' }}>
               {s.num}
             </div>
             <div style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 4 }}>{s.label}</div>

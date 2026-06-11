@@ -88,13 +88,13 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
   const [quizData, setQuizData] = useState<AnalyzeRequest | null>(null)
-  const [awaitingAuthToView, setAwaitingAuthToView] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return Boolean(loadPendingResults()?.cities.length)
-  })
+  const [awaitingAuthToView, setAwaitingAuthToView] = useState(false)
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
 
   const showLanding = matches === null && !loading && !awaitingAuthToView
+  const showHero =
+    !(matches !== null && matches.length > 0) &&
+    !(matches !== null && loading && matches.length === 0)
 
   const revealPendingResults = useCallback(async (): Promise<boolean> => {
     const pending = loadPendingResults()
@@ -433,9 +433,12 @@ export default function Home() {
     <main style={{ position: 'relative' }}>
       <Navbar onAuthClick={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('login') }} />
 
+      {showHero && (
+        <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
+      )}
+
       {showLanding && (
         <>
-          <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
           <CorePromise />
           <div id="quiz">
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
