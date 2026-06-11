@@ -25,14 +25,6 @@ The [best cities for $5,000/month](/cities/best-cities-for-5000-budget) are not 
 
 ## A Global Snapshot: Where Your Money Actually Goes
 
-| City        | Monthly Cost | Estimated Savings | Safety    | Lifestyle Level    |
-| ----------- | ------------ | ----------------- | --------- | ------------------ |
-| Valencia    | $1,600       | $3,000+           | High      | Premium Balanced   |
-| Bangkok     | $1,200       | $3,500+           | Medium    | High Energy        |
-| Chiang Mai  | $1,000       | $3,800+           | High      | Slow + Comfortable |
-| Lisbon      | $2,200       | $2,400            | Very High | Premium European   |
-| Mexico City | $1,800       | $2,900            | Medium    | Vibrant Urban      |
-
 | City        | Monthly Cost | Estimated Savings | Safety    | Climate | Lifestyle Score |
 | ----------- | ------------ | ----------------- | --------- | ------- | --------------- |
 | Valencia    | $1,600       | $3,000+           | High      | 10/10   | 9/10            |
