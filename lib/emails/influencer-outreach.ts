@@ -18,36 +18,23 @@ export function influencerOutreachEmailContent(params: {
 
 ${intro}
 
-We already have over 17,500 users actively using the platform to make smarter relocation decisions.
+This could outperform your last sponsor.
 
-I'm Jessica from the Partnerships Team at LiveWhere.io.
+We built LiveWhere — a tool with 18,000+ users that shows the best cities to live based on income and cost of living.
 
-I wanted to reach out because I think LiveWhere could genuinely be useful for many people in your audience.
+Video idea:
+"Where should you live with $3,000/month?"
+or
+"Best countries to live on $80K salary"
 
-LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.
+Simple, highly engaging, easy to test.
 
-LiveWhere is especially useful for people interested in remote work, relocation, expat life, retirement abroad, and finding better places to live based on their budget and priorities.
+We offer 40% revenue share + discounted pricing for your audience. If it hits, it can generate more than a typical brand deal.
 
-We're currently expanding our affiliate program and would love to explore a partnership with you.
+Want access? Click here: https://livewhere.io/?ref=collab
 
-What we offer:
-- 40% lifetime recurring commission on $19/month subscription sales
-- 40% commission on Lifetime Plan purchases ($149)
-- Free Pro access
-- Personal affiliate dashboard
-- Real-time tracking
-- Unique affiliate link
-- Automated payouts
-
-You can learn more here: https://livewhere.io/affiliates
-
-If this sounds interesting, I'd be happy to create your affiliate account and send over your tracking link so you can take a look.
-
-Thank you for your time.
-
-Best regards,
-Jessica
-Partnerships Team, LiveWhere.io`
+— Jessica
+Partnerships @ LiveWhere`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -56,26 +43,17 @@ Partnerships Team, LiveWhere.io`
   <div style="max-width:600px;margin:0 auto;padding:24px;">
     <p style="margin:0 0 16px;">Hi ${params.firstName},</p>
     <p style="margin:0 0 16px;">${escapeHtml(intro)}</p>
-    <p style="margin:0 0 16px;">We already have over 17,500 users actively using the platform to make smarter relocation decisions.</p>
-    <p style="margin:0 0 16px;">I'm Jessica from the Partnerships Team at LiveWhere.io.</p>
-    <p style="margin:0 0 16px;">I wanted to reach out because I think LiveWhere could genuinely be useful for many people in your audience.</p>
-    <p style="margin:0 0 16px;">LiveWhere helps people discover the best cities and locations based on income, cost of living, taxes, climate, safety, healthcare, and personal lifestyle priorities.</p>
-    <p style="margin:0 0 16px;">LiveWhere is especially useful for people interested in remote work, relocation, expat life, retirement abroad, and finding better places to live based on their budget and priorities.</p>
-    <p style="margin:0 0 16px;">We're currently expanding our affiliate program and would love to explore a partnership with you.</p>
-    <p style="margin:0 0 8px;"><strong>What we offer:</strong></p>
-    <ul style="margin:0 0 16px;padding-left:20px;">
-      <li>40% lifetime recurring commission on $19/month subscription sales</li>
-      <li>40% commission on Lifetime Plan purchases ($149)</li>
-      <li>Free Pro access</li>
-      <li>Personal affiliate dashboard</li>
-      <li>Real-time tracking</li>
-      <li>Unique affiliate link</li>
-      <li>Automated payouts</li>
-    </ul>
-    <p style="margin:0 0 16px;">You can learn more here: <a href="https://livewhere.io/affiliates">https://livewhere.io/affiliates</a></p>
-    <p style="margin:0 0 16px;">If this sounds interesting, I'd be happy to create your affiliate account and send over your tracking link so you can take a look.</p>
-    <p style="margin:0 0 16px;">Thank you for your time.</p>
-    <p style="margin:0;">Best regards,<br>Jessica<br>Partnerships Team, LiveWhere.io</p>
+    <p style="margin:0 0 16px;">This could outperform your last sponsor.</p>
+    <p style="margin:0 0 16px;">We built LiveWhere — a tool with 18,000+ users that shows the best cities to live based on income and cost of living.</p>
+    <p style="margin:0 0 8px;">Video idea:</p>
+    <p style="margin:0 0 4px;">&ldquo;Where should you live with $3,000/month?&rdquo;</p>
+    <p style="margin:0 0 16px;">or<br>&ldquo;Best countries to live on $80K salary&rdquo;</p>
+    <p style="margin:0 0 16px;">Simple, highly engaging, easy to test.</p>
+    <p style="margin:0 0 24px;">We offer 40% revenue share + discounted pricing for your audience. If it hits, it can generate more than a typical brand deal.</p>
+    <p style="margin:0 0 24px;">
+      <a href="https://livewhere.io/?ref=collab" style="display:inline-block;padding:12px 20px;background:#1a1a1a;color:#ffffff;text-decoration:none;border-radius:6px;font-size:15px;font-weight:600;">Want access? Click here</a>
+    </p>
+    <p style="margin:0;">— Jessica<br>Partnerships @ LiveWhere</p>
   </div>
 </body>
 </html>`
