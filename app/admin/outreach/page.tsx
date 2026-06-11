@@ -1,6 +1,6 @@
 'use client'
 
-import { type CSSProperties, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import AdminGate from '@/components/AdminGate'
 import { adminHeaders } from '@/lib/admin-client'
 import {
@@ -57,6 +57,9 @@ function OutreachPanel({ secret }: { secret: string }) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
+  const enrichRunRef = useRef(0)
+  const autoEnrichTargetRef = useRef<InfluencerRow[] | null>(null)
+  const [autoEnrichToken, setAutoEnrichToken] = useState(0)
 
   const withoutEmail = useMemo(() => rows.filter((r) => !r.email), [rows])
 
@@ -65,12 +68,34 @@ function OutreachPanel({ secret }: { secret: string }) {
     [rows]
   )
 
+  function formatApiError(value: unknown, fallback: string): string {
+    if (typeof value === 'string' && value.trim()) return value
+    if (value && typeof value === 'object' && 'message' in value) {
+      const message = (value as { message?: unknown }).message
+      if (typeof message === 'string' && message.trim()) return message
+    }
+    return fallback
+  }
+
+  async function parseJsonResponse(res: Response): Promise<Record<string, unknown>> {
+    const text = await res.text()
+    if (!text.trim()) return {}
+    try {
+      return JSON.parse(text) as Record<string, unknown>
+    } catch {
+      throw new Error(`Invalid server response (${res.status})`)
+    }
+  }
+
   async function enrichChannels(
     targetRows: InfluencerRow[],
     options?: { quiet?: boolean }
   ) {
     const missing = targetRows.filter((r) => !r.email)
     if (missing.length === 0) return
+
+    const runId = enrichRunRef.current + 1
+    enrichRunRef.current = runId
 
     setEnriching(true)
     setEnrichProgress(null)
@@ -86,7 +111,7 @@ function OutreachPanel({ secret }: { secret: string }) {
       platform: r.platform,
     }))
 
-    const BATCH_SIZE = 10
+    const BATCH_SIZE = 3
     const total = channels.length
     let totalFound = 0
     let totalRejected = 0
@@ -94,6 +119,8 @@ function OutreachPanel({ secret }: { secret: string }) {
 
     try {
       for (let i = 0; i < channels.length; i += BATCH_SIZE) {
+        if (enrichRunRef.current !== runId) return
+
         const batch = channels.slice(i, i + BATCH_SIZE)
         const batchStart = i + 1
         const batchEnd = i + batch.length
@@ -104,7 +131,9 @@ function OutreachPanel({ secret }: { secret: string }) {
           headers: adminHeaders(secret),
           body: JSON.stringify({ channels: batch }),
         })
-        const data = await res.json()
+        const data = await parseJsonResponse(res)
+
+        if (enrichRunRef.current !== runId) return
 
         if (res.status === 401) {
           setError('Invalid admin secret')
@@ -112,20 +141,25 @@ function OutreachPanel({ secret }: { secret: string }) {
         }
         if (!res.ok) {
           if (!options?.quiet) {
-            setError(data.error || 'Email enrichment failed')
+            setError(formatApiError(data.error, 'Email enrichment failed'))
           }
           return
         }
 
-        const byId = new Map<string, string>(
-          (data.enriched ?? [])
-            .filter((e: { channelId: string; email: string | null }) => e.email)
-            .map((e: { channelId: string; email: string }) => [e.channelId, e.email])
-        )
+        const enriched = Array.isArray(data.enriched) ? data.enriched : []
+        const byId = new Map<string, string>()
+        for (const entry of enriched) {
+          if (!entry || typeof entry !== 'object') continue
+          const { channelId, email } = entry as { channelId?: unknown; email?: unknown }
+          if (typeof channelId === 'string' && typeof email === 'string' && email.trim()) {
+            byId.set(channelId, email)
+          }
+        }
 
-        totalFound += data.foundCount ?? byId.size
-        totalRejected += data.rejectedCount ?? 0
-        totalProcessed += data.processedCount ?? batch.length
+        totalFound += typeof data.foundCount === 'number' ? data.foundCount : byId.size
+        totalRejected += typeof data.rejectedCount === 'number' ? data.rejectedCount : 0
+        totalProcessed +=
+          typeof data.processedCount === 'number' ? data.processedCount : batch.length
 
         if (byId.size > 0) {
           setRows((prev) =>
@@ -137,6 +171,8 @@ function OutreachPanel({ secret }: { secret: string }) {
           )
         }
       }
+
+      if (enrichRunRef.current !== runId) return
 
       if (totalFound === 0) {
         if (!options?.quiet) {
@@ -152,15 +188,34 @@ function OutreachPanel({ secret }: { secret: string }) {
             : `Outscraper found ${totalFound} email(s) for ${totalProcessed} channel(s).`
         setSuccess(msg)
       }
-    } catch {
+    } catch (err) {
+      if (enrichRunRef.current !== runId) return
       if (!options?.quiet) {
-        setError('Could not reach Outscraper enrichment API')
+        setError(
+          err instanceof Error ? err.message : 'Could not reach Outscraper enrichment API'
+        )
       }
     } finally {
-      setEnriching(false)
-      setEnrichProgress(null)
+      if (enrichRunRef.current === runId) {
+        setEnriching(false)
+        setEnrichProgress(null)
+      }
     }
   }
+
+  function queueAutoEnrich(target: InfluencerRow[]) {
+    if (!target.some((r) => !r.email)) return
+    autoEnrichTargetRef.current = target
+    setAutoEnrichToken((token) => token + 1)
+  }
+
+  useEffect(() => {
+    const target = autoEnrichTargetRef.current
+    if (!target) return
+    autoEnrichTargetRef.current = null
+    void enrichChannels(target, { quiet: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- token gates auto-enrich only
+  }, [autoEnrichToken])
 
   const allSelectableSelected =
     withEmail.length > 0 && withEmail.every((r) => selected.has(r.channelId))
@@ -187,15 +242,17 @@ function OutreachPanel({ secret }: { secret: string }) {
         emailSource: row.email ? ('csv' as const) : null,
       }))
 
-      setRows((prev) => {
-        const byId = new Map(prev.map((r) => [r.channelId, r]))
-        for (const row of imported) byId.set(row.channelId, row)
-        const next = Array.from(byId.values()).sort((a, b) => b.subscribers - a.subscribers)
-        if (next.some((r) => !r.email)) {
-          void enrichChannels(next, { quiet: true })
-        }
-        return next
-      })
+      const merged = Array.from(
+        new Map(
+          [...rows, ...imported].map((r) => [r.channelId, r])
+        ).values()
+      ).sort((a, b) => b.subscribers - a.subscribers)
+
+      setRows(merged)
+
+      if (merged.some((r) => !r.email)) {
+        queueAutoEnrich(merged)
+      }
 
       const hidden = influencers.length - raw.length
       const parts = [
@@ -246,7 +303,7 @@ function OutreachPanel({ secret }: { secret: string }) {
       setRows(visible)
 
       if (visible.length > 0 && visible.some((r) => !r.email)) {
-        void enrichChannels(visible, { quiet: true })
+        queueAutoEnrich(visible)
       }
 
       if (visible.length === 0) {
@@ -447,7 +504,7 @@ function OutreachPanel({ secret }: { secret: string }) {
               {withoutEmail.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => void enrichChannels(rows)}
+                  onClick={() => void enrichChannels(withoutEmail)}
                   disabled={enriching}
                   style={ghostBtnStyle}
                 >
@@ -754,7 +811,7 @@ function platformBadgeStyle(platform: InfluencerRow['platform']): CSSProperties 
     instagram: { bg: 'rgba(225,48,108,0.12)', border: 'rgba(225,48,108,0.35)', color: '#f472b6' },
     tiktok: { bg: 'rgba(0,242,234,0.1)', border: 'rgba(0,242,234,0.3)', color: '#5eead4' },
   }
-  const c = colors[platform]
+  const c = colors[platform] ?? colors.youtube
   return {
     display: 'inline-block',
     padding: '4px 10px',
