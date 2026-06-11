@@ -92,7 +92,9 @@ export default function Home() {
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
 
   const showLanding = matches === null && !loading && !awaitingAuthToView
-  const showHero = !(matches !== null && loading && matches.length === 0)
+  const showHero =
+    !(matches !== null && matches.length > 0) &&
+    !(matches !== null && loading && matches.length === 0)
 
   const revealPendingResults = useCallback(async (): Promise<boolean> => {
     const pending = loadPendingResults()
