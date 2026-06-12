@@ -1,6 +1,6 @@
 ---
 title: "Best Cities for $3,000/Month Budget in 2026"
-date: "2026-06-01"
+date: "2026-05-12"
 description: "Five standout destinations where $3,000 per month covers rent, food, coworking, and a comfortable expat lifestyle in 2026."
 city_slugs: ["bangkok", "tbilisi", "medellin", "chiang-mai", "plovdiv"]
 cluster: "Salary Cluster"

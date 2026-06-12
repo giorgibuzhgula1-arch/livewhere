@@ -1,7 +1,7 @@
 ---
 title: "Best Cities to Retire in 2026 (Affordable, Safe & High Quality of Life)"
 description: "Discover the best cities to retire in 2026 — affordable living, strong healthcare, and high quality of life in Europe, Asia, and Latin America."
-date: "2026-06-01"
+date: "2026-06-02"
 slug: "best-cities-to-retire-2026"
 show_table: false
 ---

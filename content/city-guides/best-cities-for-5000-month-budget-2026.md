@@ -1,6 +1,6 @@
 ---
 title: "What Lifestyle Can $5,000 a Month Buy Around the World in 2026?"
-date: "2026-06-01"
+date: "2026-05-19"
 description: "A $5,000 monthly budget opens up serious lifestyle flexibility. Here is what it actually buys in the cities where it goes furthest."
 cluster: "Salary Cluster"
 ---

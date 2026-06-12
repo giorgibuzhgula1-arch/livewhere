@@ -1,7 +1,7 @@
 ---
 title: "Best Countries to Retire in 2026 (Safest & Most Affordable)"
 description: "Discover the best countries to retire in 2026 — affordable living, strong healthcare, low taxes, and high quality of life for expat retirees."
-date: "2026-06-01"
+date: "2026-06-09"
 slug: "best-countries-to-retire-2026"
 show_table: false
 cluster: "retirement"

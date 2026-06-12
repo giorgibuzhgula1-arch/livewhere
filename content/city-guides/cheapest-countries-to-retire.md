@@ -1,7 +1,7 @@
 ---
 title: "Cheapest Countries to Retire in 2026 (Low Cost + High Quality of Life)"
 description: "Discover the cheapest countries to retire in 2026 — live comfortably on $1,200–$2,000/month with good healthcare, safety, and quality of life."
-date: "2026-06-01"
+date: "2026-06-16"
 slug: "cheapest-countries-to-retire"
 show_table: false
 cluster: "retirement"

@@ -1,6 +1,6 @@
 ---
 title: "Where Does $5,000 a Month Go Furthest in 2026? (Real Data Comparison)"
-date: "2026-06-01"
+date: "2026-05-26"
 description: "A real data comparison of where $5,000/month goes furthest in 2026 — savings, lifestyle, taxes, and efficiency across the top cities."
 cluster: "Salary Cluster"
 ---

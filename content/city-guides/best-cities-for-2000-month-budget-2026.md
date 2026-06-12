@@ -1,6 +1,6 @@
 ---
 title: "Best Cities for $2,000/Month Budget in 2026"
-date: "2026-06-01"
+date: "2026-05-05"
 description: "Five standout destinations where $2,000 per month covers rent, food, healthcare, and a comfortable expat lifestyle in 2026."
 city_slugs: ["kuala-lumpur", "phuket", "manila", "bogota", "santo-domingo"]
 cluster: "Salary Cluster"

@@ -1,7 +1,7 @@
 ---
 title: "Best Tax-Friendly Countries to Retire in 2026"
 description: "Discover the most tax-friendly countries to retire in 2026 — legal 0–7% effective tax rates, territorial systems, and high quality of life for expat retirees."
-date: "2026-06-01"
+date: "2026-06-30"
 slug: "tax-friendly-countries-for-retirees"
 show_table: false
 cluster: "retirement"
