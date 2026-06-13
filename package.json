@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "new:city-guide": "node scripts/new-city-guide.mjs"
   },
   "dependencies": {
     "@stripe/stripe-js": "^4.0.0",
