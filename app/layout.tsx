@@ -5,7 +5,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { dmSans, playfair } from '@/lib/fonts'
 import './globals.css'
 
-const GA_MEASUREMENT_ID = 'G-FZ6NK972GX'
+const GA_MEASUREMENT_ID = 'G-8BKJ3L5SQB'
 const CLARITY_PROJECT_ID = 'x4vqdz3sfo'
 
 export const metadata: Metadata = {
@@ -39,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}');
+            console.log('[GA4] gtag configured:', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
         <Script id="microsoft-clarity" strategy="afterInteractive">
