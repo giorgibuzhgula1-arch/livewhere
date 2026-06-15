@@ -25,20 +25,28 @@ const PRIORITIES = [
   { key: 'health', emoji: '🏥', label: 'Healthcare' },
   { key: 'nightlife', emoji: '🎉', label: 'Nightlife & culture' },
   { key: 'safety', emoji: '🔒', label: 'Safety' },
+  { key: 'expat_community', emoji: '👥', label: 'Expat community' },
+  { key: 'visa_residency', emoji: '🛂', label: 'Visa & residency ease' },
 ]
 
 const LIFESTYLES = [
   '🌍 Digital nomad', '👨‍👩‍👧 Family', '🎓 Student-friendly',
   '🏖️ Beach life', '🏔️ Mountains', '🏙️ City buzz',
-  '🌿 Nature & slow life', '💻 Tech scene'
+  '🌿 Nature & slow life', '💻 Tech scene',
+  '🏖️ Retire on the coast', '🏥 Healthcare priority',
+  '👴 Active expat community', '☀️ Warm climate year-round',
 ]
 
 export default function Quiz({ onSubmit, loading, error }: Props) {
   const tracked = useRef(false)
   const [salary, setSalary] = useState(80000)
   const [currency, setCurrency] = useState('USD')
-  const [priorities, setPriorities] = useState<UserPriorities>({
-    tax: 4, housing: 4, climate: 3, health: 3, nightlife: 2, safety: 4
+  const [priorities, setPriorities] = useState<UserPriorities & {
+    expat_community: number
+    visa_residency: number
+  }>({
+    tax: 4, housing: 4, climate: 3, health: 3, nightlife: 2, safety: 4,
+    expat_community: 3, visa_residency: 3,
   })
   const [lifestyle, setLifestyle] = useState<string[]>(['🌍 Digital nomad', '💻 Tech scene'])
 
