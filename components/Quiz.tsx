@@ -39,8 +39,7 @@ const LIFESTYLES = [
 
 export default function Quiz({ onSubmit, loading, error }: Props) {
   const tracked = useRef(false)
-  const [salary, setSalary] = useState(80000)
-  const [currency, setCurrency] = useState('USD')
+  const [monthlyBudget, setMonthlyBudget] = useState(2500)
   const [priorities, setPriorities] = useState<UserPriorities & {
     expat_community: number
     visa_residency: number
@@ -61,13 +60,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   function handleSubmit() {
-    onSubmit({ salary, currency, priorities, lifestyle })
-  }
-
-  const inputStyle = {
-    background: '#1a1a26', border: '1px solid rgba(255,255,255,0.07)',
-    color: '#f0ede8', padding: '14px 18px', borderRadius: 12,
-    fontSize: 16, fontFamily: "'DM Sans', sans-serif", outline: 'none'
+    onSubmit({ salary: monthlyBudget * 12, currency: 'USD', priorities, lifestyle })
   }
 
   return (
@@ -89,21 +82,30 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         </div>
 
         <div style={{ padding: 40 }}>
-          {/* Salary */}
+          {/* Monthly budget */}
           <div style={{ marginBottom: 32 }}>
-            <label style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 10, fontWeight: 500, display: 'block' }}>
-              Your annual income (remote-friendly)
+            <label style={{ fontSize: 14, color: '#f0ede8', marginBottom: 6, fontWeight: 600, display: 'block' }}>
+              Your monthly budget to live abroad
             </label>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <select value={currency} onChange={e => setCurrency(e.target.value)}
-                style={{ ...inputStyle, width: 100, cursor: 'pointer' }}>
-                <option value="USD">$ USD</option>
-                <option value="EUR">€ EUR</option>
-                <option value="GBP">£ GBP</option>
-              </select>
-              <input type="number" value={salary} onChange={e => setSalary(Number(e.target.value))}
-                style={{ ...inputStyle, flex: 1 }} placeholder="e.g. 80000" />
+            <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, lineHeight: 1.5 }}>
+              This includes rent, food, healthcare & lifestyle
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>$500</span>
+              <span style={{ fontSize: 18, color: '#c8f05a', fontWeight: 700 }}>
+                ${monthlyBudget.toLocaleString('en-US')} / month
+              </span>
+              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>$6,000</span>
             </div>
+            <input
+              type="range"
+              min={500}
+              max={6000}
+              step={100}
+              value={monthlyBudget}
+              onChange={e => setMonthlyBudget(Number(e.target.value))}
+              style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
+            />
           </div>
 
           {/* Priorities */}
