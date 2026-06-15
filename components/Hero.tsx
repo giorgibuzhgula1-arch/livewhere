@@ -47,7 +47,7 @@ export default function Hero({ onStart }: Props) {
           style={{ display: 'block' }}
         >
           Stop guessing<br />
-          <span style={{ color: '#c8f05a' }}>where to live.</span>
+          <span style={{ color: '#c8f05a' }}>where to retire or relocate.</span>
         </motion.span>
         <motion.span
           initial={false}
@@ -72,7 +72,7 @@ export default function Hero({ onStart }: Props) {
           lineHeight: 1.7, marginBottom: 48, fontWeight: 300
         }}
       >
-        Enter your salary, set your priorities, and discover the best cities worldwide
+        Enter your monthly budget, set your priorities, and discover the best cities worldwide
         for your lifestyle — with real tax calculations and cost breakdowns.
       </motion.p>
 
