@@ -203,6 +203,94 @@ const TESTIMONIALS = [
     stars: 5,
     text: "Moved to Bansko on a whim after it came up in my results. Thought it was a mistake for the first two weeks. Six months later I'm still here, rent is $350, mountains are 10 minutes away, and the nomad community is surprisingly solid.",
   },
+  {
+    name: 'Robert M.',
+    role: 'Retired Teacher, 58',
+    location: '🇵🇹 Lisbon, Portugal',
+    avatar: 'https://i.pravatar.cc/150?img=57',
+    stars: 5,
+    text: "After 32 years of teaching I retired with $2,600 a month and honestly had no idea how far that would go. I was skeptical at first. But the numbers were real — rent, food, healthcare. We moved to Lisbon eight months ago and I genuinely wish we had done it ten years earlier.",
+  },
+  {
+    name: 'Carol & Jim B.',
+    role: 'Retired Couple, 61 & 64',
+    location: '🇨🇴 Medellín, Colombia',
+    avatar: 'https://i.pravatar.cc/150?img=58',
+    stars: 5,
+    text: "We were spending $4,200 a month on a one-bedroom in Florida and just surviving. I remember sitting at the kitchen table thinking there has to be a better way. We got a shortlist, did our research, and took the leap. Medellín was not on our radar at all. Now it is home.",
+  },
+  {
+    name: 'Sandra K.',
+    role: 'Former Nurse, 45',
+    location: '🇵🇦 Panama City, Panama',
+    avatar: 'https://i.pravatar.cc/150?img=59',
+    stars: 5,
+    text: "Healthcare was my biggest worry retiring abroad. I spent thirty years as a nurse so I know what good care looks like. Panama surprised me completely. The hospital near us is modern, the doctors speak English, and I pay a fraction of what I was paying for insurance back home.",
+  },
+  {
+    name: 'Thomas W.',
+    role: 'Retired Engineer, 69',
+    location: '🇲🇽 Mexico City, Mexico',
+    avatar: 'https://i.pravatar.cc/150?img=60',
+    stars: 5,
+    text: "I ran the numbers myself for months and kept going in circles. Too many variables. When I finally tried a comparison tool it just laid everything out clearly — taxes, rent, cost of living. Mexico City came up and I thought no way. That was two years ago. I walk everywhere, eat incredibly well, and my savings are finally growing again.",
+  },
+  {
+    name: 'Patricia L.',
+    role: 'Retired Accountant, 56',
+    location: '🇪🇸 Valencia, Spain',
+    avatar: 'https://i.pravatar.cc/150?img=61',
+    stars: 5,
+    text: "My daughter thought I was crazy moving to Spain alone at 56. Eight months later she visited and didn't want to leave. The pace of life here is just different. I have more social life now than I did in Ohio. And my $3,100 a month covers everything comfortably.",
+  },
+  {
+    name: 'David & Anne R.',
+    role: 'Retired Couple, 47 & 49',
+    location: '🇹🇭 Chiang Mai, Thailand',
+    avatar: 'https://i.pravatar.cc/150?img=62',
+    stars: 5,
+    text: "We kept putting retirement off because we thought we hadn't saved enough. Turns out we just hadn't looked in the right places. Chiang Mai was the first result that came up for our budget and priorities. We were here within six months. Our rent is $650, the food is incredible, and the expat community welcomed us immediately.",
+  },
+  {
+    name: 'Frank G.',
+    role: 'Retired Police Officer, 81',
+    location: '🇨🇷 San José, Costa Rica',
+    avatar: 'https://i.pravatar.cc/150?img=63',
+    stars: 5,
+    text: "Safety was non-negotiable for me. I set that as my top priority and Costa Rica kept coming up. I did my homework, visited twice, then made the move. Friendly people, stable country, and my pension stretches about three times further than it did in Chicago.",
+  },
+  {
+    name: 'Margaret S.',
+    role: 'Early Retiree, 48',
+    location: '🇵🇹 Porto, Portugal',
+    avatar: 'https://i.pravatar.cc/150?img=64',
+    stars: 5,
+    text: "I took early retirement and my Social Security won't kick in for a few years. I was genuinely stressed about making the money work. Porto changed everything. My rent is $900 for a beautiful apartment, I walk to the market every morning, and for the first time in years I feel financially relaxed.",
+  },
+  {
+    name: 'George & Linda M.',
+    role: 'Retired Couple, 72 & 75',
+    location: '🇬🇷 Athens, Greece',
+    avatar: 'https://i.pravatar.cc/150?img=65',
+    stars: 5,
+    text: "Everyone told us Europe was too expensive. Athens proved them wrong. We have a two-bedroom apartment near the sea, we eat out four nights a week, and our total monthly costs are around $2,400. We tell every retired couple we know to look into it.",
+  },
+  {
+    name: 'Nancy T.',
+    role: 'Retired Teacher, 55',
+    location: '🇲🇾 Penang, Malaysia',
+    avatar: 'https://i.pravatar.cc/150?img=66',
+    stars: 5,
+    text: "I had never even considered Asia. But Penang kept appearing at the top of my results and I decided to just go visit for a month. That was eighteen months ago. The food, the weather, the people — and private healthcare here costs me $180 a month. I feel like I found a secret.",
+  },
+  {
+    name: 'Bill H.',
+    role: 'Early Retiree, 45',
+    location: '🇺🇾 Montevideo, Uruguay',
+    avatar: 'https://i.pravatar.cc/150?img=67',
+    stars: 5,
+    text: "Uruguay does not get enough attention. It is safe, the people are warm, and it genuinely feels like a smaller calmer version of Europe. My wife was hesitant at first. Now she tells everyone this was the best decision we ever made. Our quality of life at 45 is better than it was at 35.",
+  },
 ]
 
 export default function Testimonials() {
@@ -265,7 +353,7 @@ export default function Testimonials() {
               letterSpacing: 1,
             }}
           >
-            Show all 25 reviews
+            Show all 31 reviews
           </button>
         </div>
       )}
