@@ -55,7 +55,7 @@ export default function Hero({ onStart }: Props) {
           style={{
             display: 'block',
             color: '#999999',
-            fontSize: 18,
+            fontSize: 14,
             fontWeight: 400,
             lineHeight: 1.5,
             letterSpacing: 0,
@@ -63,7 +63,7 @@ export default function Hero({ onStart }: Props) {
             textAlign: 'center',
           }}
         >
-          For comparing healthcare, taxes, affordability and long-term livability across 200+ cities worldwide.
+          Compare taxes, healthcare, cost of living and residency across 200+ cities worldwide.
         </motion.span>
         <motion.span
           initial={false}
@@ -82,37 +82,7 @@ export default function Hero({ onStart }: Props) {
         >
           Our users discover an average of $850/month in additional retirement purchasing power.
         </motion.span>
-        <motion.span
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          style={{
-            display: 'block',
-            color: '#999999',
-            fontSize: 14,
-            fontWeight: 400,
-            lineHeight: 1.5,
-            letterSpacing: 0,
-            marginTop: 12,
-            textAlign: 'center',
-          }}
-        >
-          Built for retirees, future retirees and long-term relocation planners.
-        </motion.span>
       </h1>
-
-      <motion.p
-        initial={false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        style={{
-          fontSize: 18, color: 'rgba(240,237,232,0.45)', maxWidth: 520,
-          lineHeight: 1.7, marginBottom: 48, fontWeight: 300
-        }}
-      >
-        Enter your monthly budget, set your priorities, and discover the best cities worldwide
-        for your lifestyle — with real tax calculations and cost breakdowns.
-      </motion.p>
 
       <motion.div
         initial={false}
