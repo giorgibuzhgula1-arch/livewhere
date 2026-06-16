@@ -6,7 +6,10 @@
  * Indicator: Political Stability: Percentile Rank (2023 values)
  * Citation: Worldwide Governance Indicators, World Bank (www.govindicators.org)
  *
- * Regenerate: node scripts/build-wgi-stability.mjs
+ * Refresh annually when World Bank publishes updated WGI — edit WGI_2023_PV_PERCENTILE
+ * in scripts/build-wgi-stability.mjs, then regenerate and patch cities:
+ *   node scripts/build-wgi-stability.mjs
+ *   node scripts/patch-cities-stability.mjs
  */
 
 export const WGI_SOURCE = 'World Bank WGI, Political Stability percentile rank (2023)'

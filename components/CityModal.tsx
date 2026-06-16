@@ -60,11 +60,12 @@ export default function CityModal({ city, onClose, monthlyIncome, lifestyle }: P
 
           <div style={{ padding: 32 }}>
             {/* Scores */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
               {[
                 { num: city.score, label: 'Match', color: getColor(city.score) },
                 { num: city.scores.climate, label: 'Climate', color: getColor(city.scores.climate) },
                 { num: city.scores.safety, label: 'Safety', color: getColor(city.scores.safety) },
+                { num: city.scores.stability, label: 'Stability', color: getColor(city.scores.stability) },
               ].map(({ num, label, color }) => (
                 <div key={label} style={{ background: '#1a1a26', borderRadius: 14, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color }}>{num}</div>

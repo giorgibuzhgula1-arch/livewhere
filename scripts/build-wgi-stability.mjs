@@ -1,9 +1,11 @@
 /**
- * Build lib/wgi-stability.ts from World Bank API aggregate governance indicators.
- * Uses IQ.SOP.POLC.XQ (CPIA) as fallback OR fetches all country metadata.
+ * Build lib/wgi-stability.ts from embedded World Bank WGI percentile ranks.
  *
- * Primary: embed from WGI 2023 Political Stability Percentile Rank (manual sync file).
- * Run: node scripts/build-wgi-stability.mjs
+ * DATA IS STATIC — not fetched live. Update WGI_2023_PV_PERCENTILE below when the
+ * World Bank publishes a new WGI release (typically once per year; see
+ * https://www.govindicators.org and databank.worldbank.org), then run:
+ *   node scripts/build-wgi-stability.mjs
+ *   node scripts/patch-cities-stability.mjs
  */
 import { readFileSync, writeFileSync } from 'fs'
 import { join, dirname } from 'path'
@@ -84,7 +86,10 @@ const lines = [
   ' * Indicator: Political Stability: Percentile Rank (2023 values)',
   ' * Citation: Worldwide Governance Indicators, World Bank (www.govindicators.org)',
   ' *',
-  ' * Regenerate: node scripts/build-wgi-stability.mjs',
+  ' * Refresh annually when World Bank publishes updated WGI — edit WGI_2023_PV_PERCENTILE',
+  ' * in scripts/build-wgi-stability.mjs, then regenerate and patch cities:',
+  ' *   node scripts/build-wgi-stability.mjs',
+  ' *   node scripts/patch-cities-stability.mjs',
   ' */',
   '',
   "export const WGI_SOURCE = 'World Bank WGI, Political Stability percentile rank (2023)'",
