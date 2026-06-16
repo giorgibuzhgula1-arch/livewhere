@@ -30,9 +30,9 @@ const PRIORITIES = [
 ]
 
 const LIFESTYLES = [
-  '🌍 Digital nomad', '👨‍👩‍👧 Family', '🎓 Student-friendly',
+  '👨‍👩‍👧 Family', '🎓 Student-friendly',
   '🏖️ Beach life', '🏔️ Mountains', '🏙️ City buzz',
-  '🌿 Nature & slow life', '💻 Tech scene',
+  '🌿 Nature & slow life',
   '🏖️ Retire on the coast', '🏥 Healthcare priority',
   '👴 Active expat community', '☀️ Warm climate year-round',
 ]
@@ -47,7 +47,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     tax: 4, housing: 4, climate: 3, health: 3, nightlife: 2, safety: 4,
     expat_community: 3, visa_residency: 3,
   })
-  const [lifestyle, setLifestyle] = useState<string[]>(['🌍 Digital nomad', '💻 Tech scene'])
+  const [lifestyle, setLifestyle] = useState<string[]>([])
 
   useEffect(() => {
     if (tracked.current) return

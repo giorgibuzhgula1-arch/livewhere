@@ -29,7 +29,7 @@ export default function Hero({ onStart }: Props) {
         }}
       >
         <span style={{ width: 6, height: 6, background: '#c8f05a', borderRadius: '50%', display: 'inline-block' }} />
-        Find your perfect city in 3 minutes
+        Discover where your income buys the best life
       </motion.div>
 
       <h1
@@ -59,7 +59,7 @@ export default function Hero({ onStart }: Props) {
             WebkitTextStroke: '1px rgba(240,237,232,0.3)',
           }}
         >
-          Let data decide.
+          Compare taxes, healthcare, cost of living and residency across 200+ cities.
         </motion.span>
       </h1>
 
