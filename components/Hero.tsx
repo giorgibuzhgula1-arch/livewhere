@@ -71,6 +71,23 @@ export default function Hero({ onStart }: Props) {
           transition={{ delay: 0.35 }}
           style={{
             display: 'block',
+            color: '#c8f05a',
+            fontSize: 14,
+            fontWeight: 400,
+            lineHeight: 1.5,
+            letterSpacing: 0,
+            marginTop: 12,
+            textAlign: 'center',
+          }}
+        >
+          Our users discover an average of $850/month in additional retirement purchasing power.
+        </motion.span>
+        <motion.span
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          style={{
+            display: 'block',
             color: '#999999',
             fontSize: 14,
             fontWeight: 400,
@@ -109,7 +126,7 @@ export default function Hero({ onStart }: Props) {
           fontWeight: 600, cursor: 'pointer', fontFamily: fontFamilySans,
           transition: 'all 0.2s'
         }}>
-          Find My City →
+          Find My Best Retirement Destination →
         </button>
         <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
           style={{
@@ -135,12 +152,10 @@ export default function Hero({ onStart }: Props) {
         {[
           { num: '200+', label: 'Cities scored' },
           { num: '50+', label: 'Countries' },
-          { num: '12', label: 'Data points/city' },
-          { num: 'AI', label: 'Personalized' },
         ].map((s, i) => (
           <div key={i} style={{
             padding: '20px 36px', textAlign: 'center',
-            borderRight: i < 3 ? '1px solid rgba(255,255,255,0.07)' : 'none'
+            borderRight: i < 1 ? '1px solid rgba(255,255,255,0.07)' : 'none'
           }}>
             <div style={{ fontFamily: fontFamilySerif, fontSize: 28, fontWeight: 700, color: '#c8f05a' }}>
               {s.num}
