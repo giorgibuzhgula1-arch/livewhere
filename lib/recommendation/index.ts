@@ -521,7 +521,7 @@ function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities, count: n
     "Prioritize the user's highest priorities most strongly. Include practical reasoning, tax assumptions, and a monthly cost breakdown.",
     "Do not mention uncertainty unless it changes the recommendation. Tax info should be practical but not legal advice.",
     "",
-    `Salary: ${body.salary.toLocaleString()} ${body.currency} gross annual`,
+    `Target monthly living budget: $${body.monthlyBudget.toLocaleString()} ${body.currency}/month`,
     `Lifestyle: ${body.lifestyle.length ? body.lifestyle.join(", ") : "No specific lifestyle selected"}`,
     "Priorities, 1-5:",
     `- Low taxes: ${priorities.tax} (${priorityLabel(priorities.tax)})`,
@@ -544,14 +544,14 @@ function extractOpenAIJson(payload: OpenAIChatResponse): OpenAIRecommendationRes
   }
 }
 
-function normalizeCity(city: Partial<CityResult>, idx: number, salary: number): CityResult {
+function normalizeCity(city: Partial<CityResult>, idx: number, monthlyBudget: number): CityResult {
   const name = text(city.name, `Recommendation ${idx + 1}`)
   const country = text(city.country, "Unknown")
   const meta = metaFor({ name, country } as CityRow)
   const taxRate = clamp(num(city.taxRate, 25), 0, 60)
   const monthlyRent = Math.max(0, Math.round(num(city.monthlyRent, 1200)))
   const monthlyCost = Math.max(monthlyRent, Math.round(num(city.monthlyCost, monthlyRent * 1.7)))
-  const takeHomeMonthly = Math.max(0, Math.round(num(city.takeHomeMonthly, (salary * (1 - taxRate / 100)) / 12)))
+  const takeHomeMonthly = Math.max(0, Math.round(num(city.takeHomeMonthly, monthlyBudget)))
 
   return {
     name,
@@ -691,7 +691,7 @@ function emitNewCitiesFromBuffer(
     const key = `${name}|${country}`
     if (seen.has(key)) continue
     seen.add(key)
-    const city = normalizeCity(partial, seen.size - 1, body.salary)
+    const city = normalizeCity(partial, seen.size - 1, body.monthlyBudget)
     emitted.push(city)
     handlers.onCity?.(city)
   }
@@ -797,7 +797,7 @@ export async function streamRecommendCities(
   if (cities && cities.length >= resultCount) {
     return cities
       .slice(0, resultCount)
-      .map((city, idx) => normalizeCity(city, idx, body.salary))
+      .map((city, idx) => normalizeCity(city, idx, body.monthlyBudget))
   }
 
   if (streamed.length >= resultCount) {

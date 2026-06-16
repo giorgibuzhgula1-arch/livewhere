@@ -11,10 +11,10 @@ function findArrayBracket(cleaned: string): number {
   return cleaned.indexOf('[')
 }
 
-function dedupeAndSort(items: unknown[], salary: number): CityResult[] {
+function dedupeAndSort(items: unknown[], monthlyBudget: number): CityResult[] {
   const seen = new Map<string, CityResult>()
   for (const obj of items) {
-    const city = normalizePeeledCity(obj, salary)
+    const city = normalizePeeledCity(obj, monthlyBudget)
     if (city) seen.set(`${city.name}|${city.country}`, city)
   }
   return Array.from(seen.values()).sort((a, b) => b.score - a.score)
@@ -111,7 +111,7 @@ function normalizeScores(raw: unknown): CityResult['scores'] {
 /**
  * Normalize a peeled object into CityResult when enough fields exist to render a card.
  */
-export function normalizePeeledCity(raw: unknown, salary: number): CityResult | null {
+export function normalizePeeledCity(raw: unknown, monthlyBudget: number): CityResult | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Record<string, unknown>
   const name = o.name
@@ -122,8 +122,7 @@ export function normalizePeeledCity(raw: unknown, salary: number): CityResult | 
   const monthlyCost = asNum(o.monthlyCost)
   const score = scale100(asNum(o.score, 50))
 
-  const takeHomeYearly = Math.round(salary * (1 - taxRate / 100))
-  const takeHomeMonthly = Math.round(takeHomeYearly / 12)
+  const takeHomeMonthly = Math.round(asNum(o.takeHomeMonthly, monthlyBudget))
   const monthlySavings = takeHomeMonthly - monthlyCost
 
   const pros = Array.isArray(o.pros) ? o.pros.filter((x): x is string => typeof x === 'string') : []
@@ -156,11 +155,11 @@ export function parseStreamingBufferToCities(raw: string, body: AnalyzeRequest):
     try {
       const parsed = JSON.parse(cleaned)
       if (Array.isArray(parsed)) {
-        return dedupeAndSort(parsed, body.salary)
+        return dedupeAndSort(parsed, body.monthlyBudget)
       }
     } catch {
       /* Incomplete stream or leading prose — use incremental peel */
     }
   }
-  return dedupeAndSort(peelCompleteObjectsFromJsonArray(raw), body.salary)
+  return dedupeAndSort(peelCompleteObjectsFromJsonArray(raw), body.monthlyBudget)
 }

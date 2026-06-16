@@ -60,7 +60,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   function handleSubmit() {
-    onSubmit({ salary: monthlyBudget * 12, currency: 'USD', priorities, lifestyle })
+    onSubmit({ monthlyBudget, currency: 'USD', priorities, lifestyle })
   }
 
   return (

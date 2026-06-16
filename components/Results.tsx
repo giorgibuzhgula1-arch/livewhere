@@ -21,7 +21,7 @@ interface Props {
   /** When set (free tier), hide "Loading more cities…" once this many are shown. */
   maxCities?: number | null
   onUnlockPro?: () => void
-  /** Gross annual salary from the quiz — feeds the visa recommendation. */
+  /** Target monthly living budget from the quiz — feeds the visa recommendation. */
   salary?: number
   currency?: string
   lifestyle?: string[]
@@ -58,7 +58,7 @@ export default function Results({
   const paid = isPaidPlan(plan)
   const locked = !paid
   const isUnlocked = (city: CityResult) => paid || !city.locked
-  const monthlyIncome = typeof salary === 'number' && salary > 0 ? Math.round(salary / 12) : undefined
+  const monthlyIncome = typeof salary === 'number' && salary > 0 ? Math.round(salary) : undefined
 
   // Always show unlocked card(s) first, then by descending score.
   const ordered = [...cities].sort((a, b) => {

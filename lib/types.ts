@@ -36,7 +36,7 @@ export interface UserPriorities {
 }
 
 export interface AnalyzeRequest {
-  salary: number;
+  monthlyBudget: number;
   currency: string;
   priorities: UserPriorities;
   lifestyle: string[];

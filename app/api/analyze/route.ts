@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
   const priorities = normPriorities(body.priorities)
   const request = { ...body, priorities }
-  const { salary, currency, lifestyle } = request
+  const { monthlyBudget, currency, lifestyle } = request
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
         if (userId) {
           await supabaseAdmin.from('searches').insert({
             user_id: userId,
-            salary,
+            salary: monthlyBudget,
             currency,
             priorities,
             lifestyle,
