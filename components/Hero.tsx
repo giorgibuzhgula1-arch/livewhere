@@ -63,7 +63,7 @@ export default function Hero({ onStart }: Props) {
             textAlign: 'center',
           }}
         >
-          Compare taxes, healthcare, cost of living and residency across 200+ cities worldwide.
+          Compare taxes, healthcare, cost of living and residency across 50+ countries worldwide.
         </motion.span>
         <motion.span
           initial={false}
@@ -80,7 +80,7 @@ export default function Hero({ onStart }: Props) {
             textAlign: 'center',
           }}
         >
-          Our users discover an average of $850/month in additional retirement purchasing power.
+          See where your retirement income delivers the greatest purchasing power.
         </motion.span>
       </h1>
 
@@ -96,7 +96,7 @@ export default function Hero({ onStart }: Props) {
           fontWeight: 600, cursor: 'pointer', fontFamily: fontFamilySans,
           transition: 'all 0.2s'
         }}>
-          Find My Best Retirement Destination →
+          🥇 Get My Retirement Plan
         </button>
         <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
           style={{
