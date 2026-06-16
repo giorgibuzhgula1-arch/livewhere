@@ -35,7 +35,7 @@ export default function Hero({ onStart }: Props) {
       <h1
         style={{
           fontFamily: fontFamilySerif,
-          fontSize: 'clamp(52px, 8vw, 100px)',
+          fontSize: 'clamp(52px, 8vw, 80px)',
           fontWeight: 900, lineHeight: 0.95,
           letterSpacing: -2, marginBottom: 28
         }}
@@ -55,7 +55,7 @@ export default function Hero({ onStart }: Props) {
           style={{
             display: 'block',
             color: '#999999',
-            fontSize: 14,
+            fontSize: 28,
             fontWeight: 400,
             lineHeight: 1.5,
             letterSpacing: 0,
@@ -72,7 +72,7 @@ export default function Hero({ onStart }: Props) {
           style={{
             display: 'block',
             color: '#c8f05a',
-            fontSize: 14,
+            fontSize: 28,
             fontWeight: 400,
             lineHeight: 1.5,
             letterSpacing: 0,
