@@ -57,9 +57,10 @@ export default function Hero({ onStart }: Props) {
             display: 'block',
             color: 'rgba(240,237,232,0.85)',
             WebkitTextStroke: '1px rgba(240,237,232,0.3)',
+            fontSize: 18,
           }}
         >
-          Compare taxes, healthcare, cost of living and residency across 200+ cities.
+          Compare taxes, healthcare, cost of living and residency across 200+ cities worldwide.
         </motion.span>
       </h1>
 
