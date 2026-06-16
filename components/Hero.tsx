@@ -55,9 +55,13 @@ export default function Hero({ onStart }: Props) {
           transition={{ delay: 0.35 }}
           style={{
             display: 'block',
-            color: 'rgba(240,237,232,0.85)',
-            WebkitTextStroke: '1px rgba(240,237,232,0.3)',
+            color: '#999999',
             fontSize: 18,
+            fontWeight: 400,
+            lineHeight: 1.5,
+            letterSpacing: 0,
+            marginTop: 24,
+            textAlign: 'center',
           }}
         >
           Compare taxes, healthcare, cost of living and residency across 200+ cities worldwide.
