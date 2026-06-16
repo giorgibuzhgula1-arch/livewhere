@@ -43,6 +43,8 @@ function normPriorities(p: UserPriorities): UserPriorities {
     health: c(p.health),
     nightlife: c(p.nightlife),
     safety: c(p.safety),
+    expat_community: c(p.expat_community),
+    visa_residency: c(p.visa_residency),
   }
 }
 

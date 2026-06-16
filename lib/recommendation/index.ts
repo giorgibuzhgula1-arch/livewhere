@@ -530,6 +530,8 @@ function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities, count: n
     `- Healthcare: ${priorities.health} (${priorityLabel(priorities.health)})`,
     `- Nightlife and culture: ${priorities.nightlife} (${priorityLabel(priorities.nightlife)})`,
     `- Safety: ${priorities.safety} (${priorityLabel(priorities.safety)})`,
+    `- Expat community: ${priorities.expat_community} (${priorityLabel(priorities.expat_community)})`,
+    `- Visa and residency ease: ${priorities.visa_residency} (${priorityLabel(priorities.visa_residency)})`,
     "IMPORTANT: Only recommend a city if it genuinely matches the user's top priorities. If a priority is marked 'not important', do not factor it in positively. A city scoring well on criteria the user does not care about should rank lower than a city scoring well on what the user actually wants.",
   ].join("\n")
 }
@@ -756,6 +758,8 @@ export async function streamRecommendCities(
     health: normPriority(body.priorities.health),
     nightlife: normPriority(body.priorities.nightlife),
     safety: normPriority(body.priorities.safety),
+    expat_community: normPriority(body.priorities.expat_community),
+    visa_residency: normPriority(body.priorities.visa_residency),
   }
 
   const res = await fetch(OPENAI_ENDPOINT, {

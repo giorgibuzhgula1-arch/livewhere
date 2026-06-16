@@ -33,6 +33,8 @@ export interface UserPriorities {
   health: number;
   nightlife: number;
   safety: number;
+  expat_community: number;
+  visa_residency: number;
 }
 
 export interface AnalyzeRequest {

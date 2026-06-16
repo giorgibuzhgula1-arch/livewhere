@@ -40,10 +40,7 @@ const LIFESTYLES = [
 export default function Quiz({ onSubmit, loading, error }: Props) {
   const tracked = useRef(false)
   const [monthlyBudget, setMonthlyBudget] = useState(2500)
-  const [priorities, setPriorities] = useState<UserPriorities & {
-    expat_community: number
-    visa_residency: number
-  }>({
+  const [priorities, setPriorities] = useState<UserPriorities>({
     tax: 4, housing: 4, climate: 3, health: 3, nightlife: 2, safety: 4,
     expat_community: 3, visa_residency: 3,
   })
