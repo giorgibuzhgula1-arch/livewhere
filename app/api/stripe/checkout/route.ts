@@ -130,19 +130,7 @@ export async function POST(req: NextRequest) {
 
     const lineItems =
       checkoutType === 'report'
-        ? [
-            {
-              price_data: {
-                currency: 'usd',
-                product_data: {
-                  name: 'LiveWhere Lifetime Access',
-                  description: 'One-time $149 payment — lifetime access',
-                },
-                unit_amount: 14900,
-              },
-              quantity: 1,
-            },
-          ]
+        ? [{ price: 'price_1Tj2NXD753169kynXiq9z79p', quantity: 1 }]
         : [{ price: proPriceId!, quantity: 1 }]
 
     const refRaw = req.cookies.get(REF_COOKIE_NAME)?.value
