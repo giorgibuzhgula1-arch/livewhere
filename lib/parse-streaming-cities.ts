@@ -95,7 +95,7 @@ function scale100(n: number): number {
 
 function normalizeScores(raw: unknown): CityResult['scores'] {
   if (!raw || typeof raw !== 'object') {
-    return { tax: 0, housing: 0, climate: 0, health: 0, nightlife: 0, safety: 0 }
+    return { tax: 0, housing: 0, climate: 0, health: 0, stability: 0, safety: 0 }
   }
   const o = raw as Record<string, unknown>
   return {
@@ -103,7 +103,7 @@ function normalizeScores(raw: unknown): CityResult['scores'] {
     housing: scale100(asNum(o.housing)),
     climate: scale100(asNum(o.climate)),
     health: scale100(asNum(o.health)),
-    nightlife: scale100(asNum(o.nightlife)),
+    stability: scale100(asNum(o.stability, asNum(o.nightlife))),
     safety: scale100(asNum(o.safety)),
   }
 }

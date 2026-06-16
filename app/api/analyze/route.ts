@@ -28,7 +28,7 @@ function sanitizeLockedCity(city: CityResult): CityResult {
     cons: [],
     tags: [],
     visa: '',
-    scores: { tax: 0, housing: 0, climate: 0, health: 0, nightlife: 0, safety: 0 },
+    scores: { tax: 0, housing: 0, climate: 0, health: 0, stability: 0, safety: 0 },
     aiInsight: '',
     locked: true,
   }
@@ -41,7 +41,7 @@ function normPriorities(p: UserPriorities): UserPriorities {
     housing: c(p.housing),
     climate: c(p.climate),
     health: c(p.health),
-    nightlife: c(p.nightlife),
+    stability: c(p.stability),
     safety: c(p.safety),
     expat_community: c(p.expat_community),
     visa_residency: c(p.visa_residency),

@@ -19,9 +19,8 @@ export type ScoreFactorKey =
   | 'safety'
   | 'housing'
   | 'residency'
+  | 'stability'
   | 'climate'
-  | 'expat'
-  | 'nightlife'
 
 export type EliminationReason =
   | 'cost_of_living'
@@ -44,9 +43,10 @@ export interface FactorSubScores {
   safety: number
   housing: number
   residency: number
+  stability: number
   climate: number
+  /** Informational only — excluded from weighted ranking (0% base weight). */
   expat: number
-  nightlife: number
 }
 
 export interface AppliedWeights {
@@ -56,9 +56,8 @@ export interface AppliedWeights {
   safety: number
   housing: number
   residency: number
+  stability: number
   climate: number
-  expat: number
-  nightlife: number
 }
 
 export interface ScoreCityResult {
@@ -83,9 +82,8 @@ const BASE_WEIGHTS: Record<ScoreFactorKey, number> = {
   safety: 12,
   housing: 10,
   residency: 7,
-  climate: 5,
-  expat: 2,
-  nightlife: 1,
+  stability: 5,
+  climate: 3,
 }
 
 /**
@@ -182,7 +180,7 @@ const FALLBACK_VISA_SCORE: Partial<Record<string, number>> = {
 
 /** Expat community strength by country (0–100), when city-level data is unavailable. */
 // LIMITATION: CITIES has no city-level expat metrics — scores use country tables + a
-// nightlife/safety/healthcare proxy fallback until richer data is available.
+// stability/safety/healthcare proxy fallback until richer data is available.
 const EXPAT_COUNTRY_SCORE: Partial<Record<string, number>> = {
   Portugal: 88,
   Spain: 85,
@@ -277,8 +275,8 @@ export function isVeryHardResidency(country: string): boolean {
  * housing — 100 when rent ≤ 20% of budget; linear to 0 when rent ≥ 60% of budget.
  * residency — effectiveVisaScore(country), already 0–100.
  * climate — 100 at 22°C ideal; −4 points per °C deviation (±25°C → 0).
- * expat — country expat table, else proxy from nightlife/safety/healthcare blend.
- * nightlife — city.nightlife (0–10) × 10.
+ * stability — city.stability_score (World Bank WGI political stability percentile, 0–100).
+ * expat — country expat table, else proxy from stability/safety/healthcare blend (informational).
  */
 export function computeSubScores(city: CityRow, monthlyBudget: number): FactorSubScores {
   const budget = Math.max(monthlyBudget, 1)
@@ -314,7 +312,11 @@ export function computeSubScores(city: CityRow, monthlyBudget: number): FactorSu
   const countryExpat = EXPAT_COUNTRY_SCORE[city.country]
   const expatScore =
     countryExpat ??
-    clamp(((city.nightlife * 4 + city.safety * 3 + city.healthcare * 2) / 9) * 10, 25, 75)
+    clamp(
+      ((city.stability_score * 0.04 + city.safety * 3 + city.healthcare * 2) / 9) * 10,
+      25,
+      75,
+    )
 
   return {
     budget: Math.round(budgetScore),
@@ -323,9 +325,9 @@ export function computeSubScores(city: CityRow, monthlyBudget: number): FactorSu
     safety: clamp(city.safety * 10, 0, 100),
     housing: Math.round(housingScore),
     residency: Math.round(effectiveVisaScore(city.country)),
+    stability: clamp(city.stability_score, 0, 100),
     climate: Math.round(climateScore),
     expat: Math.round(expatScore),
-    nightlife: clamp(city.nightlife * 10, 0, 100),
   }
 }
 
@@ -344,9 +346,8 @@ export function computeAppliedWeights(priorities: UserPriorities): AppliedWeight
     safety: BASE_WEIGHTS.safety * sliderMultiplier(normPriority(priorities.safety)),
     housing: BASE_WEIGHTS.housing * sliderMultiplier(normPriority(priorities.housing)),
     residency: BASE_WEIGHTS.residency * sliderMultiplier(normPriority(priorities.visa_residency)),
+    stability: BASE_WEIGHTS.stability * sliderMultiplier(normPriority(priorities.stability)),
     climate: BASE_WEIGHTS.climate * sliderMultiplier(normPriority(priorities.climate)),
-    expat: BASE_WEIGHTS.expat * sliderMultiplier(normPriority(priorities.expat_community)),
-    nightlife: BASE_WEIGHTS.nightlife * sliderMultiplier(normPriority(priorities.nightlife)),
   }
 
   const adjustableSum = Object.values(raw).reduce((a, b) => a + b, 0)
@@ -359,9 +360,8 @@ export function computeAppliedWeights(priorities: UserPriorities): AppliedWeight
     safety: raw.safety * scale,
     housing: raw.housing * scale,
     residency: raw.residency * scale,
+    stability: raw.stability * scale,
     climate: raw.climate * scale,
-    expat: raw.expat * scale,
-    nightlife: raw.nightlife * scale,
   }
 }
 

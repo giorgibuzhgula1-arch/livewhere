@@ -18,7 +18,8 @@ export interface CityResult {
     housing: number;
     climate: number;
     health: number;
-    nightlife: number;
+    stability: number;
+    expat?: number;
     safety: number;
   };
   aiInsight: string;
@@ -31,7 +32,7 @@ export interface UserPriorities {
   housing: number;
   climate: number;
   health: number;
-  nightlife: number;
+  stability: number;
   safety: number;
   expat_community: number;
   visa_residency: number;

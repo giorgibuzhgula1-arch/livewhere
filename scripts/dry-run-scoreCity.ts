@@ -16,7 +16,7 @@ const userInput: ScoreCityUserInput = {
     climate: 2,
     visa_residency: 3,
     expat_community: 2,
-    nightlife: 1,
+    stability: 3,
   },
 }
 

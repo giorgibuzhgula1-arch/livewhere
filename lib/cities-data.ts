@@ -26,7 +26,7 @@ export const CITIES: CityData[] = [
     tax_rate_percent: 28,
     introvert_friendly: false,
     digital_nomad_score: 9,
-    tags: ['coastal', 'culture', 'nightlife', 'remote-work'],
+    tags: ['coastal', 'culture', 'vibrant', 'remote-work'],
   },
   {
     name: 'Bangkok',
@@ -82,7 +82,7 @@ export const CITIES: CityData[] = [
     tax_rate_percent: 0,
     introvert_friendly: false,
     digital_nomad_score: 9,
-    tags: ['spring-weather', 'affordable', 'nightlife', 'nomad-hub'],
+    tags: ['spring-weather', 'affordable', 'vibrant', 'nomad-hub'],
   },
   {
     name: 'Budapest',
@@ -96,7 +96,7 @@ export const CITIES: CityData[] = [
     tax_rate_percent: 15,
     introvert_friendly: true,
     digital_nomad_score: 8,
-    tags: ['culture', 'affordable', 'nightlife', 'walkable'],
+    tags: ['culture', 'affordable', 'vibrant', 'walkable'],
   },
   {
     name: 'Tallinn',
@@ -166,7 +166,7 @@ export const CITIES: CityData[] = [
     tax_rate_percent: 10,
     introvert_friendly: true,
     digital_nomad_score: 8,
-    tags: ['affordable', 'nightlife', 'culture', 'remote-work'],
+    tags: ['affordable', 'vibrant', 'culture', 'remote-work'],
   },
   {
     name: 'Plovdiv',
@@ -222,7 +222,7 @@ export const CITIES: CityData[] = [
     tax_rate_percent: 35,
     introvert_friendly: true,
     digital_nomad_score: 8,
-    tags: ['culture', 'food', 'walkable', 'nightlife'],
+    tags: ['culture', 'food', 'walkable', 'vibrant'],
   },
   {
     name: 'Split',
