@@ -30,7 +30,7 @@ const PRIORITIES = [
 ]
 
 const LIFESTYLES = [
-  '👨‍👩‍👧 Family', '🎓 Student-friendly',
+  '👨‍👩‍👧 Family', '💰 Wealth Preservation',
   '🏖️ Beach life', '🏔️ Mountains', '🏙️ City buzz',
   '🌿 Nature & slow life',
   '🏖️ Retire on the coast', '🏥 Healthcare priority',
@@ -69,7 +69,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         ✦ The Tool
       </div>
       <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, marginBottom: 48 }}>
-        Your personalized<br />city score
+        Your personalized<br />country score
       </h2>
 
       <div style={{ background: '#12121a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, overflow: 'hidden' }}>
@@ -172,7 +172,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center',
               justifyContent: 'center', gap: 10, transition: 'all 0.2s'
             }}>
-            ✦ Analyze & Find My Cities
+            ✦ Analyze & Find My Countries
           </button>
         </div>
       </div>
