@@ -35,7 +35,7 @@ export default function Hero({ onStart }: Props) {
       <h1
         style={{
           fontFamily: fontFamilySerif,
-          fontSize: 'clamp(52px, 8vw, 80px)',
+          fontSize: 'clamp(52px, 8vw, 100px)',
           fontWeight: 900, lineHeight: 0.95,
           letterSpacing: -2, marginBottom: 28
         }}
@@ -44,9 +44,10 @@ export default function Hero({ onStart }: Props) {
           initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          style={{ display: 'block', color: '#f0ede8' }}
+          style={{ display: 'block' }}
         >
-          The Retirement Intelligence Platform
+          The Retirement Intelligence<br />
+          <span style={{ color: '#c8f05a' }}>Platform</span>
         </motion.span>
         <motion.span
           initial={false}
@@ -96,7 +97,7 @@ export default function Hero({ onStart }: Props) {
           fontWeight: 600, cursor: 'pointer', fontFamily: fontFamilySans,
           transition: 'all 0.2s'
         }}>
-          🥇 Get My Retirement Plan
+          Get My Retirement Plan
         </button>
         <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
           style={{
