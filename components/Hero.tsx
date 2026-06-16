@@ -25,11 +25,11 @@ export default function Hero({ onStart }: Props) {
           display: 'inline-flex', alignItems: 'center', gap: 8,
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
           padding: '8px 18px', borderRadius: 30, fontSize: 12,
-          color: 'rgba(240,237,232,0.45)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 32
+          color: '#c8f05a', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 32
         }}
       >
         <span style={{ width: 6, height: 6, background: '#c8f05a', borderRadius: '50%', display: 'inline-block' }} />
-        Discover where your income buys the best life
+        Discover where your retirement income buys the best life
       </motion.div>
 
       <h1
@@ -44,10 +44,9 @@ export default function Hero({ onStart }: Props) {
           initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          style={{ display: 'block' }}
+          style={{ display: 'block', color: '#f0ede8' }}
         >
-          Stop guessing<br />
-          <span style={{ color: '#c8f05a' }}>where to retire or relocate.</span>
+          The Retirement Intelligence Platform
         </motion.span>
         <motion.span
           initial={false}
@@ -64,7 +63,24 @@ export default function Hero({ onStart }: Props) {
             textAlign: 'center',
           }}
         >
-          Compare taxes, healthcare, cost of living and residency across 200+ cities worldwide.
+          For comparing healthcare, taxes, affordability and long-term livability across 200+ cities worldwide.
+        </motion.span>
+        <motion.span
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          style={{
+            display: 'block',
+            color: '#999999',
+            fontSize: 14,
+            fontWeight: 400,
+            lineHeight: 1.5,
+            letterSpacing: 0,
+            marginTop: 12,
+            textAlign: 'center',
+          }}
+        >
+          Built for retirees, future retirees and long-term relocation planners.
         </motion.span>
       </h1>
 
