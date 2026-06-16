@@ -54,12 +54,12 @@ export default function Pricing({ onUpgrade }: Props) {
       btn: 'Get started free', style: 'ghost', popular: false
     },
     {
-      name: 'Retirement Report', price: '$149', originalPrice: '', period: 'one-time payment', sale: false,
+      name: 'Retirement Report', price: '$149', originalPrice: '$299', period: 'one-time payment', sale: true,
       features: ['Top 12 cities full analysis', 'Real tax calculator', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
-      btn: loadingPlan === 'pro' ? 'Loading...' : 'Get Retirement Report — $149', style: 'primary', popular: true
+      btn: loadingPlan === 'pro' ? 'Loading...' : 'Get My Retirement Plan', style: 'primary', popular: true
     },
     {
-      name: 'Premium Blueprint', price: '$299', originalPrice: '', period: 'one-time payment', sale: false,
+      name: 'Premium Blueprint', price: '$299', originalPrice: '$499', period: 'one-time payment', sale: true,
       features: ['Top 12 cities full analysis', 'Lifetime access', 'PDF report', 'Unlimited re-runs', 'Priority support'],
       btn: loadingPlan === 'report' ? 'Loading...' : 'Get Premium Blueprint — $299', style: 'ghost', popular: false
     },
@@ -80,12 +80,14 @@ export default function Pricing({ onUpgrade }: Props) {
               {plan.popular && <div style={{ background: '#c8f05a', color: '#0a0a0f', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', marginBottom: 20, textTransform: 'uppercase', letterSpacing: 0.5 }}>Most Popular</div>}
               <div style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', marginBottom: 8, fontWeight: 500 }}>{plan.name}</div>
               {plan.sale && plan.originalPrice && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ marginBottom: 6 }}>
                   <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: 'rgba(240,237,232,0.4)', textDecoration: 'line-through' }}>{plan.originalPrice}</span>
-                  <span style={{ background: '#f05a8c', color: '#0a0a0f', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 0.5 }}>Limited time</span>
                 </div>
               )}
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 42, fontWeight: 900, marginBottom: 4 }}>{plan.price}</div>
+              {plan.sale && (
+                <div style={{ fontSize: 12, color: '#c8f05a', marginBottom: 4 }}>Founding Member Pricing</div>
+              )}
               <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 24 }}>{plan.period}</div>
               <ul style={{ listStyle: 'none', marginBottom: 24 }}>
                 {plan.features.map(f => (
