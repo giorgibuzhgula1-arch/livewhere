@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
         const detailedCount = paid ? resultCount : FREE_DETAILED_COUNT
 
         send({ type: 'limits', maxCities: resultCount })
-        send({ type: 'status', text: 'Finding your top city matches…' })
+        send({ type: 'status', text: 'Scoring cities and writing your personalized insights…' })
 
         // Stream the #1 match unlocked the moment it parses so the free user
         // sees their top card within a few seconds; later matches stream as
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
         send({ type: 'done', cities: clientCities })
       } catch (err) {
         console.error('Recommendation error:', err)
-        send({ type: 'error', error: 'OpenAI could not generate recommendations. Please try again.' })
+        send({ type: 'error', error: 'Could not generate recommendations. Please try again.' })
       } finally {
         controller.close()
       }

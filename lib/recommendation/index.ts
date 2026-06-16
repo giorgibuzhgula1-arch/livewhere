@@ -9,6 +9,7 @@
  */
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 import { peelCompleteObjectsFromJsonArray } from '@/lib/parse-streaming-cities'
+import { rankCities, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
 
 export type CityRow = {
   name: string
@@ -437,16 +438,6 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n))
 }
 
-/**
- * Normalize a score to the 0–100 scale. The model sometimes returns scores on
- * a 0–10 scale (e.g. 9 instead of 90), so any positive value of 10 or less is
- * treated as a 0–10 rating and scaled up.
- */
-function scale100(n: number): number {
-  const scaled = n > 0 && n <= 10 ? n * 10 : n
-  return clamp(Math.round(scaled), 0, 100)
-}
-
 function normPriority(p: unknown): number {
   const n = typeof p === "number" ? p : Number(p)
   if (!Number.isFinite(n)) return 3
@@ -486,11 +477,6 @@ function priorityLabel(n: number): string {
   }
 }
 
-function num(value: unknown, fallback: number): number {
-  const n = Number(value)
-  return Number.isFinite(n) ? n : fallback
-}
-
 function text(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback
 }
@@ -501,26 +487,85 @@ function list(value: unknown, fallback: string[]): string[] {
   return items.length ? items.slice(0, 4) : fallback
 }
 
-function scores(value: unknown): CityResult["scores"] {
-  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {}
+function normPrioritiesFromBody(body: AnalyzeRequest): UserPriorities {
   return {
-    tax: scale100(num(raw.tax, 70)),
-    housing: scale100(num(raw.housing, 70)),
-    climate: scale100(num(raw.climate, 70)),
-    health: scale100(num(raw.health, 70)),
-    nightlife: scale100(num(raw.nightlife, 70)),
-    safety: scale100(num(raw.safety, 70)),
+    tax: normPriority(body.priorities.tax),
+    housing: normPriority(body.priorities.housing),
+    climate: normPriority(body.priorities.climate),
+    health: normPriority(body.priorities.health),
+    nightlife: normPriority(body.priorities.nightlife),
+    safety: normPriority(body.priorities.safety),
+    expat_community: normPriority(body.priorities.expat_community),
+    visa_residency: normPriority(body.priorities.visa_residency),
   }
 }
 
-function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities, count: number): string {
+function rankSurvivorsForUser(body: AnalyzeRequest, count: number): ScoreCityResult[] {
+  const priorities = normPrioritiesFromBody(body)
+  return rankCities(CITIES, { monthlyBudget: body.monthlyBudget, priorities })
+    .filter((r) => !r.eliminated)
+    .slice(0, count)
+}
+
+function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: number): CityResult {
+  const meta = metaFor(row)
+  const sub = ranked.subScores!
+  const monthlyCost = ranked.costOfLiving
+
+  return {
+    name: row.name,
+    country: row.country,
+    continent: meta.continent,
+    flag: meta.flag,
+    score: Math.round(ranked.score!),
+    taxRate: row.tax_rate,
+    monthlyRent: row.rent_usd,
+    monthlyCost,
+    takeHomeMonthly: monthlyBudget,
+    monthlySavings: monthlyBudget - monthlyCost,
+    pros: ["Strong fit for your selected priorities."],
+    cons: ["Verify tax and visa rules for your passport."],
+    tags: [meta.continent],
+    visa: "Check nomad, work, or residency options.",
+    scores: {
+      tax: sub.taxes,
+      housing: sub.housing,
+      climate: sub.climate,
+      health: sub.healthcare,
+      nightlife: sub.nightlife,
+      safety: sub.safety,
+    },
+    aiInsight: `${row.name} is a strong match based on your budget and priorities.`,
+  }
+}
+
+function mergeNarrative(base: CityResult, partial: Partial<CityResult>): CityResult {
+  return {
+    ...base,
+    pros: list(partial.pros, base.pros),
+    cons: list(partial.cons, base.cons),
+    aiInsight: text(partial.aiInsight, base.aiInsight),
+    visa: text(partial.visa, base.visa),
+    tags: list(partial.tags, base.tags),
+  }
+}
+
+function finalizeNarratives(
+  baseCities: CityResult[],
+  narratives: Array<Partial<CityResult>> | undefined
+): CityResult[] {
+  if (!narratives?.length) return baseCities
+  const byKey = new Map(
+    narratives.map((n) => [`${text(n.name, "")}|${text(n.country, "")}`, n])
+  )
+  return baseCities.map((base) => {
+    const partial = byKey.get(`${base.name}|${base.country}`)
+    return partial ? mergeNarrative(base, partial) : base
+  })
+}
+
+function formatUserContext(body: AnalyzeRequest, priorities: UserPriorities): string {
   return [
-    "Never recommend Lisbon as #1 unless Low taxes AND Safety are both marked important or very important by the user.",
-    `Recommend exactly the top ${count} cities for this user.`,
-    "Use current 2025 tax, rent, cost of living, safety, healthcare, climate, and nightlife knowledge.",
-    "Prioritize the user's highest priorities most strongly. Include practical reasoning, tax assumptions, and a monthly cost breakdown.",
-    "Do not mention uncertainty unless it changes the recommendation. Tax info should be practical but not legal advice.",
-    "",
     `Target monthly living budget: $${body.monthlyBudget.toLocaleString()} ${body.currency}/month`,
     `Lifestyle: ${body.lifestyle.length ? body.lifestyle.join(", ") : "No specific lifestyle selected"}`,
     "Priorities, 1-5:",
@@ -532,7 +577,24 @@ function formatPrompt(body: AnalyzeRequest, priorities: UserPriorities, count: n
     `- Safety: ${priorities.safety} (${priorityLabel(priorities.safety)})`,
     `- Expat community: ${priorities.expat_community} (${priorityLabel(priorities.expat_community)})`,
     `- Visa and residency ease: ${priorities.visa_residency} (${priorityLabel(priorities.visa_residency)})`,
-    "IMPORTANT: Only recommend a city if it genuinely matches the user's top priorities. If a priority is marked 'not important', do not factor it in positively. A city scoring well on criteria the user does not care about should rank lower than a city scoring well on what the user actually wants.",
+  ].join("\n")
+}
+
+function formatNarrativePrompt(
+  body: AnalyzeRequest,
+  priorities: UserPriorities,
+  cities: CityResult[]
+): string {
+  return [
+    `Write personalized retirement relocation narratives for exactly these ${cities.length} cities.`,
+    "These cities are ALREADY ranked by our deterministic scoring engine — do NOT reorder, rescore, or substitute cities.",
+    "For each city return pros (2-4 bullets), cons (1-3 bullets), aiInsight (one short paragraph), a practical visa summary, and lifestyle tags.",
+    "Focus on retirement-relevant reasoning tied to the user's priorities below.",
+    "",
+    formatUserContext(body, priorities),
+    "",
+    "Cities (fixed order):",
+    ...cities.map((c, i) => `${i + 1}. ${c.name}, ${c.country} (match score ${c.score})`),
   ].join("\n")
 }
 
@@ -546,40 +608,11 @@ function extractOpenAIJson(payload: OpenAIChatResponse): OpenAIRecommendationRes
   }
 }
 
-function normalizeCity(city: Partial<CityResult>, idx: number, monthlyBudget: number): CityResult {
-  const name = text(city.name, `Recommendation ${idx + 1}`)
-  const country = text(city.country, "Unknown")
-  const meta = metaFor({ name, country } as CityRow)
-  const taxRate = clamp(num(city.taxRate, 25), 0, 60)
-  const monthlyRent = Math.max(0, Math.round(num(city.monthlyRent, 1200)))
-  const monthlyCost = Math.max(monthlyRent, Math.round(num(city.monthlyCost, monthlyRent * 1.7)))
-  const takeHomeMonthly = Math.max(0, Math.round(num(city.takeHomeMonthly, monthlyBudget)))
-
-  return {
-    name,
-    country,
-    continent: text(city.continent, meta.continent),
-    flag: text(city.flag, meta.flag),
-    score: scale100(num(city.score, 90 - idx * 5)),
-    taxRate,
-    monthlyRent,
-    monthlyCost,
-    takeHomeMonthly,
-    monthlySavings: Math.round(num(city.monthlySavings, takeHomeMonthly - monthlyCost)),
-    pros: list(city.pros, ["Strong fit for your selected priorities."]),
-    cons: list(city.cons, ["Verify tax and visa rules for your passport."]),
-    tags: list(city.tags, [text(city.continent, meta.continent)]),
-    visa: text(city.visa, "Check nomad, work, or residency options."),
-    scores: scores(city.scores),
-    aiInsight: text(city.aiInsight, `${name} is a strong match based on your salary and priorities.`),
-  }
-}
-
-function cityRecommendationsJsonSchema(resultCount: number) {
+function cityNarrativesJsonSchema(resultCount: number) {
   return {
     type: "json_schema" as const,
     json_schema: {
-      name: "city_recommendations",
+      name: "city_narratives",
       strict: true,
       schema: {
         type: "object",
@@ -593,52 +626,14 @@ function cityRecommendationsJsonSchema(resultCount: number) {
             items: {
               type: "object",
               additionalProperties: false,
-              required: [
-                "name",
-                "country",
-                "continent",
-                "flag",
-                "score",
-                "taxRate",
-                "monthlyRent",
-                "monthlyCost",
-                "takeHomeMonthly",
-                "monthlySavings",
-                "pros",
-                "cons",
-                "tags",
-                "visa",
-                "scores",
-                "aiInsight",
-              ],
+              required: ["name", "country", "pros", "cons", "tags", "visa", "aiInsight"],
               properties: {
                 name: { type: "string" },
                 country: { type: "string" },
-                continent: { type: "string" },
-                flag: { type: "string" },
-                score: { type: "number", minimum: 0, maximum: 100 },
-                taxRate: { type: "number", minimum: 0, maximum: 60 },
-                monthlyRent: { type: "number", minimum: 0 },
-                monthlyCost: { type: "number", minimum: 0 },
-                takeHomeMonthly: { type: "number", minimum: 0 },
-                monthlySavings: { type: "number" },
                 pros: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 },
                 cons: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 3 },
                 tags: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 4 },
                 visa: { type: "string" },
-                scores: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: ["tax", "housing", "climate", "health", "nightlife", "safety"],
-                  properties: {
-                    tax: { type: "number", minimum: 0, maximum: 100 },
-                    housing: { type: "number", minimum: 0, maximum: 100 },
-                    climate: { type: "number", minimum: 0, maximum: 100 },
-                    health: { type: "number", minimum: 0, maximum: 100 },
-                    nightlife: { type: "number", minimum: 0, maximum: 100 },
-                    safety: { type: "number", minimum: 0, maximum: 100 },
-                  },
-                },
                 aiInsight: { type: "string" },
               },
             },
@@ -649,26 +644,26 @@ function cityRecommendationsJsonSchema(resultCount: number) {
   }
 }
 
-function buildOpenAIRequestBody(
+function buildNarrativeRequestBody(
   body: AnalyzeRequest,
   priorities: UserPriorities,
-  resultCount: number,
+  cities: CityResult[],
   stream: boolean
 ) {
   return {
     model: OPENAI_MODEL,
-    temperature: 0.3,
-    max_tokens: resultCount > 6 ? 8000 : 2500,
+    temperature: 0.4,
+    max_tokens: cities.length > 6 ? 6000 : 2500,
     stream,
     messages: [
       {
         role: "system",
         content:
-          "You are LiveWhere's relocation analyst. Return only structured recommendation data. Use realistic 2025 estimates and keep all numeric fields in USD/month or percentages as requested. When affordable housing is marked as very important or important, prioritize cities where monthly cost of living is under 40% of monthly take-home pay. Match cities strictly to the user's stated priorities and lifestyle tags. Prioritize international cities outside the user's likely home country. For digital nomad lifestyle, recommend cities in Europe, Southeast Asia, Latin America, or Middle East where the salary goes further internationally.",
+          "You are LiveWhere's retirement relocation writer. Return only narrative fields for the pre-selected cities. Never change rankings or invent numeric scores.",
       },
-      { role: "user", content: formatPrompt(body, priorities, resultCount) },
+      { role: "user", content: formatNarrativePrompt(body, priorities, cities) },
     ],
-    response_format: cityRecommendationsJsonSchema(resultCount),
+    response_format: cityNarrativesJsonSchema(cities.length),
   }
 }
 
@@ -677,9 +672,9 @@ export type RecommendStreamHandlers = {
   onCity?: (city: CityResult) => void
 }
 
-function emitNewCitiesFromBuffer(
+function emitNarrativesFromBuffer(
   buffer: string,
-  body: AnalyzeRequest,
+  baseByKey: Map<string, CityResult>,
   seen: Set<string>,
   handlers: RecommendStreamHandlers
 ): CityResult[] {
@@ -692,8 +687,10 @@ function emitNewCitiesFromBuffer(
     const country = typeof partial.country === "string" ? partial.country.trim() : "Unknown"
     const key = `${name}|${country}`
     if (seen.has(key)) continue
+    const base = baseByKey.get(key)
+    if (!base) continue
     seen.add(key)
-    const city = normalizeCity(partial, seen.size - 1, body.monthlyBudget)
+    const city = mergeNarrative(base, partial)
     emitted.push(city)
     handlers.onCity?.(city)
   }
@@ -751,16 +748,14 @@ export async function streamRecommendCities(
     throw new Error("OPENAI_API_KEY is not configured")
   }
 
-  const priorities: UserPriorities = {
-    tax: normPriority(body.priorities.tax),
-    housing: normPriority(body.priorities.housing),
-    climate: normPriority(body.priorities.climate),
-    health: normPriority(body.priorities.health),
-    nightlife: normPriority(body.priorities.nightlife),
-    safety: normPriority(body.priorities.safety),
-    expat_community: normPriority(body.priorities.expat_community),
-    visa_residency: normPriority(body.priorities.visa_residency),
+  const priorities = normPrioritiesFromBody(body)
+  const ranked = rankSurvivorsForUser(body, resultCount)
+  if (ranked.length === 0) {
+    throw new Error("No cities matched your budget and priority filters")
   }
+
+  const baseCities = ranked.map((r) => rowToCityResult(r.city, r, body.monthlyBudget))
+  const baseByKey = new Map(baseCities.map((c) => [`${c.name}|${c.country}`, c]))
 
   const res = await fetch(OPENAI_ENDPOINT, {
     method: "POST",
@@ -768,7 +763,7 @@ export async function streamRecommendCities(
       "content-type": "application/json",
       authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify(buildOpenAIRequestBody(body, priorities, resultCount, true)),
+    body: JSON.stringify(buildNarrativeRequestBody(body, priorities, baseCities, true)),
   })
 
   if (!res.ok) {
@@ -787,33 +782,33 @@ export async function streamRecommendCities(
   const content = await readOpenAIStream(res.body, (delta) => {
     accumulated += delta
     handlers.onDelta?.(delta)
-    for (const city of emitNewCitiesFromBuffer(accumulated, body, seen, handlers)) {
+    for (const city of emitNarrativesFromBuffer(accumulated, baseByKey, seen, handlers)) {
       streamed.push(city)
     }
   })
 
   if (!content.trim()) {
-    throw new Error("OpenAI API returned empty content")
+    return finalizeNarratives(baseCities, undefined)
   }
 
   const finalJson = extractOpenAIJson({ choices: [{ message: { content } }] })
-  const cities = finalJson?.cities
-  if (cities && cities.length >= resultCount) {
-    return cities
-      .slice(0, resultCount)
-      .map((city, idx) => normalizeCity(city, idx, body.monthlyBudget))
+  const narratives = finalJson?.cities
+  if (narratives && narratives.length >= resultCount) {
+    return finalizeNarratives(baseCities, narratives.slice(0, resultCount))
   }
 
   if (streamed.length >= resultCount) {
-    return streamed.slice(0, resultCount)
+    const streamedByKey = new Map(streamed.map((c) => [`${c.name}|${c.country}`, c]))
+    return baseCities.map((base) => streamedByKey.get(`${base.name}|${base.country}`) ?? base)
   }
 
-  emitNewCitiesFromBuffer(content, body, seen, handlers)
+  emitNarrativesFromBuffer(content, baseByKey, seen, handlers)
   if (streamed.length >= resultCount) {
-    return streamed.slice(0, resultCount)
+    const streamedByKey = new Map(streamed.map((c) => [`${c.name}|${c.country}`, c]))
+    return baseCities.map((base) => streamedByKey.get(`${base.name}|${base.country}`) ?? base)
   }
 
-  throw new Error(`OpenAI API did not return ${resultCount} city recommendations`)
+  return finalizeNarratives(baseCities, undefined)
 }
 
 export async function recommendCities(
