@@ -163,6 +163,18 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: P
               )}
             </div>
 
+            {city.healthcare && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, marginBottom: 6 }}>Healthcare for retirees</div>
+                <p style={{
+                  fontSize: 13, lineHeight: 1.6, margin: 0,
+                  fontWeight: 400, color: VISA_TEXT_COLOR,
+                }}>
+                  {city.healthcare}
+                </p>
+              </div>
+            )}
+
             {/* Pros & Cons */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div style={{ background: '#1a1a26', borderRadius: 14, padding: 18, borderTop: '2px solid #c8f05a' }}>
