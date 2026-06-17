@@ -28,6 +28,7 @@ function sanitizeLockedCity(city: CityResult): CityResult {
     cons: [],
     tags: [],
     visa: '',
+    healthcare: '',
     scores: { tax: 0, housing: 0, climate: 0, health: 0, stability: 0, safety: 0 },
     aiInsight: '',
     locked: true,

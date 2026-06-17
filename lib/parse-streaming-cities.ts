@@ -144,6 +144,7 @@ export function normalizePeeledCity(raw: unknown, monthlyBudget: number): CityRe
     cons,
     tags,
     visa: typeof o.visa === 'string' ? o.visa : '',
+    healthcare: typeof o.healthcare === 'string' ? o.healthcare : '',
     scores: normalizeScores(o.scores),
     aiInsight: typeof o.aiInsight === 'string' ? o.aiInsight : '',
   }

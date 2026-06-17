@@ -13,6 +13,8 @@ export interface CityResult {
   cons: string[];
   tags: string[];
   visa: string;
+  /** AI-generated retiree healthcare summary (system quality, cost, insurance). */
+  healthcare: string;
   scores: {
     tax: number;
     housing: number;

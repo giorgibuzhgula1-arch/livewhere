@@ -413,6 +413,7 @@ function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: n
     cons: ["Verify tax and visa rules for your passport."],
     tags: [meta.continent],
     visa: "Check retiree, work, or residency options.",
+    healthcare: "Healthcare details are being generated.",
     scores: {
       tax: sub.taxes,
       housing: sub.housing,
@@ -433,6 +434,7 @@ function mergeNarrative(base: CityResult, partial: Partial<CityResult>): CityRes
     cons: list(partial.cons, base.cons),
     aiInsight: text(partial.aiInsight, base.aiInsight),
     visa: text(partial.visa, base.visa),
+    healthcare: text(partial.healthcare, base.healthcare),
     tags: list(partial.tags, base.tags),
   }
 }
@@ -475,7 +477,13 @@ function formatNarrativePrompt(
   return [
     `Write personalized retirement relocation narratives for exactly these ${cities.length} cities.`,
     "These cities are ALREADY ranked by our deterministic scoring engine — do NOT reorder, rescore, or substitute cities.",
-    "For each city return pros (2-4 bullets), cons (1-3 bullets), aiInsight (one short paragraph), a practical visa summary, and lifestyle tags.",
+    "For each city return:",
+    "- pros (2-4 bullets)",
+    "- cons (1-3 bullets)",
+    "- aiInsight (one short paragraph tied to the user's priorities)",
+    "- visa: the specific visa name best suited for retirees; minimum income requirement in USD (or \"none\"); a 1-2 sentence application process overview; and the official government URL",
+    "- healthcare: 1-2 sentences on local healthcare system quality for retirees; estimated monthly healthcare cost in USD; and whether international health insurance is recommended (yes/no with a brief reason)",
+    "- tags (1-4 lifestyle tags)",
     "Focus on retirement-relevant reasoning tied to the user's priorities below.",
     "",
     formatUserContext(body, priorities),
@@ -513,7 +521,7 @@ function cityNarrativesJsonSchema(resultCount: number) {
             items: {
               type: "object",
               additionalProperties: false,
-              required: ["name", "country", "pros", "cons", "tags", "visa", "aiInsight"],
+              required: ["name", "country", "pros", "cons", "tags", "visa", "healthcare", "aiInsight"],
               properties: {
                 name: { type: "string" },
                 country: { type: "string" },
@@ -521,6 +529,7 @@ function cityNarrativesJsonSchema(resultCount: number) {
                 cons: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 3 },
                 tags: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 4 },
                 visa: { type: "string" },
+                healthcare: { type: "string" },
                 aiInsight: { type: "string" },
               },
             },
@@ -540,13 +549,13 @@ function buildNarrativeRequestBody(
   return {
     model: OPENAI_MODEL,
     temperature: 0.4,
-    max_tokens: cities.length > 6 ? 6000 : 2500,
+    max_tokens: cities.length > 6 ? 9000 : 4000,
     stream,
     messages: [
       {
         role: "system",
         content:
-          "You are LiveWhere's retirement relocation writer. Return only narrative fields for the pre-selected cities. Never change rankings or invent numeric scores.",
+          "You are LiveWhere's retirement relocation writer. Return only narrative fields for the pre-selected cities — including detailed visa and healthcare summaries. Never change rankings or invent numeric scores.",
       },
       { role: "user", content: formatNarrativePrompt(body, priorities, cities) },
     ],
@@ -722,6 +731,7 @@ function makeTeaser(row: CityRow, score: number): CityResult {
     cons: [],
     tags: [],
     visa: "",
+    healthcare: "",
     scores: { tax: 0, housing: 0, climate: 0, health: 0, stability: 0, safety: 0 },
     aiInsight: "",
     locked: true,
