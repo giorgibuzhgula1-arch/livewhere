@@ -13,6 +13,7 @@ import {
 
 const userInput: ScoreCityUserInput = {
   monthlyBudget: 2500,
+  lifestyle: [],
   priorities: {
     health: 5,
     tax: 3,
@@ -65,8 +66,8 @@ if (!result.eliminated && result.subScores && result.appliedWeights) {
   console.log(`expat (informational, 0% weight): ${subs.expat}`)
 } else {
   console.log('=== Phase 2 skipped — city eliminated in Phase 1 ===')
-  const subs = computeSubScores(batumi, userInput.monthlyBudget)
-  const w = computeAppliedWeights(userInput.priorities)
+  const subs = computeSubScores(batumi, userInput.monthlyBudget, userInput.lifestyle)
+  const w = computeAppliedWeights(userInput.priorities, userInput.lifestyle)
   console.log('(Hypothetical Phase 2 if Batumi had survived:)')
   const factors = ['budget', 'healthcare', 'taxes', 'safety', 'housing', 'residency', 'stability', 'climate'] as const
   let sum = 0

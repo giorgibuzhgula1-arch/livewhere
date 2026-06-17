@@ -8,6 +8,7 @@ import { rankCities, type ScoreCityUserInput } from '../lib/recommendation/score
 
 const userInput: ScoreCityUserInput = {
   monthlyBudget: 2500,
+  lifestyle: [],
   priorities: {
     health: 5,
     tax: 5,

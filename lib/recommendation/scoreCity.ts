@@ -34,36 +34,25 @@ export const VERY_HARD_RESIDENCY_THRESHOLD = 45
 export interface ScoreCityUserInput {
   monthlyBudget: number
   priorities: UserPriorities
+  lifestyle: string[]
 }
 
-export const CLIMATE_TARGET_COOL = 15
-export const CLIMATE_TARGET_MILD = 20
+export const WARM_CLIMATE_LIFESTYLE_TAG = 'warm_climate_year_round'
 export const CLIMATE_TARGET_WARM = 27
+export const CLIMATE_TARGET_DEFAULT = 18
+export const CLIMATE_WEIGHT_WARM = 15
+export const CLIMATE_WEIGHT_DEFAULT = 3
 
-/** Climate preference slider: 0–100 (cool ← → warm). */
-export function normClimateSlider(value: unknown): number {
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return 50
-  return clamp(Math.round(n), 0, 100)
+export function hasWarmClimateYearRound(lifestyle: string[] | undefined): boolean {
+  return lifestyle?.includes(WARM_CLIMATE_LIFESTYLE_TAG) ?? false
 }
 
-export function climateTargetTemp(climateSlider: number): number {
-  const s = normClimateSlider(climateSlider)
-  if (s <= 40) return CLIMATE_TARGET_COOL
-  if (s <= 70) return CLIMATE_TARGET_MILD
-  return CLIMATE_TARGET_WARM
+export function climateTargetTemp(lifestyle: string[] | undefined): number {
+  return hasWarmClimateYearRound(lifestyle) ? CLIMATE_TARGET_WARM : CLIMATE_TARGET_DEFAULT
 }
 
-export function climatePreferenceLabel(climateSlider: number): string {
-  const s = normClimateSlider(climateSlider)
-  if (s <= 40) return 'Cool climate'
-  if (s <= 70) return 'Mild climate'
-  return 'Warm climate'
-}
-
-/** Map 0–100 climate slider to 1–5 for Phase 2 weight scaling. */
-function climateWeightPriority(climateSlider: number): number {
-  return clamp(1 + Math.floor(normClimateSlider(climateSlider) / 25), 1, 5)
+export function climateWeightPercent(lifestyle: string[] | undefined): number {
+  return hasWarmClimateYearRound(lifestyle) ? CLIMATE_WEIGHT_WARM : CLIMATE_WEIGHT_DEFAULT
 }
 
 export interface FactorSubScores {
@@ -113,7 +102,18 @@ const BASE_WEIGHTS: Record<ScoreFactorKey, number> = {
   housing: 8,
   residency: 2,
   stability: 18,
-  climate: 1,
+  climate: CLIMATE_WEIGHT_DEFAULT,
+}
+
+type AdjustableWeightKey = Exclude<ScoreFactorKey, 'budget' | 'climate'>
+
+const ADJUSTABLE_BASE_WEIGHTS: Record<AdjustableWeightKey, number> = {
+  healthcare: BASE_WEIGHTS.healthcare,
+  taxes: BASE_WEIGHTS.taxes,
+  safety: BASE_WEIGHTS.safety,
+  housing: BASE_WEIGHTS.housing,
+  residency: BASE_WEIGHTS.residency,
+  stability: BASE_WEIGHTS.stability,
 }
 
 /**
@@ -304,14 +304,14 @@ export function isVeryHardResidency(country: string): boolean {
  * safety — city.safety (0–10) × 10.
  * housing — 100 when rent ≤ 20% of budget; linear to 0 when rent ≥ 60% of budget.
  * residency — effectiveVisaScore(country), already 0–100.
- * climate — 100 at ideal °C from climate slider (0–40→15°C, 41–70→20°C, 71–100→27°C); −4 pts/°C deviation.
+ * climate — 100 at ideal °C (27 if warm_climate_year_round lifestyle tag, else 18); −4 pts/°C deviation.
  * stability — city.stability_score (World Bank WGI political stability percentile, 0–100).
  * expat — country expat table, else proxy from stability/safety/healthcare blend (informational).
  */
 export function computeSubScores(
   city: CityRow,
   monthlyBudget: number,
-  climateSlider: number,
+  lifestyle: string[],
 ): FactorSubScores {
   const budget = Math.max(monthlyBudget, 1)
   const cost = estimatedMonthlyCost(city.rent_usd)
@@ -341,7 +341,7 @@ export function computeSubScores(
     )
   }
 
-  const targetTemp = climateTargetTemp(climateSlider)
+  const targetTemp = climateTargetTemp(lifestyle)
   const climateScore = clamp(100 - Math.abs(city.avg_temp - targetTemp) * 4, 0, 100)
 
   const countryExpat = EXPAT_COUNTRY_SCORE[city.country]
@@ -370,19 +370,21 @@ function sliderMultiplier(slider: number): number {
   return 0.6 + (slider / 5) * 0.8
 }
 
-export function computeAppliedWeights(priorities: UserPriorities): AppliedWeights {
-  // Budget fit has no user slider — always keeps the full 30% base weight.
+export function computeAppliedWeights(
+  priorities: UserPriorities,
+  lifestyle: string[],
+): AppliedWeights {
   const budgetWeight = BASE_WEIGHTS.budget
-  const remaining = 100 - budgetWeight
+  const climateWeight = climateWeightPercent(lifestyle)
+  const remaining = 100 - budgetWeight - climateWeight
 
-  const raw: Record<Exclude<ScoreFactorKey, 'budget'>, number> = {
-    healthcare: BASE_WEIGHTS.healthcare * sliderMultiplier(normPriority(priorities.health)),
-    taxes: BASE_WEIGHTS.taxes * sliderMultiplier(normPriority(priorities.tax)),
-    safety: BASE_WEIGHTS.safety * sliderMultiplier(normPriority(priorities.safety)),
-    housing: BASE_WEIGHTS.housing * sliderMultiplier(normPriority(priorities.housing)),
-    residency: BASE_WEIGHTS.residency * sliderMultiplier(normPriority(priorities.visa_residency)),
-    stability: BASE_WEIGHTS.stability * sliderMultiplier(normPriority(priorities.stability)),
-    climate: BASE_WEIGHTS.climate * sliderMultiplier(climateWeightPriority(priorities.climate)),
+  const raw: Record<AdjustableWeightKey, number> = {
+    healthcare: ADJUSTABLE_BASE_WEIGHTS.healthcare * sliderMultiplier(normPriority(priorities.health)),
+    taxes: ADJUSTABLE_BASE_WEIGHTS.taxes * sliderMultiplier(normPriority(priorities.tax)),
+    safety: ADJUSTABLE_BASE_WEIGHTS.safety * sliderMultiplier(normPriority(priorities.safety)),
+    housing: ADJUSTABLE_BASE_WEIGHTS.housing * sliderMultiplier(normPriority(priorities.housing)),
+    residency: ADJUSTABLE_BASE_WEIGHTS.residency * sliderMultiplier(normPriority(priorities.visa_residency)),
+    stability: ADJUSTABLE_BASE_WEIGHTS.stability * sliderMultiplier(normPriority(priorities.stability)),
   }
 
   const adjustableSum = Object.values(raw).reduce((a, b) => a + b, 0)
@@ -396,7 +398,7 @@ export function computeAppliedWeights(priorities: UserPriorities): AppliedWeight
     housing: raw.housing * scale,
     residency: raw.residency * scale,
     stability: raw.stability * scale,
-    climate: raw.climate * scale,
+    climate: climateWeight,
   }
 }
 
@@ -410,7 +412,7 @@ function weightedTotal(subScores: FactorSubScores, weights: AppliedWeights): num
 }
 
 export function scoreCity(city: CityRow, userInput: ScoreCityUserInput): ScoreCityResult {
-  const { monthlyBudget, priorities } = userInput
+  const { monthlyBudget, priorities, lifestyle } = userInput
   const budget = Math.max(monthlyBudget, 1)
   const costOfLiving = estimatedMonthlyCost(city.rent_usd)
   const healthcareScore = city.healthcare * 10
@@ -451,8 +453,8 @@ export function scoreCity(city: CityRow, userInput: ScoreCityUserInput): ScoreCi
     }
   }
 
-  const subScores = computeSubScores(city, budget, priorities.climate)
-  const appliedWeights = computeAppliedWeights(priorities)
+  const subScores = computeSubScores(city, budget, lifestyle)
+  const appliedWeights = computeAppliedWeights(priorities, lifestyle)
   const score = Math.round(weightedTotal(subScores, appliedWeights) * 10) / 10
 
   return {

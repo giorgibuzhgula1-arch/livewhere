@@ -7,6 +7,7 @@ import { rankCities } from '../lib/recommendation/scoreCity'
 
 const userInput = {
   monthlyBudget: 1500,
+  lifestyle: [] as string[],
   priorities: {
     health: 5,
     tax: 3,

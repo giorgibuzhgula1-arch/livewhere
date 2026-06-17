@@ -34,18 +34,12 @@ function sanitizeLockedCity(city: CityResult): CityResult {
   }
 }
 
-function normClimate(value: unknown): number {
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return 50
-  return Math.max(0, Math.min(100, Math.round(n)))
-}
-
 function normPriorities(p: UserPriorities): UserPriorities {
   const c = (x: unknown) => Math.max(1, Math.min(5, Math.round(Number(x) || 3)))
   return {
     tax: c(p.tax),
     housing: c(p.housing),
-    climate: normClimate(p.climate),
+    climate: c(p.climate),
     health: c(p.health),
     stability: c(p.stability),
     safety: c(p.safety),

@@ -9,7 +9,7 @@
  */
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 import { peelCompleteObjectsFromJsonArray } from '@/lib/parse-streaming-cities'
-import { rankCities, climateTargetTemp, climatePreferenceLabel, normClimateSlider, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
+import { rankCities, climateTargetTemp, climateWeightPercent, hasWarmClimateYearRound, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
 
 export type CityRow = {
   name: string
@@ -373,7 +373,7 @@ function normPrioritiesFromBody(body: AnalyzeRequest): UserPriorities {
   return {
     tax: normPriority(body.priorities.tax),
     housing: normPriority(body.priorities.housing),
-    climate: normClimateSlider(body.priorities.climate),
+    climate: normPriority(body.priorities.climate),
     health: normPriority(body.priorities.health),
     stability: normPriority(body.priorities.stability),
     safety: normPriority(body.priorities.safety),
@@ -384,7 +384,11 @@ function normPrioritiesFromBody(body: AnalyzeRequest): UserPriorities {
 
 function rankSurvivorsForUser(body: AnalyzeRequest, count: number): ScoreCityResult[] {
   const priorities = normPrioritiesFromBody(body)
-  return rankCities(CITIES, { monthlyBudget: body.monthlyBudget, priorities })
+  return rankCities(CITIES, {
+    monthlyBudget: body.monthlyBudget,
+    priorities,
+    lifestyle: body.lifestyle ?? [],
+  })
     .filter((r) => !r.eliminated)
     .slice(0, count)
 }
@@ -454,7 +458,7 @@ function formatUserContext(body: AnalyzeRequest, priorities: UserPriorities): st
     "Priorities, 1-5:",
     `- Low taxes: ${priorities.tax} (${priorityLabel(priorities.tax)})`,
     `- Affordable housing: ${priorities.housing} (${priorityLabel(priorities.housing)})`,
-    `- Climate: ${priorities.climate}/100 — ${climatePreferenceLabel(priorities.climate)}, ${climateTargetTemp(priorities.climate)}°C ideal avg`,
+    `- Climate: ${hasWarmClimateYearRound(body.lifestyle) ? 'Warm year-round' : 'Mild default'} — ${climateTargetTemp(body.lifestyle)}°C ideal avg (${climateWeightPercent(body.lifestyle)}% ranking weight)`,
     `- Healthcare: ${priorities.health} (${priorityLabel(priorities.health)})`,
     `- Long-term stability: ${priorities.stability} (${priorityLabel(priorities.stability)})`,
     `- Safety: ${priorities.safety} (${priorityLabel(priorities.safety)})`,

@@ -28,25 +28,24 @@ const PRIORITIES = [
   { key: 'visa_residency', emoji: '🛂', label: 'Visa & residency ease' },
 ]
 
-const LIFESTYLES = [
-  '👨‍👩‍👧 Family', '💰 Wealth Preservation',
-  '🏖️ Beach life', '🏔️ Mountains', '🏙️ City buzz',
-  '🌿 Nature & slow life',
-  '🏖️ Retire on the coast', '🏥 Healthcare priority',
-  '👴 Active expat community', '☀️ Warm climate year-round',
+const LIFESTYLES: { key: string; label: string }[] = [
+  { key: 'family', label: '👨‍👩‍👧 Family' },
+  { key: 'wealth_preservation', label: '💰 Wealth Preservation' },
+  { key: 'beach_life', label: '🏖️ Beach life' },
+  { key: 'mountains', label: '🏔️ Mountains' },
+  { key: 'city_buzz', label: '🏙️ City buzz' },
+  { key: 'nature_slow_life', label: '🌿 Nature & slow life' },
+  { key: 'retire_coast', label: '🏖️ Retire on the coast' },
+  { key: 'healthcare_priority', label: '🏥 Healthcare priority' },
+  { key: 'active_expat_community', label: '👴 Active expat community' },
+  { key: 'warm_climate_year_round', label: '☀️ Warm climate year-round' },
 ]
-
-function climateLabel(value: number): string {
-  if (value <= 40) return 'Cool climate (15°C ideal)'
-  if (value <= 70) return 'Mild climate (20°C ideal)'
-  return 'Warm climate (27°C ideal)'
-}
 
 export default function Quiz({ onSubmit, loading, error }: Props) {
   const tracked = useRef(false)
   const [monthlyBudget, setMonthlyBudget] = useState(2500)
   const [priorities, setPriorities] = useState<UserPriorities>({
-    tax: 4, housing: 4, climate: 50, health: 3, stability: 3, safety: 4,
+    tax: 4, housing: 4, climate: 3, health: 3, stability: 3, safety: 4,
     expat_community: 3, visa_residency: 3,
   })
   const [lifestyle, setLifestyle] = useState<string[]>([])
@@ -57,8 +56,8 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     trackFunnelStep(1)
   }, [])
 
-  function toggleLifestyle(item: string) {
-    setLifestyle(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item])
+  function toggleLifestyle(key: string) {
+    setLifestyle(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])
   }
 
   function handleSubmit() {
@@ -110,32 +109,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             />
           </div>
 
-          {/* Climate preference */}
-          <div style={{ marginBottom: 32 }}>
-            <label style={{ fontSize: 14, color: '#f0ede8', marginBottom: 6, fontWeight: 600, display: 'block' }}>
-              🌞 Climate preference
-            </label>
-            <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, lineHeight: 1.5 }}>
-              Slide toward your preferred year-round average temperature
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>Cool</span>
-              <span style={{ fontSize: 14, color: '#c8f05a', fontWeight: 600 }}>
-                {climateLabel(priorities.climate)}
-              </span>
-              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>Warm</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={1}
-              value={priorities.climate}
-              onChange={e => setPriorities(p => ({ ...p, climate: Number(e.target.value) }))}
-              style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
-            />
-          </div>
-
           {/* Priorities */}
           <div style={{ marginBottom: 32 }}>
             <label style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, fontWeight: 500, display: 'block' }}>
@@ -166,16 +139,16 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               Your lifestyle (select all that apply)
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              {LIFESTYLES.map(item => (
-                <button key={item} onClick={() => toggleLifestyle(item)}
+              {LIFESTYLES.map(({ key, label }) => (
+                <button key={key} onClick={() => toggleLifestyle(key)}
                   style={{
                     padding: '10px 18px', borderRadius: 30, fontSize: 13, cursor: 'pointer',
                     fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s',
-                    background: lifestyle.includes(item) ? 'rgba(200,240,90,0.12)' : '#1a1a26',
-                    border: lifestyle.includes(item) ? '1px solid #c8f05a' : '1px solid rgba(255,255,255,0.07)',
-                    color: lifestyle.includes(item) ? '#c8f05a' : '#f0ede8',
+                    background: lifestyle.includes(key) ? 'rgba(200,240,90,0.12)' : '#1a1a26',
+                    border: lifestyle.includes(key) ? '1px solid #c8f05a' : '1px solid rgba(255,255,255,0.07)',
+                    color: lifestyle.includes(key) ? '#c8f05a' : '#f0ede8',
                   }}>
-                  {item}
+                  {label}
                 </button>
               ))}
             </div>
