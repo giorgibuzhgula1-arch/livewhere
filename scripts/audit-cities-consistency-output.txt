@@ -1,0 +1,328 @@
+﻿
+=== EXTRA: stability<30 but healthcare/safety>7 ===
+
+=== EXTRA: identical stability_score for all cities in country ===
+United Arab Emirates | Dubai | stability=81 healthcare=6.8 safety=8 tax=0 rent=1850 [uniform country stability]
+United Arab Emirates | Abu Dhabi | stability=81 healthcare=7.2 safety=9 tax=0 rent=1600 [uniform country stability]
+Saudi Arabia | Riyadh | stability=59 healthcare=5.4 safety=7 tax=0 rent=900 [uniform country stability]
+Saudi Arabia | Jeddah | stability=59 healthcare=5.2 safety=7 tax=0 rent=850 [uniform country stability]
+Israel | Tel Aviv | stability=32 healthcare=8 safety=7 tax=37 rent=2100 [uniform country stability]
+Israel | Jerusalem | stability=32 healthcare=8 safety=7 tax=37 rent=1800 [uniform country stability]
+Morocco | Casablanca | stability=43 healthcare=6 safety=5 tax=38 rent=480 [uniform country stability]
+Morocco | Marrakech | stability=43 healthcare=5 safety=5 tax=38 rent=420 [uniform country stability]
+South Africa | Johannesburg | stability=38 healthcare=6 safety=2 tax=36 rent=650 [uniform country stability]
+South Africa | Cape Town | stability=38 healthcare=7 safety=3 tax=36 rent=750 [uniform country stability]
+South Africa | Durban | stability=38 healthcare=6 safety=4 tax=36 rent=500 [uniform country stability]
+Mexico | Mexico City | stability=23 healthcare=6 safety=4 tax=30 rent=750 [uniform country stability]
+Mexico | Guadalajara | stability=23 healthcare=6 safety=4 tax=30 rent=500 [uniform country stability]
+Mexico | Monterrey | stability=23 healthcare=6 safety=4 tax=30 rent=550 [uniform country stability]
+Mexico | Cancun | stability=23 healthcare=7 safety=5 tax=30 rent=800 [uniform country stability]
+Mexico | Playa del Carmen | stability=23 healthcare=6 safety=5 tax=30 rent=850 [uniform country stability]
+Mexico | Merida | stability=23 healthcare=6 safety=6 tax=30 rent=550 [uniform country stability]
+Colombia | Bogota | stability=23 healthcare=7 safety=4 tax=35 rent=450 [uniform country stability]
+Colombia | Medellin | stability=23 healthcare=7 safety=4 tax=35 rent=500 [uniform country stability]
+Colombia | Cali | stability=23 healthcare=6 safety=3 tax=35 rent=380 [uniform country stability]
+Colombia | Cartagena | stability=23 healthcare=6 safety=4 tax=35 rent=550 [uniform country stability]
+Peru | Lima | stability=43 healthcare=6 safety=4 tax=30 rent=600 [uniform country stability]
+Peru | Cusco | stability=43 healthcare=6 safety=6 tax=30 rent=350 [uniform country stability]
+Ecuador | Quito | stability=32 healthcare=6 safety=5 tax=25 rent=450 [uniform country stability]
+Ecuador | Guayaquil | stability=32 healthcare=6 safety=3 tax=25 rent=420 [uniform country stability]
+Bolivia | La Paz | stability=43 healthcare=5 safety=5 tax=13 rent=350 [uniform country stability]
+Bolivia | Santa Cruz de la Sierra | stability=43 healthcare=5 safety=4 tax=13 rent=400 [uniform country stability]
+Chile | Santiago | stability=66 healthcare=7 safety=5 tax=40 rent=700 [uniform country stability]
+Chile | Valparaiso | stability=66 healthcare=7 safety=5 tax=40 rent=480 [uniform country stability]
+Argentina | Buenos Aires | stability=52 healthcare=8 safety=5 tax=35 rent=650 [uniform country stability]
+Argentina | Cordoba | stability=52 healthcare=7 safety=5 tax=35 rent=380 [uniform country stability]
+Argentina | Mendoza | stability=52 healthcare=7 safety=6 tax=35 rent=350 [uniform country stability]
+Brazil | Sao Paulo | stability=38 healthcare=7 safety=3 tax=27 rent=900 [uniform country stability]
+Brazil | Rio de Janeiro | stability=38 healthcare=6 safety=3 tax=27 rent=750 [uniform country stability]
+Brazil | Brasilia | stability=38 healthcare=7 safety=4 tax=27 rent=550 [uniform country stability]
+Brazil | Belo Horizonte | stability=38 healthcare=7 safety=3 tax=27 rent=420 [uniform country stability]
+Brazil | Curitiba | stability=38 healthcare=7 safety=5 tax=27 rent=480 [uniform country stability]
+Brazil | Porto Alegre | stability=38 healthcare=7 safety=3 tax=27 rent=450 [uniform country stability]
+United States | New York | stability=72 healthcare=8 safety=5 tax=37 rent=4200 [uniform country stability]
+United States | Los Angeles | stability=72 healthcare=8 safety=5 tax=37 rent=2800 [uniform country stability]
+United States | San Francisco | stability=72 healthcare=8 safety=4 tax=37 rent=3500 [uniform country stability]
+United States | Miami | stability=72 healthcare=7 safety=5 tax=32 rent=2200 [uniform country stability]
+United States | Chicago | stability=72 healthcare=8 safety=4 tax=37 rent=2000 [uniform country stability]
+United States | Austin | stability=72 healthcare=7 safety=6 tax=32 rent=1600 [uniform country stability]
+United States | Seattle | stability=72 healthcare=8 safety=4 tax=32 rent=2300 [uniform country stability]
+United States | Boston | stability=72 healthcare=8 safety=6 tax=32 rent=2800 [uniform country stability]
+United States | Washington DC | stability=72 healthcare=8 safety=5 tax=32 rent=2400 [uniform country stability]
+United States | Atlanta | stability=72 healthcare=8 safety=3 tax=32 rent=1700 [uniform country stability]
+United States | Las Vegas | stability=72 healthcare=7 safety=4 tax=32 rent=1200 [uniform country stability]
+United States | Nashville | stability=72 healthcare=7 safety=4 tax=32 rent=1600 [uniform country stability]
+United States | Honolulu | stability=72 healthcare=8 safety=6 tax=32 rent=2200 [uniform country stability]
+Canada | Toronto | stability=82 healthcare=8 safety=6 tax=33 rent=1900 [uniform country stability]
+Canada | Vancouver | stability=82 healthcare=8 safety=6 tax=33 rent=2100 [uniform country stability]
+Canada | Montreal | stability=82 healthcare=8 safety=7 tax=33 rent=1200 [uniform country stability]
+Canada | Calgary | stability=82 healthcare=8 safety=7 tax=33 rent=1400 [uniform country stability]
+Canada | Ottawa | stability=82 healthcare=8 safety=8 tax=33 rent=1500 [uniform country stability]
+Canada | Quebec City | stability=82 healthcare=8 safety=8 tax=33 rent=900 [uniform country stability]
+Canada | Edmonton | stability=82 healthcare=8 safety=6 tax=33 rent=1200 [uniform country stability]
+United Kingdom | London | stability=69 healthcare=8 safety=5 tax=40 rent=2100 [uniform country stability]
+United Kingdom | Manchester | stability=69 healthcare=8 safety=5 tax=40 rent=1200 [uniform country stability]
+United Kingdom | Edinburgh | stability=69 healthcare=8 safety=6 tax=40 rent=1250 [uniform country stability]
+United Kingdom | Birmingham | stability=69 healthcare=8 safety=5 tax=40 rent=1050 [uniform country stability]
+United Kingdom | Glasgow | stability=69 healthcare=8 safety=4 tax=40 rent=1000 [uniform country stability]
+Ireland | Dublin | stability=83 healthcare=8 safety=6 tax=40 rent=2200 [uniform country stability]
+Ireland | Cork | stability=83 healthcare=8 safety=6 tax=40 rent=1400 [uniform country stability]
+France | Paris | stability=67 healthcare=8 safety=5 tax=30 rent=1650 [uniform country stability]
+France | Lyon | stability=67 healthcare=8 safety=6 tax=30 rent=880 [uniform country stability]
+France | Marseille | stability=67 healthcare=8 safety=4 tax=30 rent=750 [uniform country stability]
+France | Nice | stability=67 healthcare=8 safety=5 tax=30 rent=1200 [uniform country stability]
+France | Toulouse | stability=67 healthcare=8 safety=6 tax=30 rent=780 [uniform country stability]
+Germany | Berlin | stability=78 healthcare=8 safety=6 tax=42 rent=1100 [uniform country stability]
+Germany | Munich | stability=78 healthcare=8 safety=8 tax=42 rent=1450 [uniform country stability]
+Germany | Hamburg | stability=78 healthcare=8 safety=7 tax=42 rent=1050 [uniform country stability]
+Germany | Frankfurt | stability=78 healthcare=8 safety=6 tax=42 rent=1300 [uniform country stability]
+Switzerland | Zurich | stability=91 healthcare=9 safety=8 tax=22 rent=2200 [uniform country stability]
+Switzerland | Geneva | stability=91 healthcare=9 safety=8 tax=22 rent=2100 [uniform country stability]
+Switzerland | Basel | stability=91 healthcare=9 safety=8 tax=22 rent=1800 [uniform country stability]
+Netherlands | Amsterdam | stability=83 healthcare=8 safety=6 tax=37 rent=1750 [uniform country stability]
+Netherlands | Rotterdam | stability=83 healthcare=8 safety=6 tax=37 rent=1300 [uniform country stability]
+Netherlands | The Hague | stability=83 healthcare=8 safety=6 tax=37 rent=1250 [uniform country stability]
+Belgium | Brussels | stability=73 healthcare=8 safety=5 tax=40 rent=1150 [uniform country stability]
+Belgium | Antwerp | stability=73 healthcare=8 safety=5 tax=40 rent=950 [uniform country stability]
+Denmark | Copenhagen | stability=90 healthcare=8 safety=8 tax=42 rent=1400 [uniform country stability]
+Denmark | Aarhus | stability=90 healthcare=8 safety=8 tax=42 rent=950 [uniform country stability]
+Sweden | Stockholm | stability=85 healthcare=8 safety=6 tax=52 rent=1400 [uniform country stability]
+Sweden | Gothenburg | stability=85 healthcare=8 safety=6 tax=52 rent=900 [uniform country stability]
+Norway | Oslo | stability=93 healthcare=8 safety=8 tax=47 rent=1500 [uniform country stability]
+Norway | Bergen | stability=93 healthcare=8 safety=8 tax=47 rent=1250 [uniform country stability]
+Finland | Helsinki | stability=93 healthcare=8 safety=8 tax=56 rent=1200 [uniform country stability]
+Finland | Tampere | stability=93 healthcare=8 safety=8 tax=56 rent=850 [uniform country stability]
+Spain | Madrid | stability=67 healthcare=8 safety=6 tax=24 rent=1250 [uniform country stability]
+Spain | Barcelona | stability=67 healthcare=8 safety=6 tax=24 rent=1350 [uniform country stability]
+Spain | Valencia | stability=67 healthcare=8 safety=7 tax=24 rent=900 [uniform country stability]
+Spain | Malaga | stability=67 healthcare=7 safety=7 tax=24 rent=850 [uniform country stability]
+Portugal | Lisbon | stability=77 healthcare=7 safety=7 tax=20 rent=1200 [uniform country stability]
+Portugal | Porto | stability=77 healthcare=7 safety=7 tax=20 rent=850 [uniform country stability]
+Portugal | Braga | stability=77 healthcare=7 safety=7 tax=20 rent=650 [uniform country stability]
+Portugal | Faro | stability=77 healthcare=7 safety=7 tax=20 rent=900 [uniform country stability]
+Italy | Rome | stability=59 healthcare=8 safety=5 tax=43 rent=1300 [uniform country stability]
+Italy | Milan | stability=59 healthcare=8 safety=5 tax=43 rent=1450 [uniform country stability]
+Italy | Florence | stability=59 healthcare=8 safety=6 tax=43 rent=1100 [uniform country stability]
+Italy | Naples | stability=59 healthcare=7 safety=4 tax=43 rent=850 [uniform country stability]
+Italy | Venice | stability=59 healthcare=8 safety=6 tax=43 rent=1200 [uniform country stability]
+Greece | Athens | stability=59 healthcare=7 safety=6 tax=44 rent=700 [uniform country stability]
+Greece | Thessaloniki | stability=59 healthcare=7 safety=6 tax=44 rent=520 [uniform country stability]
+Poland | Warsaw | stability=73 healthcare=7 safety=7 tax=32 rent=750 [uniform country stability]
+Poland | Krakow | stability=73 healthcare=7 safety=7 tax=32 rent=650 [uniform country stability]
+Poland | Wroclaw | stability=73 healthcare=7 safety=7 tax=32 rent=600 [uniform country stability]
+Croatia | Zagreb | stability=77 healthcare=7 safety=7 tax=23 rent=700 [uniform country stability]
+Croatia | Split | stability=77 healthcare=7 safety=7 tax=23 rent=800 [uniform country stability]
+Ukraine | Kyiv | stability=15 healthcare=6 safety=4 tax=18 rent=550 [uniform country stability]
+Ukraine | Lviv | stability=15 healthcare=6 safety=6 tax=18 rent=420 [uniform country stability]
+Russia | Moscow | stability=24 healthcare=7 safety=4 tax=13 rent=1100 [uniform country stability]
+Russia | Saint Petersburg | stability=24 healthcare=7 safety=4 tax=13 rent=800 [uniform country stability]
+Georgia | Tbilisi | stability=49 healthcare=5.8 safety=7 tax=1 rent=550 [uniform country stability]
+Georgia | Batumi | stability=49 healthcare=4.2 safety=7 tax=1 rent=420 [uniform country stability]
+Kazakhstan | Almaty | stability=49 healthcare=6 safety=6 tax=10 rent=550 [uniform country stability]
+Kazakhstan | Astana | stability=49 healthcare=6 safety=7 tax=10 rent=500 [uniform country stability]
+Thailand | Bangkok | stability=32 healthcare=8 safety=6 tax=15 rent=650 [uniform country stability]
+Thailand | Chiang Mai | stability=32 healthcare=7 safety=7 tax=15 rent=420 [uniform country stability]
+Thailand | Phuket | stability=32 healthcare=7 safety=6 tax=15 rent=520 [uniform country stability]
+Malaysia | Kuala Lumpur | stability=43 healthcare=8 safety=6 tax=24 rent=550 [uniform country stability]
+Malaysia | Penang | stability=43 healthcare=7 safety=7 tax=24 rent=480 [uniform country stability]
+Indonesia | Jakarta | stability=29 healthcare=5 safety=5 tax=25 rent=550 [uniform country stability]
+Indonesia | Bali | stability=29 healthcare=5 safety=6 tax=15 rent=550 [uniform country stability]
+Indonesia | Surabaya | stability=29 healthcare=5 safety=5 tax=25 rent=380 [uniform country stability]
+Vietnam | Ho Chi Minh City | stability=49 healthcare=6 safety=5 tax=20 rent=500 [uniform country stability]
+Vietnam | Hanoi | stability=49 healthcare=6 safety=6 tax=20 rent=450 [uniform country stability]
+Philippines | Manila | stability=29 healthcare=6 safety=4 tax=25 rent=450 [uniform country stability]
+Philippines | Cebu | stability=29 healthcare=6 safety=5 tax=25 rent=380 [uniform country stability]
+Taiwan | Taipei | stability=83 healthcare=8 safety=8 tax=20 rent=750 [uniform country stability]
+Taiwan | Kaohsiung | stability=83 healthcare=8 safety=7 tax=20 rent=520 [uniform country stability]
+Japan | Tokyo | stability=85 healthcare=9 safety=8 tax=33 rent=1200 [uniform country stability]
+Japan | Osaka | stability=85 healthcare=8 safety=8 tax=33 rent=850 [uniform country stability]
+Japan | Kyoto | stability=85 healthcare=8 safety=8 tax=33 rent=720 [uniform country stability]
+Japan | Fukuoka | stability=85 healthcare=8 safety=8 tax=33 rent=680 [uniform country stability]
+Japan | Sapporo | stability=85 healthcare=8 safety=8 tax=33 rent=550 [uniform country stability]
+Australia | Sydney | stability=83 healthcare=8 safety=7 tax=39 rent=2100 [uniform country stability]
+Australia | Melbourne | stability=83 healthcare=8 safety=7 tax=39 rent=1650 [uniform country stability]
+Australia | Brisbane | stability=83 healthcare=8 safety=6 tax=39 rent=1500 [uniform country stability]
+Australia | Perth | stability=83 healthcare=8 safety=7 tax=39 rent=1400 [uniform country stability]
+Australia | Adelaide | stability=83 healthcare=8 safety=7 tax=39 rent=1200 [uniform country stability]
+New Zealand | Auckland | stability=92 healthcare=8 safety=6 tax=33 rent=1900 [uniform country stability]
+New Zealand | Wellington | stability=92 healthcare=8 safety=7 tax=33 rent=1700 [uniform country stability]
+New Zealand | Christchurch | stability=92 healthcare=8 safety=7 tax=33 rent=1300 [uniform country stability]
+South Korea | Seoul | stability=73 healthcare=9 safety=8 tax=35 rent=950 [uniform country stability]
+South Korea | Busan | stability=73 healthcare=8 safety=7 tax=35 rent=650 [uniform country stability]
+China | Beijing | stability=32 healthcare=7 safety=6 tax=25 rent=950 [uniform country stability]
+China | Shanghai | stability=32 healthcare=8 safety=6 tax=25 rent=1400 [uniform country stability]
+China | Shenzhen | stability=32 healthcare=8 safety=7 tax=25 rent=900 [uniform country stability]
+China | Guangzhou | stability=32 healthcare=8 safety=5 tax=25 rent=650 [uniform country stability]
+China | Chengdu | stability=32 healthcare=7 safety=7 tax=25 rent=450 [uniform country stability]
+China | Hangzhou | stability=32 healthcare=8 safety=7 tax=25 rent=720 [uniform country stability]
+China | XiAn | stability=32 healthcare=7 safety=7 tax=25 rent=400 [uniform country stability]
+
+=== EXTRA: identical healthcare+safety for 3+ cities in country ===
+Switzerland | Zurich | stability=91 healthcare=9 safety=8 tax=22 rent=2200 [uniform hc+safety]
+Switzerland | Geneva | stability=91 healthcare=9 safety=8 tax=22 rent=2100 [uniform hc+safety]
+Switzerland | Basel | stability=91 healthcare=9 safety=8 tax=22 rent=1800 [uniform hc+safety]
+Netherlands | Amsterdam | stability=83 healthcare=8 safety=6 tax=37 rent=1750 [uniform hc+safety]
+Netherlands | Rotterdam | stability=83 healthcare=8 safety=6 tax=37 rent=1300 [uniform hc+safety]
+Netherlands | The Hague | stability=83 healthcare=8 safety=6 tax=37 rent=1250 [uniform hc+safety]
+Portugal | Lisbon | stability=77 healthcare=7 safety=7 tax=20 rent=1200 [uniform hc+safety]
+Portugal | Porto | stability=77 healthcare=7 safety=7 tax=20 rent=850 [uniform hc+safety]
+Portugal | Braga | stability=77 healthcare=7 safety=7 tax=20 rent=650 [uniform hc+safety]
+Portugal | Faro | stability=77 healthcare=7 safety=7 tax=20 rent=900 [uniform hc+safety]
+Poland | Warsaw | stability=73 healthcare=7 safety=7 tax=32 rent=750 [uniform hc+safety]
+Poland | Krakow | stability=73 healthcare=7 safety=7 tax=32 rent=650 [uniform hc+safety]
+Poland | Wroclaw | stability=73 healthcare=7 safety=7 tax=32 rent=600 [uniform hc+safety]
+
+=== EXTRA: rent extremes (<=250 or >=3500) ===
+United States | New York | stability=72 healthcare=8 safety=5 tax=37 rent=4200
+United States | San Francisco | stability=72 healthcare=8 safety=4 tax=37 rent=3500
+
+TOTAL CITIES: 200
+TOTAL FLAGS: 49
+---
+United States | San Francisco
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=72 healthcare=8 safety=4 tax=37 rent=3500
+United States | Chicago
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=72 healthcare=8 safety=4 tax=37 rent=2000
+United States | Seattle
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=72 healthcare=8 safety=4 tax=32 rent=2300
+United States | Atlanta
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=72 healthcare=8 safety=3 tax=32 rent=1700
+United States | Las Vegas
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=72 healthcare=7 safety=4 tax=32 rent=1200
+United States | Nashville
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=72 healthcare=7 safety=4 tax=32 rent=1600
+United Kingdom | Glasgow
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=69 healthcare=8 safety=4 tax=40 rent=1000
+France | Marseille
+  ISSUE: High stability (>60) but low healthcare (<5) or safety (<5)
+  DATA: stability=67 healthcare=8 safety=4 tax=30 rent=750
+South Africa | Johannesburg / Cape Town / Durban
+  ISSUE: Same country, large spread in safety (min 2, max 4, spread 2)
+  DETAIL: Johannesburg=2, Cape Town=3, Durban=4
+Mexico | Mexico City / Guadalajara / Monterrey / Cancun / Playa del Carmen / Merida
+  ISSUE: Same country, large spread in safety (min 4, max 6, spread 2)
+  DETAIL: Mexico City=4, Guadalajara=4, Monterrey=4, Cancun=5, Playa del Carmen=5, Merida=6
+Peru | Lima / Cusco
+  ISSUE: Same country, large spread in safety (min 4, max 6, spread 2)
+  DETAIL: Lima=4, Cusco=6
+Ecuador | Quito / Guayaquil
+  ISSUE: Same country, large spread in safety (min 3, max 5, spread 2)
+  DETAIL: Quito=5, Guayaquil=3
+Brazil | Sao Paulo / Rio de Janeiro / Brasilia / Belo Horizonte / Curitiba / Porto Alegre
+  ISSUE: Same country, large spread in safety (min 3, max 5, spread 2)
+  DETAIL: Sao Paulo=3, Rio de Janeiro=3, Brasilia=4, Belo Horizonte=3, Curitiba=5, Porto Alegre=3
+Brazil | Sao Paulo / Rio de Janeiro / Brasilia / Belo Horizonte / Curitiba / Porto Alegre
+  ISSUE: Same country, large spread in rent_usd (min 420, max 900, spread 480)
+  DETAIL: Sao Paulo=900, Rio de Janeiro=750, Brasilia=550, Belo Horizonte=420, Curitiba=480, Porto Alegre=450
+United States | New York / Los Angeles / San Francisco / Miami / Chicago / Austin / Seattle / Boston / Washington DC / Atlanta / Las Vegas / Nashville / Honolulu
+  ISSUE: Same country, large spread in safety (min 3, max 6, spread 3)
+  DETAIL: New York=5, Los Angeles=5, San Francisco=4, Miami=5, Chicago=4, Austin=6, Seattle=4, Boston=6, Washington DC=5, Atlanta=3, Las Vegas=4, Nashville=4, Honolulu=6
+United States | New York / Los Angeles / San Francisco / Miami / Chicago / Austin / Seattle / Boston / Washington DC / Atlanta / Las Vegas / Nashville / Honolulu
+  ISSUE: Same country, large spread in rent_usd (min 1200, max 4200, spread 3000)
+  DETAIL: New York=4200, Los Angeles=2800, San Francisco=3500, Miami=2200, Chicago=2000, Austin=1600, Seattle=2300, Boston=2800, Washington DC=2400, Atlanta=1700, Las Vegas=1200, Nashville=1600, Honolulu=2200
+Canada | Toronto / Vancouver / Montreal / Calgary / Ottawa / Quebec City / Edmonton
+  ISSUE: Same country, large spread in safety (min 6, max 8, spread 2)
+  DETAIL: Toronto=6, Vancouver=6, Montreal=7, Calgary=7, Ottawa=8, Quebec City=8, Edmonton=6
+Canada | Toronto / Vancouver / Montreal / Calgary / Ottawa / Quebec City / Edmonton
+  ISSUE: Same country, large spread in rent_usd (min 900, max 2100, spread 1200)
+  DETAIL: Toronto=1900, Vancouver=2100, Montreal=1200, Calgary=1400, Ottawa=1500, Quebec City=900, Edmonton=1200
+United Kingdom | London / Manchester / Edinburgh / Birmingham / Glasgow
+  ISSUE: Same country, large spread in safety (min 4, max 6, spread 2)
+  DETAIL: London=5, Manchester=5, Edinburgh=6, Birmingham=5, Glasgow=4
+United Kingdom | London / Manchester / Edinburgh / Birmingham / Glasgow
+  ISSUE: Same country, large spread in rent_usd (min 1000, max 2100, spread 1100)
+  DETAIL: London=2100, Manchester=1200, Edinburgh=1250, Birmingham=1050, Glasgow=1000
+Ireland | Dublin / Cork
+  ISSUE: Same country, large spread in rent_usd (min 1400, max 2200, spread 800)
+  DETAIL: Dublin=2200, Cork=1400
+France | Paris / Lyon / Marseille / Nice / Toulouse
+  ISSUE: Same country, large spread in safety (min 4, max 6, spread 2)
+  DETAIL: Paris=5, Lyon=6, Marseille=4, Nice=5, Toulouse=6
+France | Paris / Lyon / Marseille / Nice / Toulouse
+  ISSUE: Same country, large spread in rent_usd (min 750, max 1650, spread 900)
+  DETAIL: Paris=1650, Lyon=880, Marseille=750, Nice=1200, Toulouse=780
+Germany | Berlin / Munich / Hamburg / Frankfurt
+  ISSUE: Same country, large spread in safety (min 6, max 8, spread 2)
+  DETAIL: Berlin=6, Munich=8, Hamburg=7, Frankfurt=6
+Germany | Berlin / Munich / Hamburg / Frankfurt
+  ISSUE: Same country, large spread in rent_usd (min 1050, max 1450, spread 400)
+  DETAIL: Berlin=1100, Munich=1450, Hamburg=1050, Frankfurt=1300
+Switzerland | Zurich / Geneva / Basel
+  ISSUE: Same country, large spread in rent_usd (min 1800, max 2200, spread 400)
+  DETAIL: Zurich=2200, Geneva=2100, Basel=1800
+Netherlands | Amsterdam / Rotterdam / The Hague
+  ISSUE: Same country, large spread in rent_usd (min 1250, max 1750, spread 500)
+  DETAIL: Amsterdam=1750, Rotterdam=1300, The Hague=1250
+Denmark | Copenhagen / Aarhus
+  ISSUE: Same country, large spread in rent_usd (min 950, max 1400, spread 450)
+  DETAIL: Copenhagen=1400, Aarhus=950
+Sweden | Stockholm / Gothenburg
+  ISSUE: Same country, large spread in rent_usd (min 900, max 1400, spread 500)
+  DETAIL: Stockholm=1400, Gothenburg=900
+Spain | Madrid / Barcelona / Valencia / Malaga
+  ISSUE: Same country, large spread in rent_usd (min 850, max 1350, spread 500)
+  DETAIL: Madrid=1250, Barcelona=1350, Valencia=900, Malaga=850
+Portugal | Lisbon / Porto / Braga / Faro
+  ISSUE: Same country, large spread in rent_usd (min 650, max 1200, spread 550)
+  DETAIL: Lisbon=1200, Porto=850, Braga=650, Faro=900
+Italy | Rome / Milan / Florence / Naples / Venice
+  ISSUE: Same country, large spread in safety (min 4, max 6, spread 2)
+  DETAIL: Rome=5, Milan=5, Florence=6, Naples=4, Venice=6
+Italy | Rome / Milan / Florence / Naples / Venice
+  ISSUE: Same country, large spread in rent_usd (min 850, max 1450, spread 600)
+  DETAIL: Rome=1300, Milan=1450, Florence=1100, Naples=850, Venice=1200
+Ukraine | Kyiv / Lviv
+  ISSUE: Same country, large spread in safety (min 4, max 6, spread 2)
+  DETAIL: Kyiv=4, Lviv=6
+Indonesia | Jakarta / Bali / Surabaya
+  ISSUE: Same country, large spread in tax_rate (min 15, max 25, spread 10)
+  DETAIL: Jakarta=25, Bali=15, Surabaya=25
+Japan | Tokyo / Osaka / Kyoto / Fukuoka / Sapporo
+  ISSUE: Same country, large spread in rent_usd (min 550, max 1200, spread 650)
+  DETAIL: Tokyo=1200, Osaka=850, Kyoto=720, Fukuoka=680, Sapporo=550
+Australia | Sydney / Melbourne / Brisbane / Perth / Adelaide
+  ISSUE: Same country, large spread in rent_usd (min 1200, max 2100, spread 900)
+  DETAIL: Sydney=2100, Melbourne=1650, Brisbane=1500, Perth=1400, Adelaide=1200
+New Zealand | Auckland / Wellington / Christchurch
+  ISSUE: Same country, large spread in rent_usd (min 1300, max 1900, spread 600)
+  DETAIL: Auckland=1900, Wellington=1700, Christchurch=1300
+China | Beijing / Shanghai / Shenzhen / Guangzhou / Chengdu / Hangzhou / XiAn
+  ISSUE: Same country, large spread in safety (min 5, max 7, spread 2)
+  DETAIL: Beijing=6, Shanghai=6, Shenzhen=7, Guangzhou=5, Chengdu=7, Hangzhou=7, XiAn=7
+China | Beijing / Shanghai / Shenzhen / Guangzhou / Chengdu / Hangzhou / XiAn
+  ISSUE: Same country, large spread in rent_usd (min 400, max 1400, spread 1000)
+  DETAIL: Beijing=950, Shanghai=1400, Shenzhen=900, Guangzhou=650, Chengdu=450, Hangzhou=720, XiAn=400
+United Arab Emirates | Dubai
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=81 healthcare=6.8 safety=8 tax=0 rent=1850
+United Arab Emirates | Abu Dhabi
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=81 healthcare=7.2 safety=9 tax=0 rent=1600
+Qatar | Doha
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=77 healthcare=6.4 safety=9 tax=0 rent=1650
+Bahrain | Manama
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=54 healthcare=5.6 safety=8 tax=0 rent=1100
+Kuwait | Kuwait City
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=59 healthcare=5.8 safety=8 tax=0 rent=1400
+Oman | Muscat
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=73 healthcare=6.3 safety=8 tax=0 rent=950
+Saudi Arabia | Riyadh
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=59 healthcare=5.4 safety=7 tax=0 rent=900
+Saudi Arabia | Jeddah
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=59 healthcare=5.2 safety=7 tax=0 rent=850
+Panama | Panama City
+  ISSUE: Missing or zero: tax_rate=0 (may be intentional tax-free)
+  DATA: stability=59 healthcare=6 safety=6 tax=0 rent=950

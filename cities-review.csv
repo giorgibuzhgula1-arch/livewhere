@@ -1,0 +1,201 @@
+city,country,rent_usd,healthcare_score,nightlife_score,safety_score,current_cost_of_living_bucket
+Dubai,United Arab Emirates,1850,70,60,80,3182
+Abu Dhabi,United Arab Emirates,1600,80,60,90,2752
+Doha,Qatar,1650,70,60,90,2838
+Manama,Bahrain,1100,70,60,80,1892
+Kuwait City,Kuwait,1400,70,60,80,2408
+Muscat,Oman,950,70,60,80,1634
+Riyadh,Saudi Arabia,900,60,60,70,1548
+Jeddah,Saudi Arabia,850,60,60,70,1462
+Tel Aviv,Israel,2100,80,90,70,3612
+Jerusalem,Israel,1800,80,60,70,3096
+Beirut,Lebanon,800,60,60,50,1376
+Amman,Jordan,550,60,60,60,946
+Cairo,Egypt,400,50,60,40,688
+Casablanca,Morocco,480,60,60,50,826
+Marrakech,Morocco,420,50,60,50,722
+Tunis,Tunisia,380,60,60,50,654
+Lagos,Nigeria,650,40,60,30,1118
+Nairobi,Kenya,550,50,60,40,946
+Johannesburg,South Africa,650,60,60,20,1118
+Cape Town,South Africa,750,70,60,30,1290
+Durban,South Africa,500,60,60,40,860
+Dar es Salaam,Tanzania,380,50,60,40,654
+Addis Ababa,Ethiopia,320,40,60,40,550
+Panama City,Panama,950,60,60,60,1634
+San Jose,Costa Rica,650,70,60,60,1118
+Guatemala City,Guatemala,450,50,60,40,774
+San Salvador,El Salvador,480,50,60,40,826
+Tegucigalpa,Honduras,400,50,60,30,688
+Managua,Nicaragua,380,50,60,50,654
+San Juan,Puerto Rico,1200,70,60,30,2064
+Kingston,Jamaica,700,60,60,30,1204
+Havana,Cuba,350,70,60,70,602
+Santo Domingo,Dominican Republic,650,60,60,40,1118
+Mexico City,Mexico,750,60,90,40,1290
+Guadalajara,Mexico,500,60,60,40,860
+Monterrey,Mexico,550,60,60,40,946
+Cancun,Mexico,800,70,90,50,1376
+Playa del Carmen,Mexico,850,60,90,50,1462
+Merida,Mexico,550,60,60,60,946
+Bogota,Colombia,450,70,60,40,774
+Medellin,Colombia,500,70,90,40,860
+Cali,Colombia,380,60,60,30,654
+Cartagena,Colombia,550,60,90,40,946
+Lima,Peru,600,60,60,40,1032
+Cusco,Peru,350,60,60,60,602
+Quito,Ecuador,450,60,60,50,774
+Guayaquil,Ecuador,420,60,60,30,722
+La Paz,Bolivia,350,50,60,50,602
+Santa Cruz de la Sierra,Bolivia,400,50,60,40,688
+Santiago,Chile,700,70,60,50,1204
+Valparaiso,Chile,480,70,60,50,826
+Buenos Aires,Argentina,650,80,90,50,1118
+Cordoba,Argentina,380,70,60,50,654
+Mendoza,Argentina,350,70,60,60,602
+Montevideo,Uruguay,650,80,60,50,1118
+Asuncion,Paraguay,380,60,60,50,654
+Sao Paulo,Brazil,900,70,90,30,1548
+Rio de Janeiro,Brazil,750,60,90,30,1290
+Brasilia,Brazil,550,70,60,40,946
+Belo Horizonte,Brazil,420,70,60,30,722
+Curitiba,Brazil,480,70,60,50,826
+Porto Alegre,Brazil,450,70,60,30,774
+New York,United States,4200,80,90,50,7224
+Los Angeles,United States,2800,80,90,50,4816
+San Francisco,United States,3500,80,90,40,6020
+Miami,United States,2200,70,90,50,3784
+Chicago,United States,2000,80,90,40,3440
+Austin,United States,1600,70,90,60,2752
+Seattle,United States,2300,80,60,40,3956
+Boston,United States,2800,80,90,60,4816
+Washington DC,United States,2400,80,90,50,4128
+Atlanta,United States,1700,80,90,30,2924
+Las Vegas,United States,1200,70,90,40,2064
+Nashville,United States,1600,70,90,40,2752
+Honolulu,United States,2200,80,90,60,3784
+Toronto,Canada,1900,80,60,60,3268
+Vancouver,Canada,2100,80,60,60,3612
+Montreal,Canada,1200,80,90,70,2064
+Calgary,Canada,1400,80,60,70,2408
+Ottawa,Canada,1500,80,60,80,2580
+Quebec City,Canada,900,80,60,80,1548
+Edmonton,Canada,1200,80,60,60,2064
+London,United Kingdom,2100,80,90,50,3612
+Manchester,United Kingdom,1200,80,60,50,2064
+Edinburgh,United Kingdom,1250,80,60,60,2150
+Birmingham,United Kingdom,1050,80,60,50,1806
+Glasgow,United Kingdom,1000,80,60,40,1720
+Dublin,Ireland,2200,80,90,60,3784
+Cork,Ireland,1400,80,60,60,2408
+Paris,France,1650,80,90,50,2838
+Lyon,France,880,80,60,60,1514
+Marseille,France,750,80,60,40,1290
+Nice,France,1200,80,60,50,2064
+Toulouse,France,780,80,60,60,1342
+Berlin,Germany,1100,80,90,60,1892
+Munich,Germany,1450,80,60,80,2494
+Hamburg,Germany,1050,80,60,70,1806
+Frankfurt,Germany,1300,80,60,60,2236
+Vienna,Austria,1050,80,60,80,1806
+Zurich,Switzerland,2200,90,60,80,3784
+Geneva,Switzerland,2100,90,60,80,3612
+Basel,Switzerland,1800,90,60,80,3096
+Amsterdam,Netherlands,1750,80,90,60,3010
+Rotterdam,Netherlands,1300,80,60,60,2236
+The Hague,Netherlands,1250,80,60,60,2150
+Brussels,Belgium,1150,80,60,50,1978
+Antwerp,Belgium,950,80,60,50,1634
+Luxembourg,Luxembourg,1650,80,60,70,2838
+Copenhagen,Denmark,1400,80,60,80,2408
+Aarhus,Denmark,950,80,60,80,1634
+Stockholm,Sweden,1400,80,60,60,2408
+Gothenburg,Sweden,900,80,60,60,1548
+Oslo,Norway,1500,80,60,80,2580
+Bergen,Norway,1250,80,60,80,2150
+Helsinki,Finland,1200,80,60,80,2064
+Tampere,Finland,850,80,60,80,1462
+Reykjavik,Iceland,1600,80,60,90,2752
+Madrid,Spain,1250,80,90,60,2150
+Barcelona,Spain,1350,80,90,60,2322
+Valencia,Spain,900,80,60,70,1548
+Malaga,Spain,850,70,60,70,1462
+Lisbon,Portugal,1200,70,90,70,2064
+Porto,Portugal,850,70,60,70,1462
+Braga,Portugal,650,70,60,70,1118
+Faro,Portugal,900,70,60,70,1548
+Rome,Italy,1300,80,90,50,2236
+Milan,Italy,1450,80,90,50,2494
+Florence,Italy,1100,80,60,60,1892
+Naples,Italy,850,70,60,40,1462
+Venice,Italy,1200,80,60,60,2064
+Athens,Greece,700,70,60,60,1204
+Thessaloniki,Greece,520,70,60,60,894
+Limassol,Cyprus,950,70,60,70,1634
+Warsaw,Poland,750,70,60,70,1290
+Krakow,Poland,650,70,60,70,1118
+Wroclaw,Poland,600,70,60,70,1032
+Prague,Czech Republic,900,80,90,70,1548
+Budapest,Hungary,650,70,90,70,1118
+Ljubljana,Slovenia,850,80,60,80,1462
+Zagreb,Croatia,700,70,60,70,1204
+Split,Croatia,800,70,60,70,1376
+Belgrade,Serbia,500,60,60,50,860
+Bucharest,Romania,550,70,60,60,946
+Sofia,Bulgaria,480,60,60,70,826
+Tallinn,Estonia,800,80,60,80,1376
+Riga,Latvia,650,70,60,60,1118
+Vilnius,Lithuania,750,70,60,70,1290
+Kyiv,Ukraine,550,60,60,40,946
+Lviv,Ukraine,420,60,60,60,722
+Moscow,Russia,1100,70,60,40,1892
+Saint Petersburg,Russia,800,70,60,40,1376
+Tbilisi,Georgia,550,60,60,70,946
+Batumi,Georgia,420,60,60,70,722
+Yerevan,Armenia,450,60,60,70,774
+Baku,Azerbaijan,650,60,60,70,1118
+Almaty,Kazakhstan,550,60,60,60,946
+Astana,Kazakhstan,500,60,60,70,860
+Tashkent,Uzbekistan,350,60,60,60,602
+Bangkok,Thailand,650,80,90,60,1118
+Chiang Mai,Thailand,420,70,60,70,722
+Phuket,Thailand,520,70,60,60,894
+Singapore,Singapore,2800,90,60,90,4816
+Kuala Lumpur,Malaysia,550,80,60,60,946
+Penang,Malaysia,480,70,60,70,826
+Jakarta,Indonesia,550,50,60,50,946
+Bali,Indonesia,550,50,90,60,946
+Surabaya,Indonesia,380,50,60,50,654
+Ho Chi Minh City,Vietnam,500,60,90,50,860
+Hanoi,Vietnam,450,60,60,60,774
+Manila,Philippines,450,60,90,40,774
+Cebu,Philippines,380,60,90,50,654
+Taipei,Taiwan,750,80,60,80,1290
+Kaohsiung,Taiwan,520,80,60,70,894
+Tokyo,Japan,1200,90,90,80,2064
+Osaka,Japan,850,80,60,80,1462
+Kyoto,Japan,720,80,60,80,1238
+Fukuoka,Japan,680,80,60,80,1170
+Sapporo,Japan,550,80,60,80,946
+Sydney,Australia,2100,80,90,70,3612
+Melbourne,Australia,1650,80,90,70,2838
+Brisbane,Australia,1500,80,60,60,2580
+Perth,Australia,1400,80,60,70,2408
+Adelaide,Australia,1200,80,60,70,2064
+Auckland,New Zealand,1900,80,60,60,3268
+Wellington,New Zealand,1700,80,60,70,2924
+Christchurch,New Zealand,1300,80,60,70,2236
+Seoul,South Korea,950,90,90,80,1634
+Busan,South Korea,650,80,60,70,1118
+Beijing,China,950,70,60,60,1634
+Shanghai,China,1400,80,60,60,2408
+Shenzhen,China,900,80,60,70,1548
+Guangzhou,China,650,80,60,50,1118
+Chengdu,China,450,70,60,70,774
+Hangzhou,China,720,80,60,70,1238
+XiAn,China,400,70,60,70,688
+Hong Kong,Hong Kong,2200,80,60,70,3784
+Macau,Macau,1400,80,60,70,2408
+Ulaanbaatar,Mongolia,450,60,60,60,774
+Kathmandu,Nepal,280,50,60,40,482
+Colombo,Sri Lanka,380,60,60,50,654

@@ -1,0 +1,201 @@
+suspicion_rank,suspicion_score,city,country,monthly_rent_usd,cost_of_living_usd,income_tier,review_flags
+1,144,Adelaide,Australia,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+2,144,Edmonton,Canada,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+3,144,Helsinki,Finland,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+4,144,Las Vegas,United States,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+5,144,Lisbon,Portugal,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+6,144,Manchester,United Kingdom,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+7,144,Montreal,Canada,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+8,144,Nice,France,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+9,144,San Juan,Puerto Rico,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+10,144,Tokyo,Japan,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+11,144,Venice,Italy,1200,2064,High income,BUCKET: 11 cities in High income share identical COL $2064 (rent $1200) | RENT-BUCKET: 11 cities in tier share rent $1200
+12,130,Baku,Azerbaijan,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+13,130,Bangkok,Thailand,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+14,130,Budapest,Hungary,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+15,130,Buenos Aires,Argentina,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+16,130,Guangzhou,China,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+17,130,Johannesburg,South Africa,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+18,130,Riga,Latvia,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+19,130,San Jose,Costa Rica,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+20,130,Santo Domingo,Dominican Republic,650,1118,Upper-middle income,BUCKET: 9 cities in Upper-middle income share identical COL $1118 (rent $650) | RENT-BUCKET: 9 cities in tier share rent $650
+21,123,Almaty,Kazakhstan,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+22,123,Brasilia,Brazil,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+23,123,Bucharest,Romania,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+24,123,Cartagena,Colombia,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+25,123,Kuala Lumpur,Malaysia,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+26,123,Merida,Mexico,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+27,123,Monterrey,Mexico,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+28,123,Tbilisi,Georgia,550,946,Upper-middle income,BUCKET: 8 cities in Upper-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 8 cities in tier share rent $550
+29,116,Calgary,Canada,1400,2408,High income,BUCKET: 7 cities in High income share identical COL $2408 (rent $1400) | RENT-BUCKET: 7 cities in tier share rent $1400
+30,116,Copenhagen,Denmark,1400,2408,High income,BUCKET: 7 cities in High income share identical COL $2408 (rent $1400) | RENT-BUCKET: 7 cities in tier share rent $1400
+31,116,Cork,Ireland,1400,2408,High income,BUCKET: 7 cities in High income share identical COL $2408 (rent $1400) | RENT-BUCKET: 7 cities in tier share rent $1400
+32,116,Jeddah,Saudi Arabia,850,1462,High income,BUCKET: 7 cities in High income share identical COL $1462 (rent $850) | RENT-BUCKET: 7 cities in tier share rent $850
+33,116,Kuwait City,Kuwait,1400,2408,High income,BUCKET: 7 cities in High income share identical COL $2408 (rent $1400) | RENT-BUCKET: 7 cities in tier share rent $1400
+34,116,Ljubljana,Slovenia,850,1462,High income,BUCKET: 7 cities in High income share identical COL $1462 (rent $850) | RENT-BUCKET: 7 cities in tier share rent $850
+35,116,Macau,Macau,1400,2408,High income,BUCKET: 7 cities in High income share identical COL $2408 (rent $1400) | RENT-BUCKET: 7 cities in tier share rent $1400
+36,116,Malaga,Spain,850,1462,High income,BUCKET: 7 cities in High income share identical COL $1462 (rent $850) | RENT-BUCKET: 7 cities in tier share rent $850
+37,116,Naples,Italy,850,1462,High income,BUCKET: 7 cities in High income share identical COL $1462 (rent $850) | RENT-BUCKET: 7 cities in tier share rent $850
+38,116,Osaka,Japan,850,1462,High income,BUCKET: 7 cities in High income share identical COL $1462 (rent $850) | RENT-BUCKET: 7 cities in tier share rent $850
+39,116,Perth,Australia,1400,2408,High income,BUCKET: 7 cities in High income share identical COL $2408 (rent $1400) | RENT-BUCKET: 7 cities in tier share rent $1400
+40,116,Porto,Portugal,850,1462,High income,BUCKET: 7 cities in High income share identical COL $1462 (rent $850) | RENT-BUCKET: 7 cities in tier share rent $850
+41,116,Stockholm,Sweden,1400,2408,High income,BUCKET: 7 cities in High income share identical COL $2408 (rent $1400) | RENT-BUCKET: 7 cities in tier share rent $1400
+42,116,Tampere,Finland,850,1462,High income,BUCKET: 7 cities in High income share identical COL $1462 (rent $850) | RENT-BUCKET: 7 cities in tier share rent $850
+43,115,Braga,Portugal,650,1118,High income,HIGH-INCOME country but very low rent/COL — review | BUCKET: 4 cities in High income share identical COL $1118 (rent $650) | RENT-BUCKET: 4 cities in tier share rent $650
+44,115,Busan,South Korea,650,1118,High income,HIGH-INCOME country but very low rent/COL — review | BUCKET: 4 cities in High income share identical COL $1118 (rent $650) | RENT-BUCKET: 4 cities in tier share rent $650
+45,115,Krakow,Poland,650,1118,High income,HIGH-INCOME country but very low rent/COL — review | BUCKET: 4 cities in High income share identical COL $1118 (rent $650) | RENT-BUCKET: 4 cities in tier share rent $650
+46,115,Montevideo,Uruguay,650,1118,High income,HIGH-INCOME country but very low rent/COL — review | BUCKET: 4 cities in High income share identical COL $1118 (rent $650) | RENT-BUCKET: 4 cities in tier share rent $650
+47,110,Kaohsiung,Taiwan,520,894,High income,HIGH-INCOME country but COL ≤ $948 — suspiciously cheap vs tier | HIGH-INCOME country but very low rent/COL — review | PAIR: identical COL $894 with Thessaloniki
+48,110,Thessaloniki,Greece,520,894,High income,HIGH-INCOME country but COL ≤ $948 — suspiciously cheap vs tier | HIGH-INCOME country but very low rent/COL — review | PAIR: identical COL $894 with Kaohsiung
+49,109,Faro,Portugal,900,1548,High income,BUCKET: 6 cities in High income share identical COL $1548 (rent $900) | RENT-BUCKET: 6 cities in tier share rent $900
+50,109,Gothenburg,Sweden,900,1548,High income,BUCKET: 6 cities in High income share identical COL $1548 (rent $900) | RENT-BUCKET: 6 cities in tier share rent $900
+51,109,Prague,Czech Republic,900,1548,High income,BUCKET: 6 cities in High income share identical COL $1548 (rent $900) | RENT-BUCKET: 6 cities in tier share rent $900
+52,109,Quebec City,Canada,900,1548,High income,BUCKET: 6 cities in High income share identical COL $1548 (rent $900) | RENT-BUCKET: 6 cities in tier share rent $900
+53,109,Riyadh,Saudi Arabia,900,1548,High income,BUCKET: 6 cities in High income share identical COL $1548 (rent $900) | RENT-BUCKET: 6 cities in tier share rent $900
+54,109,Valencia,Spain,900,1548,High income,BUCKET: 6 cities in High income share identical COL $1548 (rent $900) | RENT-BUCKET: 6 cities in tier share rent $900
+55,102,Astana,Kazakhstan,500,860,Upper-middle income,BUCKET: 5 cities in Upper-middle income share identical COL $860 (rent $500) | RENT-BUCKET: 5 cities in tier share rent $500
+56,102,Belgrade,Serbia,500,860,Upper-middle income,BUCKET: 5 cities in Upper-middle income share identical COL $860 (rent $500) | RENT-BUCKET: 5 cities in tier share rent $500
+57,102,Durban,South Africa,500,860,Upper-middle income,BUCKET: 5 cities in Upper-middle income share identical COL $860 (rent $500) | RENT-BUCKET: 5 cities in tier share rent $500
+58,102,Guadalajara,Mexico,500,860,Upper-middle income,BUCKET: 5 cities in Upper-middle income share identical COL $860 (rent $500) | RENT-BUCKET: 5 cities in tier share rent $500
+59,102,Medellin,Colombia,500,860,Upper-middle income,BUCKET: 5 cities in Upper-middle income share identical COL $860 (rent $500) | RENT-BUCKET: 5 cities in tier share rent $500
+60,100,Sapporo,Japan,550,946,High income,HIGH-INCOME country but COL ≤ $948 — suspiciously cheap vs tier | HIGH-INCOME country but very low rent/COL — review
+61,100,Valparaiso,Chile,480,826,High income,HIGH-INCOME country but COL ≤ $948 — suspiciously cheap vs tier | HIGH-INCOME country but very low rent/COL — review
+62,97,Bogota,Colombia,450,774,Upper-middle income,BUCKET: 6 cities in Upper-middle income share identical COL $774 (rent $450) | RENT-BUCKET: 6 cities in tier share rent $450
+63,97,Chengdu,China,450,774,Upper-middle income,BUCKET: 6 cities in Upper-middle income share identical COL $774 (rent $450) | RENT-BUCKET: 6 cities in tier share rent $450
+64,97,Guatemala City,Guatemala,450,774,Upper-middle income,BUCKET: 6 cities in Upper-middle income share identical COL $774 (rent $450) | RENT-BUCKET: 6 cities in tier share rent $450
+65,97,Porto Alegre,Brazil,450,774,Upper-middle income,BUCKET: 6 cities in Upper-middle income share identical COL $774 (rent $450) | RENT-BUCKET: 6 cities in tier share rent $450
+66,97,Quito,Ecuador,450,774,Upper-middle income,BUCKET: 6 cities in Upper-middle income share identical COL $774 (rent $450) | RENT-BUCKET: 6 cities in tier share rent $450
+67,97,Ulaanbaatar,Mongolia,450,774,Upper-middle income,BUCKET: 6 cities in Upper-middle income share identical COL $774 (rent $450) | RENT-BUCKET: 6 cities in tier share rent $450
+68,90,Aarhus,Denmark,950,1634,High income,BUCKET: 5 cities in High income share identical COL $1634 (rent $950) | RENT-BUCKET: 5 cities in tier share rent $950
+69,90,Amman,Jordan,550,946,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 5 cities in tier share rent $550
+70,90,Antwerp,Belgium,950,1634,High income,BUCKET: 5 cities in High income share identical COL $1634 (rent $950) | RENT-BUCKET: 5 cities in tier share rent $950
+71,90,Bali,Indonesia,550,946,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 5 cities in tier share rent $550
+72,90,Cebu,Philippines,380,654,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 5 cities in tier share rent $380
+73,90,Colombo,Sri Lanka,380,654,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 5 cities in tier share rent $380
+74,90,Dar es Salaam,Tanzania,380,654,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 5 cities in tier share rent $380
+75,90,Dublin,Ireland,2200,3784,High income,BUCKET: 5 cities in High income share identical COL $3784 (rent $2200) | RENT-BUCKET: 5 cities in tier share rent $2200
+76,90,Geneva,Switzerland,2100,3612,High income,BUCKET: 5 cities in High income share identical COL $3612 (rent $2100) | RENT-BUCKET: 5 cities in tier share rent $2100
+77,90,Hong Kong,Hong Kong,2200,3784,High income,BUCKET: 5 cities in High income share identical COL $3784 (rent $2200) | RENT-BUCKET: 5 cities in tier share rent $2200
+78,90,Honolulu,United States,2200,3784,High income,BUCKET: 5 cities in High income share identical COL $3784 (rent $2200) | RENT-BUCKET: 5 cities in tier share rent $2200
+79,90,Jakarta,Indonesia,550,946,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 5 cities in tier share rent $550
+80,90,Kyiv,Ukraine,550,946,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 5 cities in tier share rent $550
+81,90,Limassol,Cyprus,950,1634,High income,BUCKET: 5 cities in High income share identical COL $1634 (rent $950) | RENT-BUCKET: 5 cities in tier share rent $950
+82,90,London,United Kingdom,2100,3612,High income,BUCKET: 5 cities in High income share identical COL $3612 (rent $2100) | RENT-BUCKET: 5 cities in tier share rent $2100
+83,90,Miami,United States,2200,3784,High income,BUCKET: 5 cities in High income share identical COL $3784 (rent $2200) | RENT-BUCKET: 5 cities in tier share rent $2200
+84,90,Muscat,Oman,950,1634,High income,BUCKET: 5 cities in High income share identical COL $1634 (rent $950) | RENT-BUCKET: 5 cities in tier share rent $950
+85,90,Nairobi,Kenya,550,946,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $946 (rent $550) | RENT-BUCKET: 5 cities in tier share rent $550
+86,90,Seoul,South Korea,950,1634,High income,BUCKET: 5 cities in High income share identical COL $1634 (rent $950) | RENT-BUCKET: 5 cities in tier share rent $950
+87,90,Surabaya,Indonesia,380,654,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 5 cities in tier share rent $380
+88,90,Sydney,Australia,2100,3612,High income,BUCKET: 5 cities in High income share identical COL $3612 (rent $2100) | RENT-BUCKET: 5 cities in tier share rent $2100
+89,90,Tel Aviv,Israel,2100,3612,High income,BUCKET: 5 cities in High income share identical COL $3612 (rent $2100) | RENT-BUCKET: 5 cities in tier share rent $2100
+90,90,Tunis,Tunisia,380,654,Lower-middle income,BUCKET: 5 cities in Lower-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 5 cities in tier share rent $380
+91,90,Vancouver,Canada,2100,3612,High income,BUCKET: 5 cities in High income share identical COL $3612 (rent $2100) | RENT-BUCKET: 5 cities in tier share rent $2100
+92,90,Zurich,Switzerland,2200,3784,High income,BUCKET: 5 cities in High income share identical COL $3784 (rent $2200) | RENT-BUCKET: 5 cities in tier share rent $2200
+93,77,Asuncion,Paraguay,380,654,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 4 cities in tier share rent $380
+94,77,Batumi,Georgia,420,722,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $722 (rent $420) | RENT-BUCKET: 4 cities in tier share rent $420
+95,77,Belo Horizonte,Brazil,420,722,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $722 (rent $420) | RENT-BUCKET: 4 cities in tier share rent $420
+96,77,Cali,Colombia,380,654,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 4 cities in tier share rent $380
+97,77,Chiang Mai,Thailand,420,722,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $722 (rent $420) | RENT-BUCKET: 4 cities in tier share rent $420
+98,77,Cordoba,Argentina,380,654,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 4 cities in tier share rent $380
+99,77,Curitiba,Brazil,480,826,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $826 (rent $480) | RENT-BUCKET: 4 cities in tier share rent $480
+100,77,Guayaquil,Ecuador,420,722,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $722 (rent $420) | RENT-BUCKET: 4 cities in tier share rent $420
+101,77,Managua,Nicaragua,380,654,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $654 (rent $380) | RENT-BUCKET: 4 cities in tier share rent $380
+102,77,Penang,Malaysia,480,826,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $826 (rent $480) | RENT-BUCKET: 4 cities in tier share rent $480
+103,77,San Salvador,El Salvador,480,826,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $826 (rent $480) | RENT-BUCKET: 4 cities in tier share rent $480
+104,77,Sofia,Bulgaria,480,826,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $826 (rent $480) | RENT-BUCKET: 4 cities in tier share rent $480
+105,65,Abu Dhabi,United Arab Emirates,1600,2752,High income,BUCKET: 4 cities in High income share identical COL $2752 (rent $1600) | RENT-BUCKET: 4 cities in tier share rent $1600
+106,65,Austin,United States,1600,2752,High income,BUCKET: 4 cities in High income share identical COL $2752 (rent $1600) | RENT-BUCKET: 4 cities in tier share rent $1600
+107,65,Bergen,Norway,1250,2150,High income,BUCKET: 4 cities in High income share identical COL $2150 (rent $1250) | RENT-BUCKET: 4 cities in tier share rent $1250
+108,65,Cape Town,South Africa,750,1290,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $1290 (rent $750) | RENT-BUCKET: 4 cities in tier share rent $750
+109,65,Christchurch,New Zealand,1300,2236,High income,BUCKET: 4 cities in High income share identical COL $2236 (rent $1300) | RENT-BUCKET: 4 cities in tier share rent $1300
+110,65,Cusco,Peru,350,602,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $602 (rent $350) | RENT-BUCKET: 4 cities in tier share rent $350
+111,65,Doha,Qatar,1650,2838,High income,BUCKET: 4 cities in High income share identical COL $2838 (rent $1650) | RENT-BUCKET: 4 cities in tier share rent $1650
+112,65,Edinburgh,United Kingdom,1250,2150,High income,BUCKET: 4 cities in High income share identical COL $2150 (rent $1250) | RENT-BUCKET: 4 cities in tier share rent $1250
+113,65,Frankfurt,Germany,1300,2236,High income,BUCKET: 4 cities in High income share identical COL $2236 (rent $1300) | RENT-BUCKET: 4 cities in tier share rent $1300
+114,65,Havana,Cuba,350,602,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $602 (rent $350) | RENT-BUCKET: 4 cities in tier share rent $350
+115,65,La Paz,Bolivia,350,602,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $602 (rent $350) | RENT-BUCKET: 4 cities in tier share rent $350
+116,65,Luxembourg,Luxembourg,1650,2838,High income,BUCKET: 4 cities in High income share identical COL $2838 (rent $1650) | RENT-BUCKET: 4 cities in tier share rent $1650
+117,65,Madrid,Spain,1250,2150,High income,BUCKET: 4 cities in High income share identical COL $2150 (rent $1250) | RENT-BUCKET: 4 cities in tier share rent $1250
+118,65,Melbourne,Australia,1650,2838,High income,BUCKET: 4 cities in High income share identical COL $2838 (rent $1650) | RENT-BUCKET: 4 cities in tier share rent $1650
+119,65,Mendoza,Argentina,350,602,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $602 (rent $350) | RENT-BUCKET: 4 cities in tier share rent $350
+120,65,Mexico City,Mexico,750,1290,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $1290 (rent $750) | RENT-BUCKET: 4 cities in tier share rent $750
+121,65,Nashville,United States,1600,2752,High income,BUCKET: 4 cities in High income share identical COL $2752 (rent $1600) | RENT-BUCKET: 4 cities in tier share rent $1600
+122,65,Paris,France,1650,2838,High income,BUCKET: 4 cities in High income share identical COL $2838 (rent $1650) | RENT-BUCKET: 4 cities in tier share rent $1650
+123,65,Reykjavik,Iceland,1600,2752,High income,BUCKET: 4 cities in High income share identical COL $2752 (rent $1600) | RENT-BUCKET: 4 cities in tier share rent $1600
+124,65,Rio de Janeiro,Brazil,750,1290,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $1290 (rent $750) | RENT-BUCKET: 4 cities in tier share rent $750
+125,65,Rome,Italy,1300,2236,High income,BUCKET: 4 cities in High income share identical COL $2236 (rent $1300) | RENT-BUCKET: 4 cities in tier share rent $1300
+126,65,Rotterdam,Netherlands,1300,2236,High income,BUCKET: 4 cities in High income share identical COL $2236 (rent $1300) | RENT-BUCKET: 4 cities in tier share rent $1300
+127,65,The Hague,Netherlands,1250,2150,High income,BUCKET: 4 cities in High income share identical COL $2150 (rent $1250) | RENT-BUCKET: 4 cities in tier share rent $1250
+128,65,Vilnius,Lithuania,750,1290,Upper-middle income,BUCKET: 4 cities in Upper-middle income share identical COL $1290 (rent $750) | RENT-BUCKET: 4 cities in tier share rent $750
+129,51,Santa Cruz de la Sierra,Bolivia,400,688,Upper-middle income,BUCKET: 3 cities in Upper-middle income share identical COL $688 (rent $400)
+130,51,Tegucigalpa,Honduras,400,688,Upper-middle income,BUCKET: 3 cities in Upper-middle income share identical COL $688 (rent $400)
+131,51,XiAn,China,400,688,Upper-middle income,BUCKET: 3 cities in Upper-middle income share identical COL $688 (rent $400)
+132,50,Addis Ababa,Ethiopia,320,550,Low income,LOW-INCOME country but COL ≥ $500 — verify
+133,50,Beirut,Lebanon,800,1376,Lower-middle income,"LOWER-MIDDLE country but COL ≥ $1,300 — likely too expensive vs tier"
+134,50,Fukuoka,Japan,680,1170,High income,HIGH-INCOME country but very low rent/COL — review
+135,50,Kathmandu,Nepal,280,482,Lower-middle income,LOWER-MIDDLE country but COL ≤ $550 — verify not understating
+136,50,Lagos,Nigeria,650,1118,Lower-middle income,"LOWER-MIDDLE country but COL ≥ $1,100 — review vs tier peers"
+137,50,Wroclaw,Poland,600,1032,High income,HIGH-INCOME country but very low rent/COL — review
+138,39,Athens,Greece,700,1204,High income,BUCKET: 3 cities in High income share identical COL $1204 (rent $700)
+139,39,Berlin,Germany,1100,1892,High income,BUCKET: 3 cities in High income share identical COL $1892 (rent $1100)
+140,39,Birmingham,United Kingdom,1050,1806,High income,BUCKET: 3 cities in High income share identical COL $1806 (rent $1050)
+141,39,Boston,United States,2800,4816,High income,BUCKET: 3 cities in High income share identical COL $4816 (rent $2800)
+142,39,Brisbane,Australia,1500,2580,High income,BUCKET: 3 cities in High income share identical COL $2580 (rent $1500)
+143,39,Florence,Italy,1100,1892,High income,BUCKET: 3 cities in High income share identical COL $1892 (rent $1100)
+144,39,Hamburg,Germany,1050,1806,High income,BUCKET: 3 cities in High income share identical COL $1806 (rent $1050)
+145,39,Hanoi,Vietnam,450,774,Lower-middle income,BUCKET: 3 cities in Lower-middle income share identical COL $774 (rent $450)
+146,39,Los Angeles,United States,2800,4816,High income,BUCKET: 3 cities in High income share identical COL $4816 (rent $2800)
+147,39,Manama,Bahrain,1100,1892,High income,BUCKET: 3 cities in High income share identical COL $1892 (rent $1100)
+148,39,Manila,Philippines,450,774,Lower-middle income,BUCKET: 3 cities in Lower-middle income share identical COL $774 (rent $450)
+149,39,Marseille,France,750,1290,High income,BUCKET: 3 cities in High income share identical COL $1290 (rent $750)
+150,39,Oslo,Norway,1500,2580,High income,BUCKET: 3 cities in High income share identical COL $2580 (rent $1500)
+151,39,Ottawa,Canada,1500,2580,High income,BUCKET: 3 cities in High income share identical COL $2580 (rent $1500)
+152,39,Santiago,Chile,700,1204,High income,BUCKET: 3 cities in High income share identical COL $1204 (rent $700)
+153,39,Singapore,Singapore,2800,4816,High income,BUCKET: 3 cities in High income share identical COL $4816 (rent $2800)
+154,39,Taipei,Taiwan,750,1290,High income,BUCKET: 3 cities in High income share identical COL $1290 (rent $750)
+155,39,Vienna,Austria,1050,1806,High income,BUCKET: 3 cities in High income share identical COL $1806 (rent $1050)
+156,39,Warsaw,Poland,750,1290,High income,BUCKET: 3 cities in High income share identical COL $1290 (rent $750)
+157,39,Yerevan,Armenia,450,774,Lower-middle income,BUCKET: 3 cities in Lower-middle income share identical COL $774 (rent $450)
+158,39,Zagreb,Croatia,700,1204,High income,BUCKET: 3 cities in High income share identical COL $1204 (rent $700)
+159,12,Cairo,Egypt,400,688,Lower-middle income,NEAR-BUCKET: 8 cities in tier within ±$34 COL of $688
+160,12,Lyon,France,880,1514,High income,NEAR-BUCKET: 7 cities in tier within ±$34 COL of $1514
+161,10,Atlanta,United States,1700,2924,High income,PAIR: identical COL $2924 with Wellington
+162,10,Auckland,New Zealand,1900,3268,High income,PAIR: identical COL $3268 with Toronto
+163,10,Basel,Switzerland,1800,3096,High income,PAIR: identical COL $3096 with Jerusalem
+164,10,Beijing,China,950,1634,Upper-middle income,PAIR: identical COL $1634 with Panama City
+165,10,Cancun,Mexico,800,1376,Upper-middle income,PAIR: identical COL $1376 with Saint Petersburg
+166,10,Jerusalem,Israel,1800,3096,High income,PAIR: identical COL $3096 with Basel
+167,10,Lviv,Ukraine,420,722,Lower-middle income,PAIR: identical COL $722 with Marrakech
+168,10,Marrakech,Morocco,420,722,Lower-middle income,PAIR: identical COL $722 with Lviv
+169,10,Milan,Italy,1450,2494,High income,PAIR: identical COL $2494 with Munich
+170,10,Munich,Germany,1450,2494,High income,PAIR: identical COL $2494 with Milan
+171,10,Panama City,Panama,950,1634,Upper-middle income,PAIR: identical COL $1634 with Beijing
+172,10,Saint Petersburg,Russia,800,1376,Upper-middle income,PAIR: identical COL $1376 with Cancun
+173,10,Sao Paulo,Brazil,900,1548,Upper-middle income,PAIR: identical COL $1548 with Shenzhen
+174,10,Shenzhen,China,900,1548,Upper-middle income,PAIR: identical COL $1548 with Sao Paulo
+175,10,Split,Croatia,800,1376,High income,PAIR: identical COL $1376 with Tallinn
+176,10,Tallinn,Estonia,800,1376,High income,PAIR: identical COL $1376 with Split
+177,10,Toronto,Canada,1900,3268,High income,PAIR: identical COL $3268 with Auckland
+178,10,Wellington,New Zealand,1700,2924,High income,PAIR: identical COL $2924 with Atlanta
+179,0,Amsterdam,Netherlands,1750,3010,High income,—
+180,0,Barcelona,Spain,1350,2322,High income,—
+181,0,Brussels,Belgium,1150,1978,High income,—
+182,0,Casablanca,Morocco,480,826,Lower-middle income,—
+183,0,Chicago,United States,2000,3440,High income,—
+184,0,Dubai,United Arab Emirates,1850,3182,High income,—
+185,0,Glasgow,United Kingdom,1000,1720,High income,—
+186,0,Hangzhou,China,720,1238,Upper-middle income,—
+187,0,Ho Chi Minh City,Vietnam,500,860,Lower-middle income,—
+188,0,Kingston,Jamaica,700,1204,Upper-middle income,—
+189,0,Kyoto,Japan,720,1238,High income,—
+190,0,Lima,Peru,600,1032,Upper-middle income,—
+191,0,Moscow,Russia,1100,1892,Upper-middle income,—
+192,0,New York,United States,4200,7224,High income,—
+193,0,Phuket,Thailand,520,894,Upper-middle income,NEAR-BUCKET: 6 cities in tier within ±$34 COL of $894
+194,0,Playa del Carmen,Mexico,850,1462,Upper-middle income,—
+195,0,San Francisco,United States,3500,6020,High income,—
+196,0,Seattle,United States,2300,3956,High income,—
+197,0,Shanghai,China,1400,2408,Upper-middle income,—
+198,0,Tashkent,Uzbekistan,350,602,Lower-middle income,—
+199,0,Toulouse,France,780,1342,High income,—
+200,0,Washington DC,United States,2400,4128,High income,—

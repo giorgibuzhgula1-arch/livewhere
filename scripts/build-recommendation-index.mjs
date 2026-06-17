@@ -1,3 +1,6 @@
+// DO NOT RUN — superseded by direct index.ts edits.
+// Running this will lose decimal healthcare precision and drop stability_score entirely.
+
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
