@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CityResult } from '@/lib/types'
 import VisaAnalysis from './VisaAnalysis'
@@ -11,6 +11,57 @@ interface Props {
   monthlyBudget?: number
   currency?: string
   lifestyle?: string[]
+}
+
+const SLATE_300 = '#cbd5e1'
+const MARKDOWN_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g
+
+function isSafeHref(href: string): boolean {
+  try {
+    const url = new URL(href)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+/** Convert inline [label](url) markdown links to clickable anchors. */
+function renderTextWithMarkdownLinks(text: string): ReactNode[] {
+  const parts: ReactNode[] = []
+  let lastIndex = 0
+  let key = 0
+  let match: RegExpExecArray | null
+
+  MARKDOWN_LINK_RE.lastIndex = 0
+  while ((match = MARKDOWN_LINK_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index))
+    }
+    const label = match[1]
+    const href = match[2].trim()
+    if (isSafeHref(href)) {
+      parts.push(
+        <a
+          key={key++}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#c8f05a', textDecoration: 'underline' }}
+        >
+          {label}
+        </a>,
+      )
+    } else {
+      parts.push(match[0])
+    }
+    lastIndex = MARKDOWN_LINK_RE.lastIndex
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+
+  return parts.length ? parts : [text]
 }
 
 function fmt(n: number) { return '$' + n.toLocaleString() }
@@ -103,10 +154,10 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: P
                 <div style={{ paddingTop: 10 }}>
                   <div style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, marginBottom: 6 }}>Visa situation</div>
                   <p style={{
-                    fontSize: 13, lineHeight: 1.6, margin: 0,
-                    fontWeight: 400, color: 'rgba(203,213,225,0.95)',
+                    fontSize: 12, lineHeight: 1.6, margin: 0,
+                    fontWeight: 400, color: SLATE_300,
                   }}>
-                    {city.visa}
+                    {renderTextWithMarkdownLinks(city.visa)}
                   </p>
                 </div>
               )}
