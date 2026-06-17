@@ -9,7 +9,7 @@ export type CityData = {
   internet_speed_mbps: number
   tax_rate_percent: number
   introvert_friendly: boolean
-  digital_nomad_score: number
+  retiree_score: number
   tags: string[]
 }
 
@@ -25,7 +25,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 450,
     tax_rate_percent: 28,
     introvert_friendly: false,
-    digital_nomad_score: 9,
+    retiree_score: 9,
     tags: ['coastal', 'culture', 'vibrant', 'remote-work'],
   },
   {
@@ -39,7 +39,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 350,
     tax_rate_percent: 0,
     introvert_friendly: false,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['food', 'urban', 'affordable', 'remote-work'],
   },
   {
@@ -53,7 +53,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 300,
     tax_rate_percent: 0,
     introvert_friendly: true,
-    digital_nomad_score: 9,
+    retiree_score: 9,
     tags: ['mountain', 'affordable', 'nomad-hub', 'food'],
   },
   {
@@ -67,7 +67,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 250,
     tax_rate_percent: 1,
     introvert_friendly: true,
-    digital_nomad_score: 9,
+    retiree_score: 9,
     tags: ['affordable', 'culture', 'food', 'remote-work'],
   },
   {
@@ -81,7 +81,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 180,
     tax_rate_percent: 0,
     introvert_friendly: false,
-    digital_nomad_score: 9,
+    retiree_score: 9,
     tags: ['spring-weather', 'affordable', 'vibrant', 'nomad-hub'],
   },
   {
@@ -95,7 +95,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 380,
     tax_rate_percent: 15,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['culture', 'affordable', 'vibrant', 'walkable'],
   },
   {
@@ -109,7 +109,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 600,
     tax_rate_percent: 20,
     introvert_friendly: true,
-    digital_nomad_score: 9,
+    retiree_score: 9,
     tags: ['tech', 'remote-work', 'walkable', 'e-residency'],
   },
   {
@@ -123,7 +123,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 120,
     tax_rate_percent: 0,
     introvert_friendly: false,
-    digital_nomad_score: 9,
+    retiree_score: 9,
     tags: ['beach', 'wellness', 'nomad-hub', 'tropical'],
   },
   {
@@ -137,7 +137,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 200,
     tax_rate_percent: 30,
     introvert_friendly: false,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['culture', 'food', 'urban', 'remote-work'],
   },
   {
@@ -151,7 +151,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 420,
     tax_rate_percent: 28,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['coastal', 'walkable', 'wine', 'culture'],
   },
   {
@@ -165,7 +165,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 280,
     tax_rate_percent: 10,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['affordable', 'vibrant', 'culture', 'remote-work'],
   },
   {
@@ -179,7 +179,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 320,
     tax_rate_percent: 10,
     introvert_friendly: true,
-    digital_nomad_score: 7,
+    retiree_score: 7,
     tags: ['affordable', 'history', 'walkable', 'quiet'],
   },
   {
@@ -193,7 +193,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 350,
     tax_rate_percent: 24,
     introvert_friendly: false,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['food', 'urban', 'english-friendly', 'affordable'],
   },
   {
@@ -207,7 +207,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 180,
     tax_rate_percent: 0,
     introvert_friendly: false,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['food', 'affordable', 'urban', 'remote-work'],
   },
   {
@@ -221,7 +221,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 150,
     tax_rate_percent: 35,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['culture', 'food', 'walkable', 'vibrant'],
   },
   {
@@ -235,7 +235,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 220,
     tax_rate_percent: 20,
     introvert_friendly: true,
-    digital_nomad_score: 7,
+    retiree_score: 7,
     tags: ['coastal', 'history', 'mediterranean', 'retirees'],
   },
   {
@@ -249,7 +249,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 400,
     tax_rate_percent: 24,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['island', 'beach', 'year-round-sun', 'remote-work'],
   },
   {
@@ -263,7 +263,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 380,
     tax_rate_percent: 24,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['beach', 'nomad-hub', 'year-round-sun', 'walkable'],
   },
   {
@@ -277,7 +277,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 180,
     tax_rate_percent: 22,
     introvert_friendly: true,
-    digital_nomad_score: 7,
+    retiree_score: 7,
     tags: ['mediterranean', 'beach', 'retirees', 'culture'],
   },
   {
@@ -291,7 +291,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 420,
     tax_rate_percent: 28,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['coastal', 'international', 'retirees', 'remote-work'],
   },
   {
@@ -305,7 +305,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 60,
     tax_rate_percent: 0,
     introvert_friendly: true,
-    digital_nomad_score: 6,
+    retiree_score: 6,
     tags: ['tropical', 'nature', 'retirees', 'adventure'],
   },
   {
@@ -319,7 +319,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 200,
     tax_rate_percent: 30,
     introvert_friendly: false,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['beach', 'expat-friendly', 'retirees', 'healthcare'],
   },
   {
@@ -333,7 +333,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 350,
     tax_rate_percent: 24,
     introvert_friendly: true,
-    digital_nomad_score: 7,
+    retiree_score: 7,
     tags: ['coastal', 'mediterranean', 'retirees', 'slow-living'],
   },
   {
@@ -347,7 +347,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 300,
     tax_rate_percent: 0,
     introvert_friendly: false,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['beach', 'tropical', 'nomad-hub', 'expat-friendly'],
   },
   {
@@ -361,7 +361,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 150,
     tax_rate_percent: 0,
     introvert_friendly: false,
-    digital_nomad_score: 7,
+    retiree_score: 7,
     tags: ['english-friendly', 'urban', 'expat-friendly', 'affordable'],
   },
   {
@@ -375,7 +375,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 180,
     tax_rate_percent: 0,
     introvert_friendly: true,
-    digital_nomad_score: 8,
+    retiree_score: 8,
     tags: ['spring-weather', 'culture', 'affordable', 'nomad-hub'],
   },
   {
@@ -389,7 +389,7 @@ export const CITIES: CityData[] = [
     internet_speed_mbps: 120,
     tax_rate_percent: 0,
     introvert_friendly: false,
-    digital_nomad_score: 7,
+    retiree_score: 7,
     tags: ['caribbean', 'beach', 'expat-friendly', 'culture'],
   },
 ]

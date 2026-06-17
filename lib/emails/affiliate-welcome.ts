@@ -43,7 +43,7 @@ How it works:
 
 Tips:
 - Use your link in bio posts, YouTube descriptions, and email footers.
-- Mention LiveWhere helps people find the best cities for remote work and nomad life.
+- Mention LiveWhere helps people find the best cities for remote work and retiree life.
 
 Questions? Reply to this email — we're happy to help.
 

@@ -102,7 +102,7 @@ function CityComparisonTable({ cities }: { cities: CityData[] }) {
             <th>Internet</th>
             <th>Tax</th>
             <th>Introvert</th>
-            <th>Nomad</th>
+            <th>Retiree</th>
             <th>Tags</th>
           </tr>
         </thead>
@@ -121,8 +121,8 @@ function CityComparisonTable({ cities }: { cities: CityData[] }) {
               <td>{city.internet_speed_mbps} Mbps</td>
               <td>{city.tax_rate_percent}%</td>
               <td>{city.introvert_friendly ? 'Yes' : 'No'}</td>
-              <td className={scoreClass(city.digital_nomad_score)}>
-                {city.digital_nomad_score}/10
+              <td className={scoreClass(city.retiree_score)}>
+                {city.retiree_score}/10
               </td>
               <td>
                 <div className={styles.tagList}>

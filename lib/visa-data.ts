@@ -1,7 +1,7 @@
 /**
  * Visa reference data for LiveWhere's Visa Analysis.
  *
- * Figures are practical 2026 estimates for remote workers / digital nomads and
+ * Figures are practical 2026 estimates for remote workers / retirees and
  * are NOT legal advice — always confirm with official immigration sources.
  */
 

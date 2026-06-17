@@ -408,7 +408,7 @@ function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: n
     pros: ["Strong fit for your selected priorities."],
     cons: ["Verify tax and visa rules for your passport."],
     tags: [meta.continent],
-    visa: "Check nomad, work, or residency options.",
+    visa: "Check retiree, work, or residency options.",
     scores: {
       tax: sub.taxes,
       housing: sub.housing,
