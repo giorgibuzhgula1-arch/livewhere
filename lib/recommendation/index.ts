@@ -9,7 +9,7 @@
  */
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 import { peelCompleteObjectsFromJsonArray } from '@/lib/parse-streaming-cities'
-import { rankCities, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
+import { rankCities, climateTargetTemp, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
 
 export type CityRow = {
   name: string
@@ -384,7 +384,7 @@ function normPrioritiesFromBody(body: AnalyzeRequest): UserPriorities {
 
 function rankSurvivorsForUser(body: AnalyzeRequest, count: number): ScoreCityResult[] {
   const priorities = normPrioritiesFromBody(body)
-  return rankCities(CITIES, { monthlyBudget: body.monthlyBudget, priorities })
+  return rankCities(CITIES, { monthlyBudget: body.monthlyBudget, priorities, lifestyle: body.lifestyle })
     .filter((r) => !r.eliminated)
     .slice(0, count)
 }
@@ -454,7 +454,7 @@ function formatUserContext(body: AnalyzeRequest, priorities: UserPriorities): st
     "Priorities, 1-5:",
     `- Low taxes: ${priorities.tax} (${priorityLabel(priorities.tax)})`,
     `- Affordable housing: ${priorities.housing} (${priorityLabel(priorities.housing)})`,
-    `- Climate: ${priorities.climate} (${priorityLabel(priorities.climate)})`,
+    `- Climate target: ${climateTargetTemp(body.lifestyle)}°C avg (from lifestyle tags)`,
     `- Healthcare: ${priorities.health} (${priorityLabel(priorities.health)})`,
     `- Long-term stability: ${priorities.stability} (${priorityLabel(priorities.stability)})`,
     `- Safety: ${priorities.safety} (${priorityLabel(priorities.safety)})`,

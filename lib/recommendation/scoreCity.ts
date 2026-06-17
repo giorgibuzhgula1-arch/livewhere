@@ -34,6 +34,27 @@ export const VERY_HARD_RESIDENCY_THRESHOLD = 45
 export interface ScoreCityUserInput {
   monthlyBudget: number
   priorities: UserPriorities
+  lifestyle?: string[]
+}
+
+/** Target °C when user picks warm-climate lifestyle; otherwise mild-temperate default. */
+export const CLIMATE_TARGET_WARM = 27
+export const CLIMATE_TARGET_DEFAULT = 18
+
+const WARM_CLIMATE_LIFESTYLE_TAG = '☀️ Warm climate year-round'
+
+export function wantsWarmClimate(lifestyle: string[] | undefined): boolean {
+  if (!lifestyle?.length) return false
+  return lifestyle.some(
+    (tag) =>
+      tag === 'warm_climate' ||
+      tag === WARM_CLIMATE_LIFESTYLE_TAG ||
+      tag.toLowerCase().includes('warm climate'),
+  )
+}
+
+export function climateTargetTemp(lifestyle: string[] | undefined): number {
+  return wantsWarmClimate(lifestyle) ? CLIMATE_TARGET_WARM : CLIMATE_TARGET_DEFAULT
 }
 
 export interface FactorSubScores {
@@ -274,11 +295,15 @@ export function isVeryHardResidency(country: string): boolean {
  * safety — city.safety (0–10) × 10.
  * housing — 100 when rent ≤ 20% of budget; linear to 0 when rent ≥ 60% of budget.
  * residency — effectiveVisaScore(country), already 0–100.
- * climate — 100 at 22°C ideal; −4 points per °C deviation (±25°C → 0).
+ * climate — 100 at ideal °C (27 if warm_climate lifestyle, else 18); −4 points per °C deviation.
  * stability — city.stability_score (World Bank WGI political stability percentile, 0–100).
  * expat — country expat table, else proxy from stability/safety/healthcare blend (informational).
  */
-export function computeSubScores(city: CityRow, monthlyBudget: number): FactorSubScores {
+export function computeSubScores(
+  city: CityRow,
+  monthlyBudget: number,
+  lifestyle?: string[],
+): FactorSubScores {
   const budget = Math.max(monthlyBudget, 1)
   const cost = estimatedMonthlyCost(city.rent_usd)
   const ceiling = budget * 1.25
@@ -307,7 +332,8 @@ export function computeSubScores(city: CityRow, monthlyBudget: number): FactorSu
     )
   }
 
-  const climateScore = clamp(100 - Math.abs(city.avg_temp - 22) * 4, 0, 100)
+  const targetTemp = climateTargetTemp(lifestyle)
+  const climateScore = clamp(100 - Math.abs(city.avg_temp - targetTemp) * 4, 0, 100)
 
   const countryExpat = EXPAT_COUNTRY_SCORE[city.country]
   const expatScore =
@@ -416,7 +442,7 @@ export function scoreCity(city: CityRow, userInput: ScoreCityUserInput): ScoreCi
     }
   }
 
-  const subScores = computeSubScores(city, budget)
+  const subScores = computeSubScores(city, budget, userInput.lifestyle)
   const appliedWeights = computeAppliedWeights(priorities)
   const score = Math.round(weightedTotal(subScores, appliedWeights) * 10) / 10
 

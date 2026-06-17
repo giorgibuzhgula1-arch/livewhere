@@ -21,7 +21,6 @@ const LABELS: Record<number, string> = {
 const PRIORITIES = [
   { key: 'tax', emoji: '💰', label: 'Low taxes' },
   { key: 'housing', emoji: '🏠', label: 'Affordable housing' },
-  { key: 'climate', emoji: '🌞', label: 'Climate' },
   { key: 'health', emoji: '🏥', label: 'Healthcare' },
   { key: 'stability', emoji: '🏛️', label: 'Long-Term Stability' },
   { key: 'safety', emoji: '🔒', label: 'Safety' },
@@ -124,11 +123,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                     onChange={e => setPriorities(p => ({ ...p, [key]: Number(e.target.value) }))}
                     style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
                   />
-                  {key === 'climate' && priorities.climate >= 4 && (
-                    <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 8, lineHeight: 1.5 }}>
-                      Very important uses your lifestyle: Beach = warm cities (20°C+), Mountains = cool cities (14°C or below).
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
