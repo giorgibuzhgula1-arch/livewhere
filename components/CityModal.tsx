@@ -8,7 +8,7 @@ import VisaAnalysis from './VisaAnalysis'
 interface Props {
   city: CityResult
   onClose: () => void
-  monthlyIncome?: number
+  monthlyBudget?: number
   currency?: string
   lifestyle?: string[]
 }
@@ -16,7 +16,7 @@ interface Props {
 function fmt(n: number) { return '$' + n.toLocaleString() }
 function getColor(s: number) { return s >= 80 ? '#c8f05a' : s >= 65 ? '#f0c85a' : '#f05a8c' }
 
-export default function CityModal({ city, onClose, monthlyIncome, lifestyle }: Props) {
+export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: Props) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
@@ -124,7 +124,7 @@ export default function CityModal({ city, onClose, monthlyIncome, lifestyle }: P
 
             {/* Visa Analysis */}
             <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-              <VisaAnalysis city={city} monthlyIncome={monthlyIncome} lifestyle={lifestyle} />
+              <VisaAnalysis city={city} monthlyBudget={monthlyBudget} lifestyle={lifestyle} />
             </div>
           </div>
         </motion.div>

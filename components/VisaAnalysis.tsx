@@ -11,8 +11,8 @@ import {
 
 interface Props {
   city: CityResult
-  /** Net monthly income estimate used to tailor the recommendation. */
-  monthlyIncome?: number
+  /** Target monthly living budget from the quiz — used for threshold comparison only. */
+  monthlyBudget?: number
   lifestyle?: string[]
 }
 
@@ -74,7 +74,7 @@ function VisaOptionCard({ option }: { option: VisaOption }) {
   )
 }
 
-export default function VisaAnalysis({ city, monthlyIncome, lifestyle }: Props) {
+export default function VisaAnalysis({ city, monthlyBudget, lifestyle }: Props) {
   const info = getVisaInfoForCountry(city.country)
 
   if (!info) {
@@ -90,7 +90,7 @@ export default function VisaAnalysis({ city, monthlyIncome, lifestyle }: Props) 
     )
   }
 
-  const recommendation = recommendVisa(info, monthlyIncome, lifestyle)
+  const recommendation = recommendVisa(info, monthlyBudget, lifestyle)
   const scoreColor = visaScoreColor(info.visaScore)
 
   return (

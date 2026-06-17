@@ -404,8 +404,8 @@ export function visaScoreColor(score: number): string {
 
 const DIFFICULTY_RANK: Record<VisaDifficulty, number> = { Easy: 0, Moderate: 1, Hard: 2 }
 const TYPE_PRIORITY: Record<VisaType, number> = {
-  'Digital Nomad Visa': 0,
-  Residency: 1,
+  Residency: 0,
+  'Digital Nomad Visa': 1,
   'Tourist Visa': 2,
 }
 
@@ -416,12 +416,13 @@ export interface VisaRecommendation {
 }
 
 /**
- * Rule-based "AI" recommendation: pick the best long-stay option the user
- * qualifies for given their monthly income, falling back to the easiest path.
+ * Rule-based recommendation: pick the best long-stay option the user
+ * qualifies for given their monthly budget (vs minIncomeMonthly threshold),
+ * falling back to the easiest path.
  */
 export function recommendVisa(
   info: CountryVisaInfo,
-  monthlyIncome?: number,
+  monthlyBudget?: number,
   lifestyle?: string[]
 ): VisaRecommendation | null {
   if (!info.options.length) return null
@@ -436,18 +437,18 @@ export function recommendVisa(
   })
 
   const affordable =
-    typeof monthlyIncome === 'number'
-      ? sorted.filter((o) => o.minIncomeMonthly == null || monthlyIncome >= o.minIncomeMonthly)
+    typeof monthlyBudget === 'number'
+      ? sorted.filter((o) => o.minIncomeMonthly == null || monthlyBudget >= o.minIncomeMonthly)
       : []
 
   const chosen = affordable[0] ?? sorted[0]
   const qualifies =
-    typeof monthlyIncome !== 'number' ||
+    typeof monthlyBudget !== 'number' ||
     chosen.minIncomeMonthly == null ||
-    monthlyIncome >= chosen.minIncomeMonthly
+    monthlyBudget >= chosen.minIncomeMonthly
 
-  const incomeText =
-    typeof monthlyIncome === 'number' ? `your ~$${monthlyIncome.toLocaleString()}/mo income` : 'your profile'
+  const budgetText =
+    typeof monthlyBudget === 'number' ? `your ~$${monthlyBudget.toLocaleString()}/mo monthly budget` : 'your profile'
 
   const lifestyleHint =
     lifestyle && lifestyle.length
@@ -456,12 +457,12 @@ export function recommendVisa(
 
   let reason: string
   if (qualifies && chosen.minIncomeMonthly != null) {
-    reason = `Based on ${incomeText}, you comfortably meet the ${chosen.name}'s ~$${chosen.minIncomeMonthly.toLocaleString()}/mo requirement. It's a ${chosen.difficulty.toLowerCase()} application valid for ${chosen.duration.toLowerCase()}.${lifestyleHint}`
+    reason = `Based on ${budgetText}, you comfortably meet the ${chosen.name}'s ~$${chosen.minIncomeMonthly.toLocaleString()}/mo requirement. It's a ${chosen.difficulty.toLowerCase()} application valid for ${chosen.duration.toLowerCase()}.${lifestyleHint}`
   } else if (qualifies) {
-    reason = `The ${chosen.name} has no fixed income floor and is a ${chosen.difficulty.toLowerCase()} path valid for ${chosen.duration.toLowerCase()} — a strong starting point for ${incomeText}.${lifestyleHint}`
+    reason = `The ${chosen.name} has no fixed income floor and is a ${chosen.difficulty.toLowerCase()} path valid for ${chosen.duration.toLowerCase()} — a strong starting point for ${budgetText}.${lifestyleHint}`
   } else {
     const gap = chosen.minIncomeMonthly!
-    reason = `The ${chosen.name} typically expects ~$${gap.toLocaleString()}/mo, which is above ${incomeText}. Consider a tourist-visa stay first, or boost documented income before applying.${lifestyleHint}`
+    reason = `The ${chosen.name} typically expects ~$${gap.toLocaleString()}/mo, which is above ${budgetText}. Consider a tourist-visa stay first, or boost documented income before applying.${lifestyleHint}`
   }
 
   return { option: chosen, qualifies, reason }

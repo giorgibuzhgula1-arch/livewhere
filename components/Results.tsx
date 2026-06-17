@@ -22,7 +22,7 @@ interface Props {
   maxCities?: number | null
   onUnlockPro?: () => void
   /** Target monthly living budget from the quiz — feeds the visa recommendation. */
-  salary?: number
+  monthlyBudget?: number
   currency?: string
   lifestyle?: string[]
 }
@@ -35,7 +35,7 @@ export default function Results({
   streaming = false,
   maxCities = null,
   onUnlockPro,
-  salary,
+  monthlyBudget,
   currency = 'USD',
   lifestyle,
 }: Props) {
@@ -58,7 +58,7 @@ export default function Results({
   const paid = isPaidPlan(plan)
   const locked = !paid
   const isUnlocked = (city: CityResult) => paid || !city.locked
-  const monthlyIncome = typeof salary === 'number' && salary > 0 ? Math.round(salary) : undefined
+  const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
 
   // Always show unlocked card(s) first, then by descending score.
   const ordered = [...cities].sort((a, b) => {
@@ -414,7 +414,7 @@ export default function Results({
       {selectedCity && (
         <CityModal
           city={selectedCity}
-          monthlyIncome={monthlyIncome}
+          monthlyBudget={visaMonthlyBudget}
           currency={currency}
           lifestyle={lifestyle}
           onClose={() => setSelectedCity(null)}

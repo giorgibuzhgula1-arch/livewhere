@@ -542,7 +542,7 @@ export default function Home() {
           maxCities={resultMaxCities}
           onReset={handleResetMatches}
           onUnlockPro={handleUnlockPro}
-          salary={quizData?.monthlyBudget}
+          monthlyBudget={quizData?.monthlyBudget}
           currency={quizData?.currency}
           lifestyle={quizData?.lifestyle}
         />
