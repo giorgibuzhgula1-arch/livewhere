@@ -13,8 +13,34 @@ interface Props {
   lifestyle?: string[]
 }
 
-const VISA_TEXT_COLOR = '#94a3b8'
+const ACCENT_LIME = '#c8f05a'
+const BODY_TEXT_COLOR = 'rgba(240,237,232,0.75)'
 const MARKDOWN_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g
+
+const narrativeCardStyle = {
+  background: 'rgba(200,240,90,0.04)',
+  border: '1px solid rgba(200,240,90,0.15)',
+  borderRadius: 16,
+  padding: 20,
+  marginBottom: 24,
+} as const
+
+const narrativeTitleStyle = {
+  fontSize: 12,
+  textTransform: 'uppercase' as const,
+  letterSpacing: 1,
+  color: ACCENT_LIME,
+  marginBottom: 16,
+  fontWeight: 600,
+}
+
+const narrativeBodyStyle = {
+  fontSize: 14,
+  lineHeight: 1.7,
+  margin: 0,
+  fontWeight: 400,
+  color: BODY_TEXT_COLOR,
+}
 
 function isSafeHref(href: string): boolean {
   try {
@@ -46,7 +72,7 @@ function renderTextWithMarkdownLinks(text: string): ReactNode[] {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: VISA_TEXT_COLOR, fontWeight: 400, textDecoration: 'underline' }}
+          style={{ color: ACCENT_LIME, fontWeight: 400, textDecoration: 'underline' }}
         >
           {label}
         </a>,
@@ -62,6 +88,17 @@ function renderTextWithMarkdownLinks(text: string): ReactNode[] {
   }
 
   return parts.length ? parts : [text]
+}
+
+function NarrativeSection({ icon, title, children }: { icon: string; title: string; children: ReactNode }) {
+  return (
+    <div style={narrativeCardStyle}>
+      <div style={narrativeTitleStyle}>
+        {icon} {title}
+      </div>
+      {children}
+    </div>
+  )
 }
 
 function fmt(n: number) { return '$' + n.toLocaleString() }
@@ -135,8 +172,8 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: P
             </div>
 
             {/* Finance */}
-            <div style={{ background: 'rgba(200,240,90,0.04)', border: '1px solid rgba(200,240,90,0.15)', borderRadius: 16, padding: 20, marginBottom: 24 }}>
-              <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: '#c8f05a', marginBottom: 16, fontWeight: 600 }}>
+            <div style={narrativeCardStyle}>
+              <div style={narrativeTitleStyle}>
                 💰 Financial Breakdown
               </div>
               {[
@@ -150,29 +187,22 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: P
                   <span style={{ fontWeight: 600, color: vc }}>{val}</span>
                 </div>
               ))}
-              {city.visa && (
-                <div style={{ paddingTop: 10 }}>
-                  <div style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, marginBottom: 6 }}>Visa situation</div>
-                  <p style={{
-                    fontSize: 13, lineHeight: 1.6, margin: 0,
-                    fontWeight: 400, color: VISA_TEXT_COLOR,
-                  }}>
-                    {renderTextWithMarkdownLinks(city.visa)}
-                  </p>
-                </div>
-              )}
             </div>
 
-            {city.healthcare && (
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, marginBottom: 6 }}>Healthcare for retirees</div>
-                <p style={{
-                  fontSize: 13, lineHeight: 1.6, margin: 0,
-                  fontWeight: 400, color: VISA_TEXT_COLOR,
-                }}>
-                  {city.healthcare}
+            {city.visa && (
+              <NarrativeSection icon="🛂" title="Visa situation">
+                <p style={narrativeBodyStyle}>
+                  {renderTextWithMarkdownLinks(city.visa)}
                 </p>
-              </div>
+              </NarrativeSection>
+            )}
+
+            {city.healthcare && (
+              <NarrativeSection icon="🏥" title="Healthcare for retirees">
+                <p style={narrativeBodyStyle}>
+                  {renderTextWithMarkdownLinks(city.healthcare)}
+                </p>
+              </NarrativeSection>
             )}
 
             {/* Pros & Cons */}
