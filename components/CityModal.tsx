@@ -93,13 +93,23 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: P
                 { key: 'Take-home / month', val: fmt(city.takeHomeMonthly), vc: '#c8f05a' },
                 { key: 'Monthly living costs', val: `- ${fmt(city.monthlyCost)}`, vc: '#f05a8c' },
                 { key: 'Monthly savings', val: `${city.monthlySavings > 0 ? '+' : ''}${fmt(city.monthlySavings)}`, vc: city.monthlySavings > 0 ? '#c8f05a' : '#f05a8c' },
-                { key: 'Visa situation', val: city.visa, vc: undefined },
               ].map(({ key, val, vc }) => (
                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', fontSize: 14 }}>
                   <span style={{ color: 'rgba(240,237,232,0.45)' }}>{key}</span>
                   <span style={{ fontWeight: 600, color: vc }}>{val}</span>
                 </div>
               ))}
+              {city.visa && (
+                <div style={{ paddingTop: 10 }}>
+                  <div style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, marginBottom: 6 }}>Visa situation</div>
+                  <p style={{
+                    fontSize: 13, lineHeight: 1.6, margin: 0,
+                    fontWeight: 400, color: 'rgba(203,213,225,0.95)',
+                  }}>
+                    {city.visa}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Pros & Cons */}

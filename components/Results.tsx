@@ -277,6 +277,36 @@ export default function Results({
         </motion.div>
       )}
 
+      {top && isUnlocked(top) && top.visa && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          style={{
+            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 16, padding: 24, marginBottom: 28, display: 'flex', gap: 16
+          }}
+        >
+          <div style={{
+            width: 36, height: 36, background: 'rgba(255,255,255,0.06)', borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0
+          }}>🛂</div>
+          <div>
+            <div style={{
+              fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.2,
+              color: 'rgba(240,237,232,0.45)', marginBottom: 8, fontWeight: 600
+            }}>
+              Visa situation
+            </div>
+            <p style={{
+              fontSize: 14, lineHeight: 1.7, margin: 0,
+              fontWeight: 400, color: 'rgba(203,213,225,0.95)',
+            }}>
+              {top.visa}
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {top && paid && (
         <motion.div
           ref={shareCardRef}
