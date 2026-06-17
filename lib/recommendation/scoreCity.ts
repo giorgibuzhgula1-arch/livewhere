@@ -77,13 +77,13 @@ export interface ScoreCityResult {
 
 const BASE_WEIGHTS: Record<ScoreFactorKey, number> = {
   budget: 30,
-  healthcare: 18,
-  taxes: 15,
-  safety: 12,
-  housing: 10,
-  residency: 7,
-  stability: 5,
-  climate: 3,
+  healthcare: 22,
+  taxes: 5,
+  safety: 14,
+  housing: 8,
+  residency: 2,
+  stability: 18,
+  climate: 1,
 }
 
 /**
