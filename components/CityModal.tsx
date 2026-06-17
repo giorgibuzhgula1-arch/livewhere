@@ -13,7 +13,7 @@ interface Props {
   lifestyle?: string[]
 }
 
-const SLATE_300 = '#cbd5e1'
+const VISA_TEXT_COLOR = '#94a3b8'
 const MARKDOWN_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g
 
 function isSafeHref(href: string): boolean {
@@ -46,7 +46,7 @@ function renderTextWithMarkdownLinks(text: string): ReactNode[] {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: '#c8f05a', textDecoration: 'underline' }}
+          style={{ color: VISA_TEXT_COLOR, fontWeight: 400, textDecoration: 'underline' }}
         >
           {label}
         </a>,
@@ -154,8 +154,8 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: P
                 <div style={{ paddingTop: 10 }}>
                   <div style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, marginBottom: 6 }}>Visa situation</div>
                   <p style={{
-                    fontSize: 12, lineHeight: 1.6, margin: 0,
-                    fontWeight: 400, color: SLATE_300,
+                    fontSize: 13, lineHeight: 1.6, margin: 0,
+                    fontWeight: 400, color: VISA_TEXT_COLOR,
                   }}>
                     {renderTextWithMarkdownLinks(city.visa)}
                   </p>
