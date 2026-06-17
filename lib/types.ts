@@ -30,6 +30,7 @@ export interface CityResult {
 export interface UserPriorities {
   tax: number;
   housing: number;
+  /** 0–100: cool (≤40) / mild (41–70) / warm (71–100) climate preference. */
   climate: number;
   health: number;
   stability: number;

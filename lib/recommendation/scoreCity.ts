@@ -34,27 +34,36 @@ export const VERY_HARD_RESIDENCY_THRESHOLD = 45
 export interface ScoreCityUserInput {
   monthlyBudget: number
   priorities: UserPriorities
-  lifestyle?: string[]
 }
 
-/** Target °C when user picks warm-climate lifestyle; otherwise mild-temperate default. */
+export const CLIMATE_TARGET_COOL = 15
+export const CLIMATE_TARGET_MILD = 20
 export const CLIMATE_TARGET_WARM = 27
-export const CLIMATE_TARGET_DEFAULT = 18
 
-const WARM_CLIMATE_LIFESTYLE_TAG = '☀️ Warm climate year-round'
-
-export function wantsWarmClimate(lifestyle: string[] | undefined): boolean {
-  if (!lifestyle?.length) return false
-  return lifestyle.some(
-    (tag) =>
-      tag === 'warm_climate' ||
-      tag === WARM_CLIMATE_LIFESTYLE_TAG ||
-      tag.toLowerCase().includes('warm climate'),
-  )
+/** Climate preference slider: 0–100 (cool ← → warm). */
+export function normClimateSlider(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return 50
+  return clamp(Math.round(n), 0, 100)
 }
 
-export function climateTargetTemp(lifestyle: string[] | undefined): number {
-  return wantsWarmClimate(lifestyle) ? CLIMATE_TARGET_WARM : CLIMATE_TARGET_DEFAULT
+export function climateTargetTemp(climateSlider: number): number {
+  const s = normClimateSlider(climateSlider)
+  if (s <= 40) return CLIMATE_TARGET_COOL
+  if (s <= 70) return CLIMATE_TARGET_MILD
+  return CLIMATE_TARGET_WARM
+}
+
+export function climatePreferenceLabel(climateSlider: number): string {
+  const s = normClimateSlider(climateSlider)
+  if (s <= 40) return 'Cool climate'
+  if (s <= 70) return 'Mild climate'
+  return 'Warm climate'
+}
+
+/** Map 0–100 climate slider to 1–5 for Phase 2 weight scaling. */
+function climateWeightPriority(climateSlider: number): number {
+  return clamp(1 + Math.floor(normClimateSlider(climateSlider) / 25), 1, 5)
 }
 
 export interface FactorSubScores {
@@ -295,14 +304,14 @@ export function isVeryHardResidency(country: string): boolean {
  * safety — city.safety (0–10) × 10.
  * housing — 100 when rent ≤ 20% of budget; linear to 0 when rent ≥ 60% of budget.
  * residency — effectiveVisaScore(country), already 0–100.
- * climate — 100 at ideal °C (27 if warm_climate lifestyle, else 18); −4 points per °C deviation.
+ * climate — 100 at ideal °C from climate slider (0–40→15°C, 41–70→20°C, 71–100→27°C); −4 pts/°C deviation.
  * stability — city.stability_score (World Bank WGI political stability percentile, 0–100).
  * expat — country expat table, else proxy from stability/safety/healthcare blend (informational).
  */
 export function computeSubScores(
   city: CityRow,
   monthlyBudget: number,
-  lifestyle?: string[],
+  climateSlider: number,
 ): FactorSubScores {
   const budget = Math.max(monthlyBudget, 1)
   const cost = estimatedMonthlyCost(city.rent_usd)
@@ -332,7 +341,7 @@ export function computeSubScores(
     )
   }
 
-  const targetTemp = climateTargetTemp(lifestyle)
+  const targetTemp = climateTargetTemp(climateSlider)
   const climateScore = clamp(100 - Math.abs(city.avg_temp - targetTemp) * 4, 0, 100)
 
   const countryExpat = EXPAT_COUNTRY_SCORE[city.country]
@@ -373,7 +382,7 @@ export function computeAppliedWeights(priorities: UserPriorities): AppliedWeight
     housing: BASE_WEIGHTS.housing * sliderMultiplier(normPriority(priorities.housing)),
     residency: BASE_WEIGHTS.residency * sliderMultiplier(normPriority(priorities.visa_residency)),
     stability: BASE_WEIGHTS.stability * sliderMultiplier(normPriority(priorities.stability)),
-    climate: BASE_WEIGHTS.climate * sliderMultiplier(normPriority(priorities.climate)),
+    climate: BASE_WEIGHTS.climate * sliderMultiplier(climateWeightPriority(priorities.climate)),
   }
 
   const adjustableSum = Object.values(raw).reduce((a, b) => a + b, 0)
@@ -442,7 +451,7 @@ export function scoreCity(city: CityRow, userInput: ScoreCityUserInput): ScoreCi
     }
   }
 
-  const subScores = computeSubScores(city, budget, userInput.lifestyle)
+  const subScores = computeSubScores(city, budget, priorities.climate)
   const appliedWeights = computeAppliedWeights(priorities)
   const score = Math.round(weightedTotal(subScores, appliedWeights) * 10) / 10
 

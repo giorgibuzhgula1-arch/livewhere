@@ -36,11 +36,17 @@ const LIFESTYLES = [
   '👴 Active expat community', '☀️ Warm climate year-round',
 ]
 
+function climateLabel(value: number): string {
+  if (value <= 40) return 'Cool climate (15°C ideal)'
+  if (value <= 70) return 'Mild climate (20°C ideal)'
+  return 'Warm climate (27°C ideal)'
+}
+
 export default function Quiz({ onSubmit, loading, error }: Props) {
   const tracked = useRef(false)
   const [monthlyBudget, setMonthlyBudget] = useState(2500)
   const [priorities, setPriorities] = useState<UserPriorities>({
-    tax: 4, housing: 4, climate: 3, health: 3, stability: 3, safety: 4,
+    tax: 4, housing: 4, climate: 50, health: 3, stability: 3, safety: 4,
     expat_community: 3, visa_residency: 3,
   })
   const [lifestyle, setLifestyle] = useState<string[]>([])
@@ -100,6 +106,32 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               step={100}
               value={monthlyBudget}
               onChange={e => setMonthlyBudget(Number(e.target.value))}
+              style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
+            />
+          </div>
+
+          {/* Climate preference */}
+          <div style={{ marginBottom: 32 }}>
+            <label style={{ fontSize: 14, color: '#f0ede8', marginBottom: 6, fontWeight: 600, display: 'block' }}>
+              🌞 Climate preference
+            </label>
+            <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, lineHeight: 1.5 }}>
+              Slide toward your preferred year-round average temperature
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>Cool</span>
+              <span style={{ fontSize: 14, color: '#c8f05a', fontWeight: 600 }}>
+                {climateLabel(priorities.climate)}
+              </span>
+              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>Warm</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={priorities.climate}
+              onChange={e => setPriorities(p => ({ ...p, climate: Number(e.target.value) }))}
               style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
             />
           </div>
