@@ -54,7 +54,7 @@ export const CITIES: CityRow[] = [
   { name: "Managua", country: "Nicaragua", avg_temp: 26, tax_rate: 30, rent_usd: 380, safety: 5, healthcare: 5, stability_score: 32 },
   { name: "San Juan", country: "Puerto Rico", avg_temp: 26, tax_rate: 33, rent_usd: 1200, safety: 3, healthcare: 7, stability_score: 59 },
   { name: "Kingston", country: "Jamaica", avg_temp: 26, tax_rate: 25, rent_usd: 700, safety: 3, healthcare: 6, stability_score: 43 },
-  { name: "Havana", country: "Cuba", avg_temp: 25, tax_rate: 15, rent_usd: 350, safety: 7, healthcare: 7, stability_score: 58 },
+  { name: "Havana", country: "Cuba", avg_temp: 25, tax_rate: 15, rent_usd: 350, safety: 5, healthcare: 4, stability_score: 22 },
   { name: "Santo Domingo", country: "Dominican Republic", avg_temp: 25, tax_rate: 25, rent_usd: 650, safety: 4, healthcare: 6, stability_score: 51 },
   { name: "Mexico City", country: "Mexico", avg_temp: 16, tax_rate: 30, rent_usd: 750, safety: 4, healthcare: 6, stability_score: 23 },
   { name: "Guadalajara", country: "Mexico", avg_temp: 20, tax_rate: 30, rent_usd: 500, safety: 4, healthcare: 6, stability_score: 23 },
