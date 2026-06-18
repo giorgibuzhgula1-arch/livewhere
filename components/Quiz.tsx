@@ -96,12 +96,12 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               <span style={{ fontSize: 18, color: '#c8f05a', fontWeight: 700 }}>
                 ${monthlyBudget.toLocaleString('en-US')} / month
               </span>
-              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>$6,000</span>
+              <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>$10,000</span>
             </div>
             <input
               type="range"
               min={500}
-              max={6000}
+              max={10000}
               step={100}
               value={monthlyBudget}
               onChange={e => setMonthlyBudget(Number(e.target.value))}
