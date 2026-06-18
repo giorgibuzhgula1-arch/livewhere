@@ -8,6 +8,7 @@ import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
 import HowItWorks from '@/components/HowItWorks'
 import Testimonials from '@/components/Testimonials'
+import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
 
 const Results = dynamic(() => import('@/components/Results'), { ssr: false })
@@ -443,6 +444,7 @@ export default function Home() {
       {showLanding && (
         <>
           <CorePromise />
+          <SavingsCalculator />
           <div id="quiz">
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
