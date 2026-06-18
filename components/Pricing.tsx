@@ -40,7 +40,7 @@ export default function Pricing({ onUpgrade }: Props) {
   function handlePlanClick(planName: string) {
     if (planName === 'Retirement Report') {
       void handleCheckout('pro')
-    } else if (planName === 'Premium Blueprint') {
+    } else if (planName === 'Retirement Relocation Blueprint') {
       void handleCheckout('report')
     } else {
       onUpgrade()
@@ -59,9 +59,9 @@ export default function Pricing({ onUpgrade }: Props) {
       btn: loadingPlan === 'pro' ? 'Loading...' : 'Get My Retirement Plan', style: 'primary', popular: true
     },
     {
-      name: 'Premium Blueprint', price: '$299', originalPrice: '$499', period: 'one-time payment', sale: true,
+      name: 'Retirement Relocation Blueprint', price: '$499', originalPrice: '$1000', period: 'one-time payment', sale: true,
       features: ['Top 12 cities full analysis', 'Lifetime access', 'PDF report', 'Unlimited re-runs', 'Priority support'],
-      btn: loadingPlan === 'report' ? 'Loading...' : 'Get Premium Blueprint — $299', style: 'ghost', popular: false
+      btn: loadingPlan === 'report' ? 'Loading...' : 'Get Retirement Relocation Blueprint — $499', style: 'ghost', popular: false
     },
   ]
 
@@ -73,7 +73,7 @@ export default function Pricing({ onUpgrade }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 20 }}>
         {plans.map(plan => {
           const isProPlan = plan.name === 'Retirement Report'
-          const isLifetimePlan = plan.name === 'Premium Blueprint'
+          const isLifetimePlan = plan.name === 'Retirement Relocation Blueprint'
           const isLoading = (isProPlan && loadingPlan === 'pro') || (isLifetimePlan && loadingPlan === 'report')
           return (
             <div key={plan.name} style={{ background: plan.popular ? 'rgba(200,240,90,0.05)' : '#12121a', border: plan.popular ? '1px solid rgba(200,240,90,0.3)' : '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32, textAlign: 'left', position: 'relative', zIndex: 1 }}>

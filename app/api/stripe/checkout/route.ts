@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     const lineItems =
       checkoutType === 'report'
-        ? [{ price: 'price_1Tj2NXD753169kynXiq9z79p', quantity: 1 }]
+        ? [{ price: 'price_1TjciyD753169kynku8SCht0', quantity: 1 }]
         : [{ price: proPriceId!, quantity: 1 }]
 
     const refRaw = req.cookies.get(REF_COOKIE_NAME)?.value
