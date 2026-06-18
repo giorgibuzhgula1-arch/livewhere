@@ -102,6 +102,15 @@ const cardStyle: React.CSSProperties = {
   marginBottom: 32,
 }
 
+const flagStyle: React.CSSProperties = {
+  fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", emoji',
+  fontStyle: 'normal',
+}
+
+function Flag({ flag }: { flag: string }) {
+  return <span style={flagStyle}>{flag}</span>
+}
+
 export default function SavingsCalculator() {
   const [state, setState] = useState('Florida')
   const [destination, setDestination] = useState('Portugal')
@@ -179,7 +188,7 @@ export default function SavingsCalculator() {
               onClick={() => setDestOpen((open) => !open)}
               style={{ ...selectStyle, textAlign: 'left' }}
             >
-              {dest.flag} {destination}
+              <Flag flag={dest.flag} /> {destination}
             </button>
             {destOpen && (
               <div
@@ -215,7 +224,7 @@ export default function SavingsCalculator() {
                       background: country === destination ? 'rgba(200,240,90,0.1)' : 'transparent',
                     }}
                   >
-                    {d.flag} {country}
+                    <Flag flag={d.flag} /> {country}
                   </div>
                 ))}
               </div>
@@ -230,7 +239,7 @@ export default function SavingsCalculator() {
             Moving from{' '}
             <span style={{ color: '#f0ede8', fontWeight: 600 }}>{state}</span>
             {' '}to{' '}
-            <span style={{ color: '#f0ede8', fontWeight: 600 }}>{dest.flag} {dest.city}, {destination}</span>
+            <span style={{ color: '#f0ede8', fontWeight: 600 }}><Flag flag={dest.flag} /> {dest.city}, {destination}</span>
           </p>
           <div
             style={{
@@ -264,7 +273,7 @@ export default function SavingsCalculator() {
       ) : (
         <div style={cardStyle}>
           <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', margin: 0, lineHeight: 1.6 }}>
-            {dest.flag} {destination} has a similar cost of living to {state}. Try a different destination to see bigger savings.
+            <Flag flag={dest.flag} /> {destination} has a similar cost of living to {state}. Try a different destination to see bigger savings.
           </p>
         </div>
       )}
