@@ -105,6 +105,7 @@ const cardStyle: React.CSSProperties = {
 export default function SavingsCalculator() {
   const [state, setState] = useState('Florida')
   const [destination, setDestination] = useState('Portugal')
+  const [destOpen, setDestOpen] = useState(false)
 
   const usCost = US_STATE_COSTS[state] ?? 3800
   const dest = DESTINATIONS[destination]
@@ -172,11 +173,54 @@ export default function SavingsCalculator() {
           <label style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(240,237,232,0.45)' }}>
             Retire in
           </label>
-          <select value={destination} onChange={(e) => setDestination(e.target.value)} style={selectStyle}>
-            {Object.entries(DESTINATIONS).map(([country, d]) => (
-              <option key={country} value={country}>{d.flag} {country}</option>
-            ))}
-          </select>
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setDestOpen((open) => !open)}
+              style={{ ...selectStyle, textAlign: 'left' }}
+            >
+              {dest.flag} {destination}
+            </button>
+            {destOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: 4,
+                  background: '#12121a',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 10,
+                  maxHeight: 240,
+                  overflowY: 'auto',
+                  zIndex: 10,
+                }}
+              >
+                {Object.entries(DESTINATIONS).map(([country, d]) => (
+                  <div
+                    key={country}
+                    role="option"
+                    aria-selected={country === destination}
+                    onClick={() => {
+                      setDestination(country)
+                      setDestOpen(false)
+                    }}
+                    style={{
+                      padding: '12px 16px',
+                      fontSize: 14,
+                      fontFamily: "'DM Sans', sans-serif",
+                      color: '#fff',
+                      cursor: 'pointer',
+                      background: country === destination ? 'rgba(200,240,90,0.1)' : 'transparent',
+                    }}
+                  >
+                    {d.flag} {country}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
