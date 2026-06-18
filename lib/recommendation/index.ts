@@ -9,6 +9,7 @@
  */
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 import { peelCompleteObjectsFromJsonArray } from '@/lib/parse-streaming-cities'
+import { getVisaInfoForCountry } from '@/lib/visa-data'
 import { rankCities, climateTargetTemp, climateWeightPercent, hasWarmClimateYearRound, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
 
 export type CityRow = {
@@ -469,11 +470,43 @@ function formatUserContext(body: AnalyzeRequest, priorities: UserPriorities): st
   ].join("\n")
 }
 
+function formatVisaDataForCountry(country: string): string {
+  const info = getVisaInfoForCountry(country)
+  if (!info) {
+    return 'No verified visa facts on file for this country. Do not invent visa names, income thresholds, or URLs.'
+  }
+
+  const optionLines = info.options.map((option) => {
+    const incomeLine =
+      option.minIncomeMonthly != null
+        ? `Minimum income (verified): $${option.minIncomeMonthly.toLocaleString()}/mo USD`
+        : 'Minimum income (verified): none on file'
+    return [
+      `  • ${option.name} (${option.type}, ${option.difficulty})`,
+      `    ${incomeLine}`,
+      `    Cost: ${option.cost}; Duration: ${option.duration}; Processing: ${option.processingTime}`,
+      `    Requirements: ${option.requirements.join('; ')}`,
+    ].join('\n')
+  })
+
+  return [`Country summary: ${info.summary}`, 'Verified visa options:', ...optionLines].join('\n')
+}
+
 function formatNarrativePrompt(
   body: AnalyzeRequest,
   priorities: UserPriorities,
   cities: CityResult[]
 ): string {
+  const cityBlocks = cities.flatMap((c, i) => {
+    const visaDataForCity = formatVisaDataForCountry(c.country)
+    return [
+      `${i + 1}. ${c.name}, ${c.country} (match score ${c.score})`,
+      `Use ONLY these verified visa facts: ${visaDataForCity}`,
+      'Do not invent income requirements. If minimum income exists, state the exact USD figure.',
+      '',
+    ]
+  })
+
   return [
     `Write personalized retirement relocation narratives for exactly these ${cities.length} cities.`,
     "These cities are ALREADY ranked by our deterministic scoring engine — do NOT reorder, rescore, or substitute cities.",
@@ -481,7 +514,7 @@ function formatNarrativePrompt(
     "- pros (2-4 bullets)",
     "- cons (1-3 bullets)",
     "- aiInsight (one short paragraph tied to the user's priorities)",
-    "- visa: the specific visa name best suited for retirees; minimum income requirement in USD (or \"none\"); a 1-2 sentence application process overview; and the official government URL",
+    "- visa: pick the best retiree option using ONLY that city's verified visa facts above; state the exact USD minimum income if listed (or \"none\"); 1-2 sentence application overview; include the official URL from requirements when present",
     "- healthcare: 1-2 sentences on local healthcare system quality for retirees; estimated monthly healthcare cost in USD; and whether international health insurance is recommended (yes/no with a brief reason)",
     "- tags (1-4 lifestyle tags)",
     "Focus on retirement-relevant reasoning tied to the user's priorities below.",
@@ -489,7 +522,7 @@ function formatNarrativePrompt(
     formatUserContext(body, priorities),
     "",
     "Cities (fixed order):",
-    ...cities.map((c, i) => `${i + 1}. ${c.name}, ${c.country} (match score ${c.score})`),
+    ...cityBlocks,
   ].join("\n")
 }
 
@@ -555,7 +588,7 @@ function buildNarrativeRequestBody(
       {
         role: "system",
         content:
-          "You are LiveWhere's retirement relocation writer. Return only narrative fields for the pre-selected cities — including detailed visa and healthcare summaries. Never change rankings or invent numeric scores.",
+          "You are LiveWhere's retirement relocation writer. Return only narrative fields for the pre-selected cities — including detailed visa and healthcare summaries. Never change rankings or invent numeric scores. For visa fields, use ONLY the verified visa facts provided per country — never invent income requirements.",
       },
       { role: "user", content: formatNarrativePrompt(body, priorities, cities) },
     ],
