@@ -44,6 +44,26 @@ const DESTINATIONS: Record<string, { flag: string; city: string; rent_usd: numbe
 
 const MULTIPLIER = 1.72
 
+const selectStyle: React.CSSProperties = {
+  background: '#12121a',
+  border: '1px solid rgba(255,255,255,0.15)',
+  color: '#fff',
+  borderRadius: 10,
+  padding: '12px 16px',
+  fontSize: 14,
+  fontFamily: "'DM Sans', sans-serif",
+  cursor: 'pointer',
+  minWidth: 180,
+}
+
+const cardStyle: React.CSSProperties = {
+  background: '#12121a',
+  border: '1px solid rgba(255,255,255,0.07)',
+  borderRadius: 20,
+  padding: 32,
+  marginBottom: 32,
+}
+
 export default function SavingsCalculator() {
   const [state, setState] = useState('Florida')
   const [destination, setDestination] = useState('Portugal')
@@ -58,87 +78,131 @@ export default function SavingsCalculator() {
   const isPositive = monthlySavings > 0
 
   return (
-    <section className="py-16 px-4 bg-[#0a0a0a] border-y border-white/10">
-      <div className="max-w-3xl mx-auto text-center">
-        <p className="text-xs uppercase tracking-widest text-white/40 mb-3">✦ Savings Estimate</p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-          See How Far Your Retirement Income Could Go
-        </h2>
-        <p className="text-white/50 mb-10 text-sm">
-          Based on average cost of living data. Your actual savings may vary.
-        </p>
+    <section
+      style={{
+        maxWidth: 1100,
+        margin: '0 auto',
+        padding: '80px 20px',
+        position: 'relative',
+        zIndex: 1,
+        background: '#0a0a0a',
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#c8f05a', marginBottom: 12, fontWeight: 600 }}>
+        ✦ Savings Estimate
+      </div>
+      <h2
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 'clamp(32px, 4vw, 52px)',
+          fontWeight: 700,
+          lineHeight: 1.1,
+          marginBottom: 12,
+        }}
+      >
+        See How Far Your Retirement Income Could Go
+      </h2>
+      <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', marginBottom: 40, lineHeight: 1.6 }}>
+        Based on average cost of living data. Your actual savings may vary.
+      </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-          <div className="flex flex-col gap-1 text-left">
-            <label className="text-xs text-white/40 uppercase tracking-widest">Current state</label>
-            <select
-              value={state}
-              onChange={e => setState(e.target.value)}
-              className="bg-white/5 border border-white/10 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-white/30"
-            >
-              {Object.keys(US_STATE_COSTS).map(s => (
-                <option key={s} value={s} className="bg-[#111]">{s}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-end pb-3 text-white/30 text-xl font-light">→</div>
-
-          <div className="flex flex-col gap-1 text-left">
-            <label className="text-xs text-white/40 uppercase tracking-widest">Retire in</label>
-            <select
-              value={destination}
-              onChange={e => setDestination(e.target.value)}
-              className="bg-white/5 border border-white/10 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-white/30"
-            >
-              {Object.entries(DESTINATIONS).map(([country, d]) => (
-                <option key={country} value={country} className="bg-[#111]">{d.flag} {country}</option>
-              ))}
-            </select>
-          </div>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 16,
+          justifyContent: 'center',
+          alignItems: 'flex-end',
+          marginBottom: 40,
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left' }}>
+          <label style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(240,237,232,0.45)' }}>
+            Current state
+          </label>
+          <select value={state} onChange={(e) => setState(e.target.value)} style={selectStyle}>
+            {Object.keys(US_STATE_COSTS).map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
         </div>
 
-        {isPositive ? (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
-            <p className="text-white/50 text-sm mb-6">
-              Moving from <span className="text-white font-medium">{state}</span> to <span className="text-white font-medium">{dest.flag} {dest.city}, {destination}</span>
-            </p>
-            <div className="grid grid-cols-3 gap-6">
-              <div>
-                <p className="text-3xl md:text-4xl font-bold text-emerald-400">
-                  ${monthlySavings.toLocaleString()}
-                </p>
-                <p className="text-white/40 text-xs mt-1">per month</p>
-              </div>
-              <div>
-                <p className="text-3xl md:text-4xl font-bold text-emerald-400">
-                  ${annualSavings.toLocaleString()}
-                </p>
-                <p className="text-white/40 text-xs mt-1">per year</p>
-              </div>
-              <div>
-                <p className="text-3xl md:text-4xl font-bold text-emerald-400">
-                  ${tenYearSavings.toLocaleString()}
-                </p>
-                <p className="text-white/40 text-xs mt-1">over 10 years</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
-            <p className="text-white/50 text-sm">
-              {dest.flag} {destination} has a similar cost of living to {state}. Try a different destination to see bigger savings.
-            </p>
-          </div>
-        )}
+        <div style={{ color: 'rgba(240,237,232,0.3)', fontSize: 20, fontWeight: 300, paddingBottom: 12 }}>→</div>
 
-        <a
-          href="#quiz"
-          className="inline-block bg-white text-black font-semibold px-8 py-4 rounded-full hover:bg-white/90 transition-colors text-sm"
-        >
-          Get My Personalized Retirement Analysis →
-        </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left' }}>
+          <label style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(240,237,232,0.45)' }}>
+            Retire in
+          </label>
+          <select value={destination} onChange={(e) => setDestination(e.target.value)} style={selectStyle}>
+            {Object.entries(DESTINATIONS).map(([country, d]) => (
+              <option key={country} value={country}>{d.flag} {country}</option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {isPositive ? (
+        <div style={cardStyle}>
+          <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', marginBottom: 24, lineHeight: 1.6 }}>
+            Moving from{' '}
+            <span style={{ color: '#f0ede8', fontWeight: 600 }}>{state}</span>
+            {' '}to{' '}
+            <span style={{ color: '#f0ede8', fontWeight: 600 }}>{dest.flag} {dest.city}, {destination}</span>
+          </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: 24,
+            }}
+          >
+            {[
+              { value: monthlySavings, label: 'per month' },
+              { value: annualSavings, label: 'per year' },
+              { value: tenYearSavings, label: 'over 10 years' },
+            ].map(({ value, label }) => (
+              <div key={label}>
+                <p
+                  style={{
+                    fontSize: 'clamp(28px, 4vw, 40px)',
+                    fontWeight: 700,
+                    color: '#c8f05a',
+                    margin: 0,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  ${value.toLocaleString()}
+                </p>
+                <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 6 }}>{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={cardStyle}>
+          <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', margin: 0, lineHeight: 1.6 }}>
+            {dest.flag} {destination} has a similar cost of living to {state}. Try a different destination to see bigger savings.
+          </p>
+        </div>
+      )}
+
+      <a
+        href="#quiz"
+        style={{
+          display: 'inline-block',
+          background: '#c8f05a',
+          color: '#0a0a0f',
+          borderRadius: 50,
+          padding: '16px 32px',
+          fontWeight: 600,
+          fontSize: 14,
+          textDecoration: 'none',
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        Get My Personalized Retirement Analysis →
+      </a>
     </section>
   )
 }
