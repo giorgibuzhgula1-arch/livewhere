@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 // Monthly cost of living ($) by state — scaled from BLS Consumer Expenditure Survey
 // 2024 national average (~$6,545/mo per consumer unit) via MERIC/C2ER 2025 state index
@@ -105,19 +105,6 @@ const cardStyle: React.CSSProperties = {
 export default function SavingsCalculator() {
   const [state, setState] = useState('Florida')
   const [destination, setDestination] = useState('Portugal')
-  const [destOpen, setDestOpen] = useState(false)
-  const destRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!destOpen) return
-    const close = (e: MouseEvent) => {
-      if (destRef.current && !destRef.current.contains(e.target as Node)) {
-        setDestOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [destOpen])
 
   const usCost = US_STATE_COSTS[state] ?? 3800
   const dest = DESTINATIONS[destination]
@@ -181,58 +168,15 @@ export default function SavingsCalculator() {
 
         <div style={{ color: 'rgba(240,237,232,0.3)', fontSize: 20, fontWeight: 300, paddingBottom: 12 }}>→</div>
 
-        <div ref={destRef} style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left', position: 'relative' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left' }}>
           <label style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(240,237,232,0.45)' }}>
             Retire in
           </label>
-          <button
-            type="button"
-            onClick={() => setDestOpen((open) => !open)}
-            style={{ ...selectStyle, textAlign: 'left' }}
-          >
-            {dest.flag} {destination}
-          </button>
-          {destOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                marginTop: 4,
-                background: '#12121a',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 10,
-                overflow: 'hidden',
-                zIndex: 10,
-              }}
-            >
-              {Object.entries(DESTINATIONS).map(([country, d]) => (
-                <button
-                  key={country}
-                  type="button"
-                  onClick={() => {
-                    setDestination(country)
-                    setDestOpen(false)
-                  }}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '12px 16px',
-                    background: country === destination ? 'rgba(200,240,90,0.1)' : 'transparent',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    fontSize: 14,
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  {d.flag} {country}
-                </button>
-              ))}
-            </div>
-          )}
+          <select value={destination} onChange={(e) => setDestination(e.target.value)} style={selectStyle}>
+            {Object.entries(DESTINATIONS).map(([country, d]) => (
+              <option key={country} value={country}>{d.flag} {country}</option>
+            ))}
+          </select>
         </div>
       </div>
 
