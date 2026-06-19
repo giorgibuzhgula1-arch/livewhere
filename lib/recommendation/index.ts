@@ -651,7 +651,7 @@ function cityNarrativesJsonSchema(resultCount: number) {
             items: {
               type: "object",
               additionalProperties: false,
-              required: ["name", "country", "pros", "cons", "tags", "visa", "healthcare", "aiInsight"],
+              required: ["index", "name", "country", "pros", "cons", "tags", "visa", "healthcare", "aiInsight"],
               properties: {
                 index: { type: "integer" },
                 name: { type: "string" },
