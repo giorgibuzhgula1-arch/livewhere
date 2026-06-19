@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization')
   let userId: string | null = null
   let plan = 'free'
+  let searchesThisMonth = 0
 
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7)
@@ -73,8 +74,9 @@ export async function POST(req: NextRequest) {
         .single()
 
       plan = profile?.plan || 'free'
+      searchesThisMonth = profile?.searches_this_month ?? 0
 
-      if (plan === 'free' && (profile?.searches_this_month || 0) >= 3) {
+      if (plan === 'free' && searchesThisMonth >= 3) {
         return NextResponse.json(
           { error: 'Free plan limit reached. Upgrade to Pro for unlimited searches.' },
           { status: 403 }
@@ -150,7 +152,7 @@ export async function POST(req: NextRequest) {
 
           await supabaseAdmin
             .from('profiles')
-            .update({ searches_this_month: supabaseAdmin.rpc('increment', { x: 1 }) })
+            .update({ searches_this_month: searchesThisMonth + 1 })
             .eq('id', userId)
         }
 
