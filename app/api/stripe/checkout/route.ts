@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${appUrl}/`,
       metadata: sessionMetadata,
       ...(checkoutType === 'report'
-        ? { discounts: [{ coupon: 'ddUocJ8X' }] }
+        ? { discounts: [{ coupon: '71015UqI' }] }
         : {}),
       ...(refCode
         ? {
