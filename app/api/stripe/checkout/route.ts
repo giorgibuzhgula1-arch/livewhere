@@ -159,6 +159,9 @@ export async function POST(req: NextRequest) {
       success_url: `${appUrl}/?upgraded=true`,
       cancel_url: `${appUrl}/`,
       metadata: sessionMetadata,
+      ...(checkoutType === 'report'
+        ? { discounts: [{ coupon: 'oTtP8j4z' }] }
+        : {}),
       ...(refCode
         ? {
             payment_intent_data: {
