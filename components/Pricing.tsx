@@ -60,7 +60,16 @@ export default function Pricing({ onUpgrade }: Props) {
     },
     {
       name: 'Retirement Relocation Blueprint', price: '$499', originalPrice: '$1000', period: 'one-time payment', sale: true,
-      features: ['Top 12 cities full analysis', 'Lifetime access', 'PDF report', 'Unlimited re-runs', 'Priority support'],
+      features: [
+        'Top 25 cities full analysis',
+        '10-Year Retirement Projection',
+        'Retirement Risk Assessment',
+        'Wealth Preservation Analysis',
+        'PDF report',
+        'Lifetime access',
+        'Unlimited re-runs',
+        'Priority support',
+      ],
       btn: loadingPlan === 'report' ? 'Loading...' : 'Get Retirement Relocation Blueprint — $499', style: 'ghost', popular: false
     },
   ]
