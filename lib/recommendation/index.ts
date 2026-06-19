@@ -165,6 +165,10 @@ export const CITIES: CityRow[] = [
   { name: "Christchurch", country: "New Zealand", avg_temp: 12, tax_rate: 33, rent_usd: 1300, safety: 7, healthcare: 8, stability_score: 73 },
   { name: "Seoul", country: "South Korea", avg_temp: 13, tax_rate: 35, rent_usd: 950, safety: 8, healthcare: 9, stability_score: 63 },
   { name: "Busan", country: "South Korea", avg_temp: 15, tax_rate: 35, rent_usd: 650, safety: 7, healthcare: 8, stability_score: 63 },
+  { name: "Valletta", country: "Malta", avg_temp: 19, tax_rate: 15, rent_usd: 1380, safety: 6, healthcare: 8.2, stability_score: 66 },
+  { name: "Sliema", country: "Malta", avg_temp: 19, tax_rate: 15, rent_usd: 1800, safety: 6, healthcare: 8.2, stability_score: 66 },
+  { name: "Victoria", country: "Seychelles", avg_temp: 28, tax_rate: 30, rent_usd: 1000, safety: 6, healthcare: 8.2, stability_score: 68 },
+  { name: "Beau Vallon", country: "Seychelles", avg_temp: 28, tax_rate: 30, rent_usd: 1050, safety: 6, healthcare: 8.2, stability_score: 68 },
 ]
 
 const DISPLAY: Record<string, { continent: string; flag: string }> = {
@@ -309,6 +313,10 @@ const DISPLAY: Record<string, { continent: string; flag: string }> = {
   "Christchurch|New Zealand": { continent: "Oceania", flag: "🇳🇿" },
   "Seoul|South Korea": { continent: "Asia", flag: "🇰🇷" },
   "Busan|South Korea": { continent: "Asia", flag: "🇰🇷" },
+  "Valletta|Malta": { continent: "Europe", flag: "🇲🇹" },
+  "Sliema|Malta": { continent: "Europe", flag: "🇲🇹" },
+  "Victoria|Seychelles": { continent: "Africa", flag: "🇸🇨" },
+  "Beau Vallon|Seychelles": { continent: "Africa", flag: "🇸🇨" },
 }
 
 export const RESULT_COUNT = 3
