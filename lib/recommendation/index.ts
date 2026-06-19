@@ -331,8 +331,10 @@ function metaFor(city: CityRow): { continent: string; flag: string } {
   return DISPLAY[`${city.name}|${city.country}`] ?? { continent: "Other", flag: "🏙️" }
 }
 
+type OpenAINarrativeCity = Partial<CityResult> & { index?: number }
+
 type OpenAIRecommendationResponse = {
-  cities?: Array<Partial<CityResult>>
+  cities?: OpenAINarrativeCity[]
 }
 
 type OpenAIChatResponse = {
@@ -440,18 +442,111 @@ function mergeNarrative(base: CityResult, partial: Partial<CityResult>): CityRes
   }
 }
 
+type NarrativeMergePath = "index" | "name-country" | "none"
+
+const narrativeMergeStats = {
+  index: 0,
+  nameCountry: 0,
+  none: 0,
+}
+
+function resetNarrativeMergeStats(): void {
+  narrativeMergeStats.index = 0
+  narrativeMergeStats.nameCountry = 0
+  narrativeMergeStats.none = 0
+}
+
+function recordNarrativeMerge(path: NarrativeMergePath): void {
+  if (path === "index") narrativeMergeStats.index++
+  else if (path === "name-country") narrativeMergeStats.nameCountry++
+  else narrativeMergeStats.none++
+}
+
+function narrativeListIndex(partial: OpenAINarrativeCity): number | null {
+  return typeof partial.index === "number" && Number.isInteger(partial.index)
+    ? partial.index
+    : null
+}
+
+function resolveNarrativePartial(
+  base: CityResult,
+  position: number,
+  narratives: OpenAINarrativeCity[],
+  byKey: Map<string, OpenAINarrativeCity>
+): { partial?: OpenAINarrativeCity; path: NarrativeMergePath } {
+  const expectedIndex = position + 1
+  const byIndex = narratives.find((n) => narrativeListIndex(n) === expectedIndex)
+  if (byIndex) return { partial: byIndex, path: "index" }
+
+  const byName = byKey.get(`${base.name}|${base.country}`)
+  if (byName) return { partial: byName, path: "name-country" }
+
+  return { path: "none" }
+}
+
+function resolveStreamedNarrativePartial(
+  partial: OpenAINarrativeCity,
+  baseCities: CityResult[],
+  baseByKey: Map<string, CityResult>
+): { base?: CityResult; path: NarrativeMergePath } {
+  const listIndex = narrativeListIndex(partial)
+  if (listIndex !== null && listIndex >= 1 && listIndex <= baseCities.length) {
+    return { base: baseCities[listIndex - 1], path: "index" }
+  }
+
+  const name = typeof partial.name === "string" ? partial.name.trim() : ""
+  const country = typeof partial.country === "string" ? partial.country.trim() : "Unknown"
+  const byName = baseByKey.get(`${name}|${country}`)
+  if (byName) return { base: byName, path: "name-country" }
+
+  return { path: "none" }
+}
+
+function logNarrativeMergeSummary(total: number): void {
+  console.warn(
+    `[narrative-merge-summary] matched_via_index=${narrativeMergeStats.index} matched_via_name=${narrativeMergeStats.nameCountry} unmatched=${narrativeMergeStats.none} total=${total}`
+  )
+}
+
 function finalizeNarratives(
   baseCities: CityResult[],
-  narratives: Array<Partial<CityResult>> | undefined
+  narratives: OpenAINarrativeCity[] | undefined
 ): CityResult[] {
-  if (!narratives?.length) return baseCities
+  if (!narratives?.length) {
+    resetNarrativeMergeStats()
+    for (const base of baseCities) {
+      console.warn(`[narrative-merge] no match for "${base.name}|${base.country}"`)
+      recordNarrativeMerge("none")
+    }
+    console.warn(`[narrative-merge] ${baseCities.length}/${baseCities.length} cities failed to merge`)
+    return baseCities
+  }
+
+  resetNarrativeMergeStats()
+
   const byKey = new Map(
     narratives.map((n) => [`${text(n.name, "")}|${text(n.country, "")}`, n])
   )
-  return baseCities.map((base) => {
-    const partial = byKey.get(`${base.name}|${base.country}`)
-    return partial ? mergeNarrative(base, partial) : base
+  let unmatchedCount = 0
+
+  const result = baseCities.map((base, i) => {
+    const { partial, path } = resolveNarrativePartial(base, i, narratives, byKey)
+    console.warn(
+      `[narrative-merge] city ${i} (${base.name}|${base.country}) matched via: ${path}`
+    )
+    recordNarrativeMerge(path)
+
+    if (!partial) {
+      unmatchedCount++
+      console.warn(`[narrative-merge] no match for "${base.name}|${base.country}"`)
+      return base
+    }
+
+    return mergeNarrative(base, partial)
   })
+
+  console.warn(`[narrative-merge] ${unmatchedCount}/${baseCities.length} cities failed to merge`)
+  return result
 }
 
 function formatUserContext(body: AnalyzeRequest, priorities: UserPriorities): string {
@@ -517,6 +612,8 @@ function formatNarrativePrompt(
     "- visa: pick the best retiree option using ONLY that city's verified visa facts above; state the exact USD minimum income if listed (or \"none\"); 1-2 sentence application overview; include the official URL from requirements when present",
     "- healthcare: 1-2 sentences on local healthcare system quality for retirees; estimated monthly healthcare cost in USD; and whether international health insurance is recommended (yes/no with a brief reason)",
     "- tags (1-4 lifestyle tags)",
+    "- index: set to the exact 1-based list number shown next to that city in Cities (fixed order) below",
+    "For each city in your response, set the `index` field to the exact number (1-based) shown next to that city in the list above.",
     "Focus on retirement-relevant reasoning tied to the user's priorities below.",
     "",
     formatUserContext(body, priorities),
@@ -556,6 +653,7 @@ function cityNarrativesJsonSchema(resultCount: number) {
               additionalProperties: false,
               required: ["name", "country", "pros", "cons", "tags", "visa", "healthcare", "aiInsight"],
               properties: {
+                index: { type: "integer" },
                 name: { type: "string" },
                 country: { type: "string" },
                 pros: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 },
@@ -603,6 +701,7 @@ export type RecommendStreamHandlers = {
 
 function emitNarrativesFromBuffer(
   buffer: string,
+  baseCities: CityResult[],
   baseByKey: Map<string, CityResult>,
   seen: Set<string>,
   handlers: RecommendStreamHandlers
@@ -610,15 +709,27 @@ function emitNarrativesFromBuffer(
   const emitted: CityResult[] = []
   const peeled = peelCompleteObjectsFromJsonArray(buffer)
   for (const raw of peeled) {
-    const partial = raw as Partial<CityResult>
+    const partial = raw as OpenAINarrativeCity
     const name = typeof partial.name === "string" ? partial.name.trim() : ""
     if (!name) continue
-    const country = typeof partial.country === "string" ? partial.country.trim() : "Unknown"
-    const key = `${name}|${country}`
-    if (seen.has(key)) continue
-    const base = baseByKey.get(key)
-    if (!base) continue
-    seen.add(key)
+
+    const { base, path } = resolveStreamedNarrativePartial(partial, baseCities, baseByKey)
+    if (!base) {
+      const country = typeof partial.country === "string" ? partial.country.trim() : "Unknown"
+      console.warn(`[narrative-merge] no match for "${name}|${country}"`)
+      continue
+    }
+
+    const seenKey = `${base.name}|${base.country}`
+    if (seen.has(seenKey)) continue
+    seen.add(seenKey)
+
+    const position = baseCities.indexOf(base)
+    console.warn(
+      `[narrative-merge] city ${position} (${base.name}|${base.country}) matched via: ${path}`
+    )
+    recordNarrativeMerge(path)
+
     const city = mergeNarrative(base, partial)
     emitted.push(city)
     handlers.onCity?.(city)
@@ -686,6 +797,8 @@ export async function streamRecommendCities(
   const baseCities = ranked.map((r) => rowToCityResult(r.city, r, body.monthlyBudget))
   const baseByKey = new Map(baseCities.map((c) => [`${c.name}|${c.country}`, c]))
 
+  resetNarrativeMergeStats()
+
   const res = await fetch(OPENAI_ENDPOINT, {
     method: "POST",
     headers: {
@@ -707,37 +820,57 @@ export async function streamRecommendCities(
   const seen = new Set<string>()
   const streamed: CityResult[] = []
   let accumulated = ""
+  let finalCities: CityResult[]
 
   const content = await readOpenAIStream(res.body, (delta) => {
     accumulated += delta
     handlers.onDelta?.(delta)
-    for (const city of emitNarrativesFromBuffer(accumulated, baseByKey, seen, handlers)) {
+    for (const city of emitNarrativesFromBuffer(
+      accumulated,
+      baseCities,
+      baseByKey,
+      seen,
+      handlers
+    )) {
       streamed.push(city)
     }
   })
 
   if (!content.trim()) {
-    return finalizeNarratives(baseCities, undefined)
+    finalCities = finalizeNarratives(baseCities, undefined)
+  } else {
+    const finalJson = extractOpenAIJson({ choices: [{ message: { content } }] })
+    const narratives = finalJson?.cities
+    if (narratives && narratives.length >= resultCount) {
+      finalCities = finalizeNarratives(baseCities, narratives.slice(0, resultCount))
+    } else if (streamed.length >= resultCount) {
+      const streamedByKey = new Map(streamed.map((c) => [`${c.name}|${c.country}`, c]))
+      finalCities = baseCities.map((base) => {
+        const merged = streamedByKey.get(`${base.name}|${base.country}`)
+        if (merged) return merged
+        recordNarrativeMerge("none")
+        console.warn(`[narrative-merge] no match for "${base.name}|${base.country}"`)
+        return base
+      })
+    } else {
+      emitNarrativesFromBuffer(content, baseCities, baseByKey, seen, handlers)
+      if (streamed.length >= resultCount) {
+        const streamedByKey = new Map(streamed.map((c) => [`${c.name}|${c.country}`, c]))
+        finalCities = baseCities.map((base) => {
+          const merged = streamedByKey.get(`${base.name}|${base.country}`)
+          if (merged) return merged
+          recordNarrativeMerge("none")
+          console.warn(`[narrative-merge] no match for "${base.name}|${base.country}"`)
+          return base
+        })
+      } else {
+        finalCities = finalizeNarratives(baseCities, undefined)
+      }
+    }
   }
 
-  const finalJson = extractOpenAIJson({ choices: [{ message: { content } }] })
-  const narratives = finalJson?.cities
-  if (narratives && narratives.length >= resultCount) {
-    return finalizeNarratives(baseCities, narratives.slice(0, resultCount))
-  }
-
-  if (streamed.length >= resultCount) {
-    const streamedByKey = new Map(streamed.map((c) => [`${c.name}|${c.country}`, c]))
-    return baseCities.map((base) => streamedByKey.get(`${base.name}|${base.country}`) ?? base)
-  }
-
-  emitNarrativesFromBuffer(content, baseByKey, seen, handlers)
-  if (streamed.length >= resultCount) {
-    const streamedByKey = new Map(streamed.map((c) => [`${c.name}|${c.country}`, c]))
-    return baseCities.map((base) => streamedByKey.get(`${base.name}|${base.country}`) ?? base)
-  }
-
-  return finalizeNarratives(baseCities, undefined)
+  logNarrativeMergeSummary(finalCities.length)
+  return finalCities
 }
 
 export async function recommendCities(
