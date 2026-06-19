@@ -35,6 +35,28 @@ function sanitizeLockedCity(city: CityResult): CityResult {
   }
 }
 
+const FREE_SEARCH_LIMIT_MESSAGE =
+  'Free plan limit reached. Upgrade to Pro for unlimited searches.'
+
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  const realIp = req.headers.get('x-real-ip')
+  if (realIp) {
+    return realIp.trim()
+  }
+  return 'unknown'
+}
+
+function getSearchMonth(): string {
+  const now = new Date()
+  const year = now.getUTCFullYear()
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0')
+  return `${year}-${month}`
+}
+
 function normPriorities(p: UserPriorities): UserPriorities {
   const c = (x: unknown) => Math.max(1, Math.min(5, Math.round(Number(x) || 3)))
   return {
@@ -78,10 +100,41 @@ export async function POST(req: NextRequest) {
 
       if (plan === 'free' && searchesThisMonth >= 3) {
         return NextResponse.json(
-          { error: 'Free plan limit reached. Upgrade to Pro for unlimited searches.' },
+          { error: FREE_SEARCH_LIMIT_MESSAGE },
           { status: 403 }
         )
       }
+    }
+  }
+
+  if (!userId) {
+    const clientIp = getClientIp(req)
+    const month = getSearchMonth()
+
+    const { data: anonRow, error: readError } = await supabaseAdmin
+      .from('anonymous_searches')
+      .select('count')
+      .eq('ip', clientIp)
+      .eq('month', month)
+      .maybeSingle()
+
+    if (readError) {
+      console.error('anonymous_searches read error:', readError)
+      return NextResponse.json({ error: 'Could not verify search limit. Please try again.' }, { status: 500 })
+    }
+
+    const anonCount = anonRow?.count ?? 0
+    if (anonCount >= 3) {
+      return NextResponse.json({ error: FREE_SEARCH_LIMIT_MESSAGE }, { status: 403 })
+    }
+
+    const { error: upsertError } = await supabaseAdmin
+      .from('anonymous_searches')
+      .upsert({ ip: clientIp, month, count: anonCount + 1 }, { onConflict: 'ip,month' })
+
+    if (upsertError) {
+      console.error('anonymous_searches upsert error:', upsertError)
+      return NextResponse.json({ error: 'Could not record search limit. Please try again.' }, { status: 500 })
     }
   }
 
@@ -97,8 +150,8 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        const resultCount = resultCountForPlan(plan)
         const paid = isPaidPlan(plan)
+        const resultCount = plan === 'lifetime' ? 25 : resultCountForPlan(plan)
         // Free users only ever see ONE city in full, so we generate a small
         // detailed set instead of all 12 rich objects (the cause of the ~1 min
         // analyses). The locked grid is padded with cheap teasers below.

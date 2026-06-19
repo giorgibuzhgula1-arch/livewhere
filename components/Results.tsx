@@ -4,11 +4,14 @@ import { useState, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import CityCard from './CityCard'
+import CityComparison from './CityComparison'
+import LifetimeInsights from './LifetimeInsights'
 
 const CityModal = dynamic(() => import('./CityModal'), { ssr: false })
 import { CityResult } from '@/lib/types'
 import { getSiteUrl } from '@/lib/site-url'
 import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
+import { exportRetirementReport } from '@/lib/export-pdf'
 
 function buildShareLine(city: CityResult): string {
   return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
@@ -28,6 +31,11 @@ interface Props {
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
+const MAX_COMPARE_CITIES = 3
+
+function cityKey(city: CityResult): string {
+  return `${city.name}|${city.country}`
+}
 
 export default function Results({
   cities,
@@ -45,6 +53,9 @@ export default function Results({
   const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const [plan, setPlan] = useState<UserPlan>('free')
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [compareSelection, setCompareSelection] = useState<CityResult[]>([])
+  const [showComparison, setShowComparison] = useState(false)
   const shareCardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -56,6 +67,7 @@ export default function Results({
   }, [])
 
   const paid = isPaidPlan(plan)
+  const isLifetime = plan === 'lifetime'
   const locked = !paid
   const isUnlocked = (city: CityResult) => paid || !city.locked
   const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
@@ -85,6 +97,44 @@ export default function Results({
 
   function openShareUrl(url: string) {
     window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  async function handleDownloadPdf() {
+    if (pdfLoading) return
+    const exportCities = ordered.filter(isUnlocked)
+    if (exportCities.length === 0) return
+
+    setPdfLoading(true)
+    try {
+      const budget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? monthlyBudget : 0
+      await exportRetirementReport(exportCities, budget, { lifetime: true })
+    } catch (err) {
+      console.error('PDF export failed:', err)
+    } finally {
+      setPdfLoading(false)
+    }
+  }
+
+  function isCompareSelected(city: CityResult): boolean {
+    return compareSelection.some((c) => cityKey(c) === cityKey(city))
+  }
+
+  function toggleCompareSelection(city: CityResult) {
+    setCompareSelection((prev) => {
+      const key = cityKey(city)
+      if (prev.some((c) => cityKey(c) === key)) {
+        const next = prev.filter((c) => cityKey(c) !== key)
+        if (next.length < 2) setShowComparison(false)
+        return next
+      }
+      if (prev.length >= MAX_COMPARE_CITIES) return prev
+      return [...prev, city]
+    })
+  }
+
+  function clearCompareSelection() {
+    setCompareSelection([])
+    setShowComparison(false)
   }
 
   return (
@@ -207,6 +257,27 @@ export default function Results({
           )}
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {isLifetime && (
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={pdfLoading || ordered.filter(isUnlocked).length === 0}
+              style={{
+                background: pdfLoading ? 'rgba(200,240,90,0.08)' : 'rgba(200,240,90,0.1)',
+                border: '1px solid rgba(200,240,90,0.35)',
+                color: '#c8f05a',
+                padding: '10px 18px',
+                borderRadius: 10,
+                fontSize: 13,
+                cursor: pdfLoading ? 'wait' : 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                opacity: pdfLoading || ordered.filter(isUnlocked).length === 0 ? 0.7 : 1,
+              }}
+            >
+              {pdfLoading ? 'Generating PDF…' : 'Download PDF Report'}
+            </button>
+          )}
           {top && paid && (
             <button
               type="button"
@@ -389,15 +460,109 @@ export default function Results({
       </div>
       )}
 
+      {paid && (
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 20,
+        }}>
+          <span style={{
+            fontSize: 13,
+            color: 'rgba(240,237,232,0.55)',
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
+            Compare cities — select up to {MAX_COMPARE_CITIES} unlocked matches
+          </span>
+          {compareSelection.length >= 2 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowComparison(true)}
+                style={{
+                  background: 'rgba(200,240,90,0.1)',
+                  border: '1px solid rgba(200,240,90,0.35)',
+                  color: '#c8f05a',
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 600,
+                }}
+              >
+                Compare ({compareSelection.length})
+              </button>
+              <button
+                type="button"
+                onClick={clearCompareSelection}
+                style={{
+                  background: '#1a1a26',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  color: 'rgba(240,237,232,0.45)',
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Clear selection
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Cities grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
-        {filtered.map((city, i) => (
+        {filtered.map((city, i) => {
+          const compareSelected = isCompareSelected(city)
+          const compareDisabled =
+            paid &&
+            isUnlocked(city) &&
+            !compareSelected &&
+            compareSelection.length >= MAX_COMPARE_CITIES
+
+          return (
           <motion.div
-            key={city.name}
+            key={`${city.name}|${city.country}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
+            style={{ position: 'relative' }}
           >
+            {paid && isUnlocked(city) && (
+              <button
+                type="button"
+                aria-pressed={compareSelected}
+                aria-label={`${compareSelected ? 'Remove' : 'Add'} ${city.name} from comparison`}
+                disabled={compareDisabled}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleCompareSelection(city)
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  zIndex: 2,
+                  background: compareSelected ? 'rgba(200,240,90,0.18)' : 'rgba(26,26,38,0.92)',
+                  border: compareSelected ? '1px solid #c8f05a' : '1px solid rgba(255,255,255,0.12)',
+                  color: compareSelected ? '#c8f05a' : 'rgba(240,237,232,0.7)',
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: compareDisabled ? 'not-allowed' : 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                  opacity: compareDisabled ? 0.45 : 1,
+                }}
+              >
+                {compareSelected ? 'Selected' : 'Compare'}
+              </button>
+            )}
             <CityCard
               city={city}
               rank={i + 1}
@@ -408,8 +573,20 @@ export default function Results({
               }}
             />
           </motion.div>
-        ))}
+          )
+        })}
       </div>
+
+      {paid && showComparison && compareSelection.length >= 2 && (
+        <CityComparison cities={compareSelection} currency={currency} />
+      )}
+
+      {isLifetime && (
+        <LifetimeInsights
+          cities={ordered.filter(isUnlocked)}
+          budget={typeof monthlyBudget === 'number' && monthlyBudget > 0 ? monthlyBudget : 0}
+        />
+      )}
 
       {selectedCity && (
         <CityModal

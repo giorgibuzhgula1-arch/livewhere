@@ -36,7 +36,14 @@ export async function POST(req: NextRequest) {
 
     const { userId, email, checkoutType = 'pro' } = payload
 
-    if (checkoutType === 'pro' && (!userId || !email)) {
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'You must be signed in to complete this purchase.' },
+        { status: 400 }
+      )
+    }
+
+    if (checkoutType === 'pro' && !email) {
       return NextResponse.json({ error: 'Missing userId or email for pro checkout' }, { status: 400 })
     }
 
