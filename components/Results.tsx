@@ -155,7 +155,7 @@ export default function Results({
               padding: '14px 16px',
             }}>
               <div style={{
-                fontSize: 17,
+                fontSize: 21,
                 fontWeight: 700,
                 color: '#c8f05a',
                 marginBottom: 12,
