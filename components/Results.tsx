@@ -162,7 +162,7 @@ export default function Results({
                 fontFamily: "'DM Sans', sans-serif",
                 letterSpacing: 0.2,
               }}>
-                Share your results — it&apos;s free
+                Share your results - help a friend plan their move
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 <button
