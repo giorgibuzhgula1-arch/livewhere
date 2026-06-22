@@ -5,6 +5,7 @@ import { useState } from 'react'
 // 2024 national average (~$6,545/mo per consumer unit) via MERIC/C2ER 2025 state index
 // (national average = 100), normalized to single-retiree household baseline (~$3,720 at index 100).
 const US_STATE_COSTS: Record<string, number> = {
+  'United Kingdom': 3500,
   'Alabama': 3300,
   'Alaska': 4600,
   'Arizona': 3700,
@@ -111,8 +112,13 @@ function Flag({ flag }: { flag: string }) {
   return <span style={flagStyle}>{flag}</span>
 }
 
-export default function SavingsCalculator() {
-  const [state, setState] = useState('Florida')
+export default function SavingsCalculator({
+  defaultLocation = 'Florida',
+}: {
+  defaultLocation?: string
+}) {
+  const resolvedDefault = US_STATE_COSTS[defaultLocation] ? defaultLocation : 'Florida'
+  const [state, setState] = useState(resolvedDefault)
   const [destination, setDestination] = useState('Portugal')
   const [destOpen, setDestOpen] = useState(false)
 
@@ -167,10 +173,10 @@ export default function SavingsCalculator() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left' }}>
           <label style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(240,237,232,0.45)' }}>
-            Current state
+            Current location
           </label>
           <select value={state} onChange={(e) => setState(e.target.value)} style={selectStyle}>
-            {Object.keys(US_STATE_COSTS).map((s) => (
+            {[...Object.keys(US_STATE_COSTS)].sort((a, b) => a.localeCompare(b)).map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
