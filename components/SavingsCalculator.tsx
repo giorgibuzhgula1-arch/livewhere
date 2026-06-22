@@ -1,11 +1,15 @@
 'use client'
 import { useState } from 'react'
 
-// Monthly cost of living ($) by state — scaled from BLS Consumer Expenditure Survey
+const COUNTRY_LOCATIONS = ['United Kingdom', 'Australia', 'Canada'] as const
+
+// Monthly cost of living ($) by location — US states scaled from BLS Consumer Expenditure Survey
 // 2024 national average (~$6,545/mo per consumer unit) via MERIC/C2ER 2025 state index
 // (national average = 100), normalized to single-retiree household baseline (~$3,720 at index 100).
 const US_STATE_COSTS: Record<string, number> = {
   'United Kingdom': 3500,
+  'Australia': 3800,
+  'Canada': 3200,
   'Alabama': 3300,
   'Alaska': 4600,
   'Arizona': 3700,
@@ -176,9 +180,20 @@ export default function SavingsCalculator({
             Current location
           </label>
           <select value={state} onChange={(e) => setState(e.target.value)} style={selectStyle}>
-            {[...Object.keys(US_STATE_COSTS)].sort((a, b) => a.localeCompare(b)).map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {COUNTRY_LOCATIONS.map((location) => (
+              <option key={location} value={location}>
+                {location}
+              </option>
             ))}
+            <option disabled>──────────────</option>
+            {Object.keys(US_STATE_COSTS)
+              .filter((s) => !COUNTRY_LOCATIONS.includes(s as (typeof COUNTRY_LOCATIONS)[number]))
+              .sort((a, b) => a.localeCompare(b))
+              .map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
           </select>
         </div>
 
