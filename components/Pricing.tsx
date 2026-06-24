@@ -54,12 +54,12 @@ export default function Pricing({ onUpgrade }: Props) {
       btn: 'Get started free', style: 'ghost', popular: false
     },
     {
-      name: 'Retirement Report', price: '$149', originalPrice: '$299', period: 'one-time payment', sale: true,
+      name: 'Retirement Report', price: '$39', originalPrice: '$299', period: 'one-time payment', sale: true,
       features: ['Top 12 cities full analysis', 'Real tax calculator', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
       btn: loadingPlan === 'pro' ? 'Loading...' : 'Get My Retirement Plan', style: 'primary', popular: true
     },
     {
-      name: 'Retirement Relocation Blueprint', price: '$499', originalPrice: '$1000', period: 'one-time payment', sale: true,
+      name: 'Retirement Relocation Blueprint', price: '$99', originalPrice: '$1000', period: 'one-time payment', sale: true,
       features: [
         'Top 25 cities full analysis',
         '10-Year Retirement Projection',
@@ -70,7 +70,7 @@ export default function Pricing({ onUpgrade }: Props) {
         'Unlimited re-runs',
         'Priority support',
       ],
-      btn: loadingPlan === 'report' ? 'Loading...' : 'Get Retirement Relocation Blueprint — $499', style: 'ghost', popular: false
+      btn: loadingPlan === 'report' ? 'Loading...' : 'Get Retirement Relocation Blueprint — $99', style: 'ghost', popular: false
     },
   ]
 
