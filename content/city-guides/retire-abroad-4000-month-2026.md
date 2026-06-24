@@ -20,7 +20,7 @@ At $5,000, you have options everywhere — including Western Europe's most expen
 
 At $4,000, you still have excellent options — but destination choice starts to matter.
 
-At $3,000, you're limiting yourself to specific cities in specific countries, and the margin for error shrinks fast.
+At $3,000, you're limiting yourself to specific cities in specific countries, and the margin for error shrinks fast. To see where that budget goes furthest, [Click here](/city-guides/where-does-3000-go-furthest-2026).
 
 $4,000 sits at a threshold where smart planning creates genuine financial freedom, and poor planning creates quiet pressure that builds over years. That's why this guide exists — not to tell you where things are cheapest, but where your money builds the strongest long-term outcome.
 
@@ -166,7 +166,7 @@ $4,000 feels like a strong retirement income. Globally, it is one. But context c
 
 The hidden risk isn't the wrong country — it's the wrong city within the right country. A retiree who moves to central Lisbon and pays $1,800 for a two-bedroom sees $2,000+ in monthly savings. A retiree who moves to coastal Cascais and pays $2,400 for the same apartment sees the math flip — and in five years, that compounding difference becomes significant.
 
-**Example:** Taipei leaves $2,100/month in savings. A poorly planned move to a tourist-heavy resort town in the same region might leave $500. Same income. Completely different financial future.
+**Example:** Taipei leaves $2,100/month in savings. A poorly planned move to a tourist-heavy resort town in the same region might leave $500. Same income. Completely different financial future. [Click here](/city-guides/cheapest-countries-to-retire).
 
 This is why analyzing the [cheapest countries to retire in 2026](/city-guides/cheapest-countries-to-retire) matters — not for cheap living, but for strategic positioning.
 
@@ -178,7 +178,7 @@ This is why analyzing the [cheapest countries to retire in 2026](/city-guides/ch
 
 **Monthly savings buffer:** At $4,000/month, aim for at least $1,200–$1,500 in monthly savings. This covers annual flights home, unexpected repairs, and medical expenses without touching reserves.
 
-**Long-term visa stability:** Some programs change. Malaysia's MM2H tightened. Portugal's NHR restructured. Always have a backup visa pathway or understand what relocation would look like if rules shift.
+**Long-term visa stability:** Some programs change. Malaysia's MM2H tightened. Portugal's NHR restructured. Always have a backup visa pathway or understand what relocation would look like if rules shift. [Click here](/city-guides/safest-countries-to-retire).
 
 Long-term visa stability is also why many retirees cross-reference the [safest countries to retire in 2026](/city-guides/safest-countries-to-retire) — stability and safety often go hand in hand.
 
@@ -199,7 +199,7 @@ $4,000 is enough to build a genuinely strong retirement abroad. But it requires 
 A $4,000 retirement income can absolutely work abroad — as this guide shows. But income level changes the equation significantly:
 
 - At $3,000/month, destination options narrow. Southeast Asia and Latin America remain strong, but European options become more constrained.
-- At $5,000/month, Western European capitals open up — including Paris, Amsterdam, and central Barcelona — without financial pressure.
+- At $5,000/month, Western European capitals open up — including Paris, Amsterdam, and central Barcelona — without financial pressure. [Click here](/city-guides/where-does-5000-go-furthest-2026).
 
 Understanding where your income sits in the global retirement landscape is the foundation of good planning.
 
