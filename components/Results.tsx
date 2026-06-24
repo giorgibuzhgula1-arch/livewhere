@@ -594,6 +594,8 @@ export default function Results({
           monthlyBudget={visaMonthlyBudget}
           currency={currency}
           lifestyle={lifestyle}
+          plan={plan}
+          onUnlock={onUnlockPro}
           onClose={() => setSelectedCity(null)}
         />
       )}

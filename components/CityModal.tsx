@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CityResult } from '@/lib/types'
+import { isPaidPlan, type UserPlan } from '@/lib/plan'
 import VisaAnalysis from './VisaAnalysis'
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
   monthlyBudget?: number
   currency?: string
   lifestyle?: string[]
+  plan?: UserPlan
+  onUnlock?: () => void
 }
 
 const ACCENT_LIME = '#c8f05a'
@@ -104,7 +107,88 @@ function NarrativeSection({ icon, title, children }: { icon: string; title: stri
 function fmt(n: number) { return '$' + n.toLocaleString() }
 function getColor(s: number) { return s >= 80 ? '#c8f05a' : s >= 65 ? '#f0c85a' : '#f05a8c' }
 
-export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: Props) {
+function FinancialBreakdown({
+  city,
+  paid,
+  onUnlock,
+}: {
+  city: CityResult
+  paid: boolean
+  onUnlock?: () => void
+}) {
+  if (paid) {
+    return (
+      <div style={narrativeCardStyle}>
+        <div style={narrativeTitleStyle}>
+          💰 Financial Breakdown
+        </div>
+        {[
+          { key: 'Effective tax rate', val: `${city.taxRate}%`, vc: undefined },
+          { key: 'Take-home / month', val: fmt(city.takeHomeMonthly), vc: '#c8f05a' },
+          { key: 'Monthly living costs', val: `- ${fmt(city.monthlyCost)}`, vc: '#f05a8c' },
+          { key: 'Monthly savings', val: `${city.monthlySavings > 0 ? '+' : ''}${fmt(city.monthlySavings)}`, vc: city.monthlySavings > 0 ? '#c8f05a' : '#f05a8c' },
+        ].map(({ key, val, vc }) => (
+          <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', fontSize: 14 }}>
+            <span style={{ color: 'rgba(240,237,232,0.45)' }}>{key}</span>
+            <span style={{ fontWeight: 600, color: vc }}>{val}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div style={narrativeCardStyle}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={narrativeTitleStyle}>💰 Financial Breakdown</div>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase',
+          color: 'rgba(240,237,232,0.55)', background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: 6,
+        }}>
+          🔒 Pro
+        </span>
+      </div>
+      <div aria-hidden style={{ filter: 'blur(7px)', opacity: 0.25, userSelect: 'none', pointerEvents: 'none', marginBottom: 16 }}>
+        {[
+          { key: 'Effective tax rate', val: '00%' },
+          { key: 'Take-home / month', val: '$0,000' },
+          { key: 'Monthly living costs', val: '- $0,000' },
+          { key: 'Monthly savings', val: '+ $0,000' },
+        ].map(({ key, val }) => (
+          <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', fontSize: 14 }}>
+            <span style={{ color: 'rgba(240,237,232,0.45)' }}>{key}</span>
+            <span style={{ fontWeight: 600 }}>{val}</span>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(240,237,232,0.55)', margin: '0 0 16px' }}>
+        Upgrade to see tax rates, take-home pay, and monthly savings for this city.
+      </p>
+      <button
+        type="button"
+        onClick={onUnlock}
+        style={{
+          width: '100%',
+          background: '#c8f05a',
+          color: '#0a0a0f',
+          border: 'none',
+          padding: '12px 18px',
+          borderRadius: 10,
+          fontSize: 13,
+          fontWeight: 700,
+          cursor: 'pointer',
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        Get My Retirement Plan — $39
+      </button>
+    </div>
+  )
+}
+
+export default function CityModal({ city, onClose, monthlyBudget, lifestyle, plan = 'free', onUnlock }: Props) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
@@ -171,23 +255,7 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle }: P
               {city.aiInsight}
             </div>
 
-            {/* Finance */}
-            <div style={narrativeCardStyle}>
-              <div style={narrativeTitleStyle}>
-                💰 Financial Breakdown
-              </div>
-              {[
-                { key: 'Effective tax rate', val: `${city.taxRate}%`, vc: undefined },
-                { key: 'Take-home / month', val: fmt(city.takeHomeMonthly), vc: '#c8f05a' },
-                { key: 'Monthly living costs', val: `- ${fmt(city.monthlyCost)}`, vc: '#f05a8c' },
-                { key: 'Monthly savings', val: `${city.monthlySavings > 0 ? '+' : ''}${fmt(city.monthlySavings)}`, vc: city.monthlySavings > 0 ? '#c8f05a' : '#f05a8c' },
-              ].map(({ key, val, vc }) => (
-                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', fontSize: 14 }}>
-                  <span style={{ color: 'rgba(240,237,232,0.45)' }}>{key}</span>
-                  <span style={{ fontWeight: 600, color: vc }}>{val}</span>
-                </div>
-              ))}
-            </div>
+            <FinancialBreakdown city={city} paid={isPaidPlan(plan)} onUnlock={onUnlock} />
 
             {city.visa && (
               <NarrativeSection icon="🛂" title="Visa situation">
