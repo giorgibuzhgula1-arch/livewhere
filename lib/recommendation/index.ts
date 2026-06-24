@@ -393,15 +393,29 @@ function normPrioritiesFromBody(body: AnalyzeRequest): UserPriorities {
   }
 }
 
+function limitCitiesPerCountry(results: ScoreCityResult[], maxPerCountry: number): ScoreCityResult[] {
+  const countryCounts = new Map<string, number>()
+  const limited: ScoreCityResult[] = []
+  for (const result of results) {
+    const country = result.city.country
+    const seen = countryCounts.get(country) ?? 0
+    if (seen >= maxPerCountry) continue
+    countryCounts.set(country, seen + 1)
+    limited.push(result)
+  }
+  return limited
+}
+
 function rankSurvivorsForUser(body: AnalyzeRequest, count: number): ScoreCityResult[] {
   const priorities = normPrioritiesFromBody(body)
-  return rankCities(CITIES, {
-    monthlyBudget: body.monthlyBudget,
-    priorities,
-    lifestyle: body.lifestyle ?? [],
-  })
-    .filter((r) => !r.eliminated)
-    .slice(0, count)
+  return limitCitiesPerCountry(
+    rankCities(CITIES, {
+      monthlyBudget: body.monthlyBudget,
+      priorities,
+      lifestyle: body.lifestyle ?? [],
+    }).filter((r) => !r.eliminated),
+    2,
+  ).slice(0, count)
 }
 
 function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: number): CityResult {
