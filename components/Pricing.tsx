@@ -55,7 +55,7 @@ export default function Pricing({ onUpgrade }: Props) {
     },
     {
       name: 'Retirement Report', price: '$39', originalPrice: '$99', period: 'one-time payment', sale: true, limitedOffer: true,
-      features: ['Top 12 cities full analysis', 'Real tax calculator', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
+      features: ['Top 12 cities full analysis', 'Tax rates & savings breakdown per city', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
       btn: loadingPlan === 'pro' ? 'Loading...' : 'Get My Retirement Plan', style: 'primary', popular: true
     },
     {
