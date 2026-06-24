@@ -54,12 +54,12 @@ export default function Pricing({ onUpgrade }: Props) {
       btn: 'Get started free', style: 'ghost', popular: false
     },
     {
-      name: 'Retirement Report', price: '$39', originalPrice: '$299', period: 'one-time payment', sale: true,
+      name: 'Retirement Report', price: '$39', originalPrice: '$99', period: 'one-time payment', sale: true, limitedOffer: true,
       features: ['Top 12 cities full analysis', 'Real tax calculator', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
       btn: loadingPlan === 'pro' ? 'Loading...' : 'Get My Retirement Plan', style: 'primary', popular: true
     },
     {
-      name: 'Retirement Relocation Blueprint', price: '$99', originalPrice: '$1000', period: 'one-time payment', sale: true,
+      name: 'Retirement Relocation Blueprint', price: '$99', originalPrice: '$249', period: 'one-time payment', sale: true, limitedOffer: true,
       features: [
         'Top 25 cities full analysis',
         '10-Year Retirement Projection',
@@ -86,7 +86,20 @@ export default function Pricing({ onUpgrade }: Props) {
           const isLoading = (isProPlan && loadingPlan === 'pro') || (isLifetimePlan && loadingPlan === 'report')
           return (
             <div key={plan.name} style={{ background: plan.popular ? 'rgba(200,240,90,0.05)' : '#12121a', border: plan.popular ? '1px solid rgba(200,240,90,0.3)' : '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32, textAlign: 'left', position: 'relative', zIndex: 1 }}>
-              {plan.popular && <div style={{ background: '#c8f05a', color: '#0a0a0f', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', marginBottom: 20, textTransform: 'uppercase', letterSpacing: 0.5 }}>Most Popular</div>}
+              {(plan.popular || plan.limitedOffer) && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                  {plan.popular && (
+                    <div style={{ background: '#c8f05a', color: '#0a0a0f', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      Most Popular
+                    </div>
+                  )}
+                  {plan.limitedOffer && (
+                    <div style={{ background: 'rgba(240,90,140,0.15)', color: '#f05a8c', border: '1px solid rgba(240,90,140,0.35)', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      Limited Time Offer
+                    </div>
+                  )}
+                </div>
+              )}
               <div style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', marginBottom: 8, fontWeight: 500 }}>{plan.name}</div>
               {plan.sale && plan.originalPrice && (
                 <div style={{ marginBottom: 6 }}>
