@@ -35,7 +35,7 @@ export default function Hero({ onStart }: Props) {
       <h1
         style={{
           fontFamily: fontFamilySerif,
-          fontSize: 'clamp(47px, 7.2vw, 90px)',
+          fontSize: 'clamp(42px, 6.48vw, 81px)',
           fontWeight: 900, lineHeight: 0.95,
           letterSpacing: -2, marginBottom: 28
         }}
