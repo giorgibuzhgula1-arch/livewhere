@@ -29,7 +29,7 @@ export default function Hero({ onStart }: Props) {
         }}
       >
         <span style={{ width: 6, height: 6, background: '#c8f05a', borderRadius: '50%', display: 'inline-block' }} />
-        Discover where your retirement income buys the best life
+        The Retirement Intelligence Platform
       </motion.div>
 
       <h1
@@ -46,8 +46,7 @@ export default function Hero({ onStart }: Props) {
           transition={{ delay: 0.2 }}
           style={{ display: 'block' }}
         >
-          The Retirement Intelligence<br />
-          <span style={{ color: '#c8f05a' }}>Platform</span>
+          Find Out Which Country Could Save You $100,000+ During Retirement
         </motion.span>
         <motion.span
           initial={false}
@@ -64,7 +63,7 @@ export default function Hero({ onStart }: Props) {
             textAlign: 'center',
           }}
         >
-          Compare taxes, healthcare, cost of living and residency across 50+ countries worldwide.
+          Discover where your retirement savings could last years longer — and how much money you could save over the next decade.
         </motion.span>
         <motion.span
           initial={false}
@@ -81,7 +80,7 @@ export default function Hero({ onStart }: Props) {
             textAlign: 'center',
           }}
         >
-          See where your retirement income delivers the greatest purchasing power.
+          
         </motion.span>
       </h1>
 
