@@ -290,6 +290,19 @@ export default function SavingsCalculator({
               </div>
             ))}
           </div>
+          <h3
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 'clamp(32px, 4vw, 52px)',
+              fontWeight: 700,
+              lineHeight: 1.1,
+              margin: '32px 0 0',
+              textAlign: 'center',
+              color: '#f0ede8',
+            }}
+          >
+            What Could An Extra $228,960 Mean For Your Retirement?
+          </h3>
         </div>
       ) : (
         <div style={cardStyle}>
