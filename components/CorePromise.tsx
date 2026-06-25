@@ -38,7 +38,7 @@ export default function CorePromise() {
           viewport={{ once: true }}
           transition={{ delay: 0.08 }}
           style={{
-            fontSize: 15,
+            fontSize: 18,
             lineHeight: 1.7,
             color: 'rgba(240,237,232,0.6)',
             margin: '0 auto',
@@ -67,7 +67,7 @@ export default function CorePromise() {
             <li
               key={item}
               style={{
-                fontSize: 14,
+                fontSize: 17,
                 color: 'rgba(240,237,232,0.75)',
                 display: 'flex',
                 gap: 10,
