@@ -96,7 +96,7 @@ export default function Hero({ onStart }: Props) {
           fontWeight: 600, cursor: 'pointer', fontFamily: fontFamilySans,
           transition: 'all 0.2s'
         }}>
-          Get My Retirement Plan
+          Find My Best Retirement Countries
         </button>
         <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
           style={{
