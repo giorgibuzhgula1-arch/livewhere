@@ -7,7 +7,7 @@ import Hero from '@/components/Hero'
 import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
 import HowItWorks from '@/components/HowItWorks'
-import Testimonials from '@/components/Testimonials'
+import RetirementStatsBar from '@/components/RetirementStatsBar'
 import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
 
@@ -452,7 +452,7 @@ export default function HomePageClient({
           <div id="quiz">
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
-          <Testimonials />
+          <RetirementStatsBar />
           <HowItWorks />
           <Pricing onUpgrade={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('signup') }} />
         </>
