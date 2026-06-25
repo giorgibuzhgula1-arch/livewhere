@@ -301,7 +301,7 @@ export default function SavingsCalculator({
               color: '#f0ede8',
             }}
           >
-            What Could An Extra $228,960 Mean For Your Retirement?
+            What Could An Extra ${tenYearSavings.toLocaleString()} Mean For Your Retirement?
           </h3>
         </div>
       ) : (
