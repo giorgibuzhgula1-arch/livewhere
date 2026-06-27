@@ -59,7 +59,7 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
         }}
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: 32,
+          fontSize: 36,
           fontWeight: 900,
           color: '#f0ede8',
           textDecoration: 'none',
