@@ -72,15 +72,6 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <Link
-          href="/news"
-          style={{
-            fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-          }}
-        >
-          News
-        </Link>
-        <Link
           href="/city-guides"
           style={{
             fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
