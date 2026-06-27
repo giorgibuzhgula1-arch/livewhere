@@ -77,12 +77,12 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
         <span
           style={{
             fontFamily: "'DM Sans', sans-serif",
-            fontSize: 10,
+            fontSize: 13,
             fontWeight: 500,
             letterSpacing: 0.3,
             lineHeight: 1.3,
-            color: 'rgba(240,237,232,0.45)',
-            maxWidth: 220,
+            color: '#ffffff',
+            whiteSpace: 'nowrap',
           }}
         >
           The World&apos;s Largest Retirement Intelligence Database
