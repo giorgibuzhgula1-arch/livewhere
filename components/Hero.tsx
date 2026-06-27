@@ -29,7 +29,7 @@ export default function Hero({ onStart }: Props) {
         }}
       >
         <span style={{ width: 6, height: 6, background: '#c8f05a', borderRadius: '50%', display: 'inline-block' }} />
-        The Retirement Intelligence Platform
+        The World&apos;s Largest Retirement Intelligence Database
       </motion.div>
 
       <h1
