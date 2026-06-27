@@ -65,9 +65,28 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
           textDecoration: 'none',
           cursor: 'pointer',
           letterSpacing: -0.5,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 4,
         }}
       >
-        <span style={{ color: '#f0ede8' }}>Live</span><span style={{ color: '#c8f05a' }}>Where</span>
+        <span>
+          <span style={{ color: '#f0ede8' }}>Live</span><span style={{ color: '#c8f05a' }}>Where</span>
+        </span>
+        <span
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 10,
+            fontWeight: 500,
+            letterSpacing: 0.3,
+            lineHeight: 1.3,
+            color: 'rgba(240,237,232,0.45)',
+            maxWidth: 220,
+          }}
+        >
+          The World&apos;s Largest Retirement Intelligence Database
+        </span>
       </Link>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
