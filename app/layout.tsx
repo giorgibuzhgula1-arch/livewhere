@@ -7,7 +7,6 @@ import './globals.css'
 
 const GA_MEASUREMENT_ID = 'G-8BKJ3L5SQB'
 const CLARITY_PROJECT_ID = 'x4vqdz3sfo'
-const CRISP_WEBSITE_ID = '21955386-aa52-45a9-a036-2833b4534d80'
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -52,19 +51,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");
           `}
         </Script>
-        <Script id="crisp-chat" strategy="afterInteractive">
-          {`
-            window.$crisp=[];
-            window.CRISP_WEBSITE_ID="${CRISP_WEBSITE_ID}";
-            (function(){
-              d=document;
-              s=d.createElement("script");
-              s.src="https://client.crisp.chat/l.js";
-              s.async=1;
-              d.getElementsByTagName("head")[0].appendChild(s);
-            })();
-          `}
-        </Script>
+        <Script
+          src="https://code.tidio.co/epmebrwxqyubp902tcis4izbo59fnbly.js"
+          strategy="afterInteractive"
+          async
+        />
       </head>
       <body className={dmSans.className}>
         <div className="orb orb1" aria-hidden />
