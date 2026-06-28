@@ -85,16 +85,22 @@ function CityDetails({ city, color, showCompareLink = false }: { city: CityResul
           href={compareHrefForCity(city.name)}
           onClick={(e) => e.stopPropagation()}
           style={{
-            display: 'inline-block',
+            display: 'block',
+            width: '100%',
             marginTop: 14,
+            textAlign: 'center',
+            background: '#1a1a26',
+            border: '1px solid rgba(255,255,255,0.07)',
+            color: '#c8f05a',
+            padding: '10px 16px',
+            borderRadius: 10,
             fontSize: 13,
             fontWeight: 600,
-            color: '#c8f05a',
             textDecoration: 'none',
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Compare →
+          Compare
         </Link>
       )}
     </>

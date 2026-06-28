@@ -81,6 +81,15 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
           City Guides
         </Link>
         <Link
+          href="/compare"
+          style={{
+            fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+          }}
+        >
+          Compare Cities
+        </Link>
+        <Link
           href="/blog"
           style={{
             fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
