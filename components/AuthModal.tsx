@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { getSiteUrl } from '@/lib/site-url'
@@ -23,11 +23,27 @@ export default function AuthModal({
   onModeSwitch,
   googleOnly = false,
 }: Props) {
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFullName('')
+      setEmail('')
+      setPassword('')
+      setError(null)
+      setSuccess(false)
+      setLoading(false)
+    }
+  }, [isOpen])
+
+  function authRedirectOrigin() {
+    return typeof window !== 'undefined' ? window.location.origin : getSiteUrl()
+  }
 
   async function signInWithGoogle() {
     setLoading(true)
@@ -53,26 +69,65 @@ export default function AuthModal({
     }
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e?: FormEvent) {
+    e?.preventDefault()
     setLoading(true)
     setError(null)
+
+    const trimmedEmail = email.trim()
+    const trimmedName = fullName.trim()
+
     try {
       if (mode === 'signup') {
-        const { error: signUpError } = await supabase.auth.signUp({ email, password })
+        if (!trimmedName) {
+          throw new Error('Please enter your full name')
+        }
+        if (!trimmedEmail) {
+          throw new Error('Please enter your email')
+        }
+        if (password.length < 6) {
+          throw new Error('Password must be at least 6 characters')
+        }
+
+        const redirectTo = `${authRedirectOrigin()}/auth/callback?next=${encodeURIComponent('/')}`
+
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: trimmedEmail,
+          password,
+          options: {
+            data: { full_name: trimmedName },
+            emailRedirectTo: redirectTo,
+          },
+        })
         if (signUpError) throw signUpError
+
         trackSignUp('email')
+
+        if (data.session) {
+          onClose()
+          return
+        }
+
         setSuccess(true)
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+        if (!trimmedEmail) {
+          throw new Error('Please enter your email')
+        }
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password })
         if (signInError) throw signInError
         onClose()
-        // Session is stored by Supabase; parent resumes pending analysis on SIGNED_IN.
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Authentication failed')
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleModeSwitch() {
+    setError(null)
+    setSuccess(false)
+    onModeSwitch()
   }
 
   const inputStyle = {
@@ -235,49 +290,64 @@ export default function AuthModal({
                       <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
                     </div>
 
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      style={inputStyle}
-                    />
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                      style={inputStyle}
-                    />
+                    <form onSubmit={handleSubmit}>
+                      {mode === 'signup' && (
+                        <input
+                          type="text"
+                          name="fullName"
+                          autoComplete="name"
+                          placeholder="Full Name"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          style={inputStyle}
+                        />
+                      )}
+                      <input
+                        type="email"
+                        name="email"
+                        autoComplete="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        style={inputStyle}
+                      />
+                      <input
+                        type="password"
+                        name="password"
+                        autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        style={inputStyle}
+                      />
 
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={loading}
-                      style={{
-                        width: '100%',
-                        background: '#c8f05a',
-                        color: '#0a0a0f',
-                        border: 'none',
-                        padding: '16px',
-                        borderRadius: 12,
-                        fontSize: 15,
-                        fontWeight: 700,
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        opacity: loading ? 0.7 : 1,
-                        fontFamily: "'DM Sans', sans-serif",
-                        marginBottom: 16,
-                      }}
-                    >
-                      {loading ? 'Loading...' : mode === 'login' ? 'Sign in' : 'Create account'}
-                    </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          background: '#c8f05a',
+                          color: '#0a0a0f',
+                          border: 'none',
+                          padding: '16px',
+                          borderRadius: 12,
+                          fontSize: 15,
+                          fontWeight: 700,
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          opacity: loading ? 0.7 : 1,
+                          fontFamily: "'DM Sans', sans-serif",
+                          marginBottom: 16,
+                        }}
+                      >
+                        {loading ? 'Loading...' : mode === 'login' ? 'Sign in' : 'Create account'}
+                      </button>
+                    </form>
 
                     <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>
                       {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
                       <button
                         type="button"
-                        onClick={onModeSwitch}
+                        onClick={handleModeSwitch}
                         style={{
                           background: 'none',
                           border: 'none',
