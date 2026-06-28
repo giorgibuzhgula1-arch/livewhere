@@ -87,6 +87,46 @@ const METRIC_ROWS: MetricRow[] = [
     summaryKey: 'climate',
   },
   {
+    label: 'Airport Score',
+    getValue: (m) => m.airportScore,
+    format: (m) => formatScore(m.airportScore),
+    higherIsBetter: true,
+    isScore: true,
+    summaryKey: 'airport access',
+  },
+  {
+    label: 'Internet Score',
+    getValue: (m) => m.internetScore,
+    format: (m) => formatScore(m.internetScore),
+    higherIsBetter: true,
+    isScore: true,
+    summaryKey: 'internet',
+  },
+  {
+    label: 'Walkability Score',
+    getValue: (m) => m.walkabilityScore,
+    format: (m) => formatScore(m.walkabilityScore),
+    higherIsBetter: true,
+    isScore: true,
+    summaryKey: 'walkability',
+  },
+  {
+    label: 'Expat Community Score',
+    getValue: (m) => m.expatCommunityScore,
+    format: (m) => formatScore(m.expatCommunityScore),
+    higherIsBetter: true,
+    isScore: true,
+    summaryKey: 'expat community',
+  },
+  {
+    label: 'Visa Access Score',
+    getValue: (m) => m.visaAccessScore,
+    format: (m) => formatScore(m.visaAccessScore),
+    higherIsBetter: true,
+    isScore: true,
+    summaryKey: 'visa access',
+  },
+  {
     label: 'Overall Retirement Score',
     getValue: (m) => m.overallRetirementScore,
     format: (m) => formatScore(m.overallRetirementScore),
@@ -115,7 +155,20 @@ function buildOverallSummary(
     }
   }
 
-  const priority = ['cost', 'overall score', 'healthcare', 'safety', 'taxes', 'climate', 'rent']
+  const priority = [
+    'cost',
+    'overall score',
+    'healthcare',
+    'safety',
+    'taxes',
+    'climate',
+    'airport access',
+    'internet',
+    'walkability',
+    'expat community',
+    'visa access',
+    'rent',
+  ]
   const ordered = priority.filter((key) => highlights.includes(key))
   const rest = highlights.filter((key) => !ordered.includes(key))
   const parts = [...ordered, ...rest].slice(0, 3)
@@ -164,6 +217,8 @@ export default function CompareView() {
   }, [])
 
   const paid = isPaidPlan(plan)
+  console.log('plan:', plan)
+  console.log('isPaid:', isPaidPlan(plan))
   const showPaywall = !paid
 
   const cityAKey = useMemo(() => {

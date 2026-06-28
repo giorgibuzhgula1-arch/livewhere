@@ -8,6 +8,8 @@ import type { UserPriorities } from '@/lib/types'
 import { visaScoreForCountry } from '@/lib/visa-data'
 import type { CityRow } from '@/lib/recommendation/index'
 
+export type { CityRow } from '@/lib/recommendation/index'
+
 /** Monthly living cost estimate (rent + utilities, food, transport). */
 export const RENT_TO_LIVING_MULTIPLIER = 1.72
 
@@ -208,71 +210,6 @@ const FALLBACK_VISA_SCORE: Partial<Record<string, number>> = {
   Vietnam: 62,
 }
 
-/** Expat community strength by country (0–100), when city-level data is unavailable. */
-// LIMITATION: CITIES has no city-level expat metrics — scores use country tables + a
-// stability/safety/healthcare proxy fallback until richer data is available.
-const EXPAT_COUNTRY_SCORE: Partial<Record<string, number>> = {
-  Portugal: 88,
-  Spain: 85,
-  Mexico: 82,
-  Thailand: 80,
-  Colombia: 78,
-  Georgia: 76,
-  'Costa Rica': 74,
-  Panama: 74,
-  Malaysia: 72,
-  Estonia: 70,
-  Uruguay: 68,
-  Argentina: 66,
-  'United Arab Emirates': 82,
-  Cyprus: 72,
-  Malta: 75,
-  Greece: 70,
-  Italy: 68,
-  France: 65,
-  Germany: 62,
-  Netherlands: 70,
-  'United Kingdom': 78,
-  Ireland: 74,
-  Australia: 72,
-  'New Zealand': 68,
-  Canada: 70,
-  'United States': 65,
-  Brazil: 62,
-  Vietnam: 60,
-  Indonesia: 58,
-  Philippines: 62,
-  Japan: 55,
-  'South Korea': 52,
-  China: 48,
-  Russia: 45,
-  Egypt: 50,
-  Morocco: 55,
-  Tunisia: 52,
-  Kenya: 50,
-  'South Africa': 58,
-  Nigeria: 45,
-  India: 55,
-  Turkey: 62,
-  Poland: 58,
-  'Czech Republic': 60,
-  Hungary: 58,
-  Romania: 55,
-  Bulgaria: 52,
-  Croatia: 60,
-  Serbia: 55,
-  Slovenia: 54,
-  Switzerland: 68,
-  Austria: 62,
-  Belgium: 60,
-  Luxembourg: 58,
-  Denmark: 62,
-  Sweden: 60,
-  Norway: 58,
-  Finland: 55,
-  Iceland: 52,
-}
-
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n))
 }
@@ -303,10 +240,10 @@ export function isVeryHardResidency(country: string): boolean {
  * taxes — 100 − tax_rate × 2.5 (0% tax → 100; 40%+ → 0).
  * safety — city.safety (0–10) × 10.
  * housing — 100 when rent ≤ 20% of budget; linear to 0 when rent ≥ 60% of budget.
- * residency — effectiveVisaScore(country), already 0–100.
+ * residency — city.visaAccessScore (0–100).
  * climate — 100 at ideal °C (27 if warm_climate_year_round lifestyle tag, else 18); −4 pts/°C deviation.
  * stability — city.stability_score (World Bank WGI political stability percentile, 0–100).
- * expat — country expat table, else proxy from stability/safety/healthcare blend (informational).
+ * expat — city.expatCommunityScore (0–100).
  */
 export function computeSubScores(
   city: CityRow,
@@ -344,14 +281,7 @@ export function computeSubScores(
   const targetTemp = climateTargetTemp(lifestyle)
   const climateScore = clamp(100 - Math.abs(city.avg_temp - targetTemp) * 4, 0, 100)
 
-  const countryExpat = EXPAT_COUNTRY_SCORE[city.country]
-  const expatScore =
-    countryExpat ??
-    clamp(
-      ((city.stability_score * 0.04 + city.safety * 3 + city.healthcare * 2) / 9) * 10,
-      25,
-      75,
-    )
+  const expatScore = city.expatCommunityScore
 
   return {
     budget: Math.round(budgetScore),
@@ -359,10 +289,10 @@ export function computeSubScores(
     taxes: clamp(Math.round(100 - city.tax_rate * 2.5), 0, 100),
     safety: clamp(city.safety * 10, 0, 100),
     housing: Math.round(housingScore),
-    residency: Math.round(effectiveVisaScore(city.country)),
+    residency: Math.round(clamp(city.visaAccessScore, 0, 100)),
     stability: clamp(city.stability_score, 0, 100),
     climate: Math.round(climateScore),
-    expat: Math.round(expatScore),
+    expat: Math.round(clamp(expatScore, 0, 100)),
   }
 }
 
@@ -417,8 +347,8 @@ export function scoreCity(city: CityRow, userInput: ScoreCityUserInput): ScoreCi
   const costOfLiving = estimatedMonthlyCost(city.rent_usd)
   const healthcareScore = city.healthcare * 10
   const safetyScore = city.safety * 10
-  const residencyScore = effectiveVisaScore(city.country)
-  const veryHardResidency = isVeryHardResidency(city.country)
+  const residencyScore = city.visaAccessScore
+  const veryHardResidency = residencyScore < VERY_HARD_RESIDENCY_THRESHOLD
 
   const eliminationReasons: EliminationReason[] = []
 

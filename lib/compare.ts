@@ -29,6 +29,11 @@ export interface CityCompareMetrics {
   safetyScore: number
   taxScore: number
   climateScore: number
+  airportScore: number
+  internetScore: number
+  walkabilityScore: number
+  expatCommunityScore: number
+  visaAccessScore: number
   overallRetirementScore: number
 }
 
@@ -95,6 +100,11 @@ export function getCityCompareMetrics(city: CityRow): CityCompareMetrics {
     safetyScore: subScores.safety,
     taxScore: subScores.taxes,
     climateScore: subScores.climate,
+    airportScore: city.airportScore,
+    internetScore: city.internetScore,
+    walkabilityScore: city.walkabilityScore,
+    expatCommunityScore: city.expatCommunityScore,
+    visaAccessScore: city.visaAccessScore,
     overallRetirementScore: weightedOverallScore(subScores, weights),
   }
 }
