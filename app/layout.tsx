@@ -7,6 +7,7 @@ import './globals.css'
 
 const GA_MEASUREMENT_ID = 'G-8BKJ3L5SQB'
 const CLARITY_PROJECT_ID = 'x4vqdz3sfo'
+const CRISP_WEBSITE_ID = '21955386-aa52-45a9-a036-2833b4534d80'
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -49,6 +50,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
               y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
             })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");
+          `}
+        </Script>
+        <Script id="crisp-chat" strategy="afterInteractive">
+          {`
+            window.$crisp=[];
+            window.CRISP_WEBSITE_ID="${CRISP_WEBSITE_ID}";
+            (function(){
+              d=document;
+              s=d.createElement("script");
+              s.src="https://client.crisp.chat/l.js";
+              s.async=1;
+              d.getElementsByTagName("head")[0].appendChild(s);
+            })();
           `}
         </Script>
       </head>
