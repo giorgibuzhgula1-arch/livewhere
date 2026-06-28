@@ -12,7 +12,6 @@ import {
   type CityCompareMetrics,
 } from '@/lib/compare'
 import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
-import { supabase } from '@/lib/supabase'
 import styles from './compare.module.css'
 
 function fmtUsd(n: number): string {
@@ -152,35 +151,20 @@ function WinnerBadge({ result }: { result: RowWinner }) {
 export default function CompareView() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [authReady, setAuthReady] = useState(false)
-  const [loggedIn, setLoggedIn] = useState(false)
   const [plan, setPlan] = useState<UserPlan>('free')
 
   useEffect(() => {
     let cancelled = false
-
-    async function loadAccess() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (cancelled) return
-      setLoggedIn(Boolean(user))
-      setPlan(await fetchUserPlan())
-      setAuthReady(true)
-    }
-
-    void loadAccess()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      void loadAccess()
+    void fetchUserPlan().then((p) => {
+      if (!cancelled) setPlan(p)
     })
-
     return () => {
       cancelled = true
-      subscription.unsubscribe()
     }
   }, [])
 
-  const hasAccess = authReady && loggedIn && isPaidPlan(plan)
-  const showPaywall = !hasAccess
+  const paid = isPaidPlan(plan)
+  const showPaywall = !paid
 
   const cityAKey = useMemo(() => {
     const query = searchParams.get('cityA')
