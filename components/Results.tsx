@@ -568,6 +568,7 @@ export default function Results({
               rank={i + 1}
               locked={!isUnlocked(city)}
               onUnlock={onUnlockPro}
+              showCompareLink={isUnlocked(city)}
               onClick={() => {
                 if (isUnlocked(city)) setSelectedCity(city)
               }}

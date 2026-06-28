@@ -1,6 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { CityResult } from '@/lib/types'
+import { compareHrefForCity } from '@/lib/compare'
 import { visaScoreForCountry, visaScoreColor } from '@/lib/visa-data'
 
 interface Props {
@@ -9,6 +11,8 @@ interface Props {
   onClick: () => void
   locked?: boolean
   onUnlock?: () => void
+  /** When set, show a link to the /compare page with this city pre-selected. */
+  showCompareLink?: boolean
 }
 
 function getScoreColor(score: number) {
@@ -35,7 +39,7 @@ function cardShellStyle(rank: number, cursor: string) {
   }
 }
 
-function CityDetails({ city, color }: { city: CityResult; color: string }) {
+function CityDetails({ city, color, showCompareLink = false }: { city: CityResult; color: string; showCompareLink?: boolean }) {
   return (
     <>
       <div style={{
@@ -76,6 +80,23 @@ function CityDetails({ city, color }: { city: CityResult; color: string }) {
         ))}
         <VisaBadge country={city.country} />
       </div>
+      {showCompareLink && (
+        <Link
+          href={compareHrefForCity(city.name)}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            display: 'inline-block',
+            marginTop: 14,
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#c8f05a',
+            textDecoration: 'none',
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          Compare →
+        </Link>
+      )}
     </>
   )
 }
@@ -98,7 +119,7 @@ function VisaBadge({ country }: { country: string }) {
   )
 }
 
-export default function CityCard({ city, rank, onClick, locked = false, onUnlock }: Props) {
+export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false }: Props) {
   const color = getScoreColor(city.score)
 
   if (locked) {
@@ -160,7 +181,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 20px 40px rgba(0,0,0,0.4)' }}
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
     >
-      <CityDetails city={city} color={color} />
+      <CityDetails city={city} color={color} showCompareLink={showCompareLink} />
     </div>
   )
 }

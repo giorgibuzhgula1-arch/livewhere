@@ -8,6 +8,7 @@ function shouldSkipAuth(pathname: string): boolean {
   if (pathname.startsWith('/blog')) return true
   if (pathname.startsWith('/news')) return true
   if (pathname.startsWith('/city-guides')) return true
+  if (pathname.startsWith('/compare')) return true
   if (pathname.startsWith('/cities')) return true
   if (pathname.startsWith('/affiliates')) return true
   if (pathname.startsWith('/admin')) return true
