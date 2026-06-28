@@ -83,11 +83,37 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
         <Link
           href="/compare"
           style={{
-            fontSize: 13, color: 'rgba(240,237,232,0.6)', textDecoration: 'none',
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 13,
+            color: 'rgba(200,240,90,0.85)',
+            textDecoration: 'none',
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 600,
+            padding: '5px 12px',
+            borderRadius: 20,
+            background: 'rgba(200,240,90,0.06)',
+            border: '1px solid rgba(200,240,90,0.18)',
           }}
         >
           Compare Cities
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: 0.4,
+              textTransform: 'uppercase',
+              color: '#c8f05a',
+              background: 'rgba(200,240,90,0.12)',
+              border: '1px solid rgba(200,240,90,0.22)',
+              padding: '2px 5px',
+              borderRadius: 6,
+              lineHeight: 1.2,
+            }}
+          >
+            New
+          </span>
         </Link>
         <Link
           href="/blog"
