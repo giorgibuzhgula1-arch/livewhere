@@ -111,14 +111,6 @@ const METRIC_ROWS: MetricRow[] = [
     summaryKey: 'walkability',
   },
   {
-    label: 'Expat Community Score',
-    getValue: (m) => m.expatCommunityScore,
-    format: (m) => formatScore(m.expatCommunityScore),
-    higherIsBetter: true,
-    isScore: true,
-    summaryKey: 'expat community',
-  },
-  {
     label: 'Visa Access Score',
     getValue: (m) => m.visaAccessScore,
     format: (m) => formatScore(m.visaAccessScore),
@@ -165,7 +157,6 @@ function buildOverallSummary(
     'airport access',
     'internet',
     'walkability',
-    'expat community',
     'visa access',
     'rent',
   ]

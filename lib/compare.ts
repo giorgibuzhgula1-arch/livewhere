@@ -1,25 +1,9 @@
 import { CITIES, type CityRow } from '@/lib/recommendation/index'
 import {
-  computeAppliedWeights,
-  computeSubScores,
-  estimatedMonthlyCost,
-  type ScoreFactorKey,
-} from '@/lib/recommendation/scoreCity'
-import type { UserPriorities } from '@/lib/types'
-
-/** Reference budget for neutral retirement scores on the compare page. */
-export const COMPARE_REFERENCE_BUDGET = 4000
-
-const DEFAULT_PRIORITIES: UserPriorities = {
-  tax: 3,
-  housing: 3,
-  climate: 3,
-  health: 3,
-  stability: 3,
-  safety: 3,
-  expat_community: 3,
-  visa_residency: 3,
-}
+  COMPARE_DATA_BY_KEY,
+  COMPARE_DATA_BY_NAME,
+  type CompareCityRecord,
+} from '@/data/compareData'
 
 export interface CityCompareMetrics {
   city: CityRow
@@ -66,46 +50,30 @@ export function findCityByQuery(query: string): CityRow | undefined {
   return matches[0]
 }
 
-function weightedOverallScore(
-  subScores: ReturnType<typeof computeSubScores>,
-  weights: ReturnType<typeof computeAppliedWeights>,
-): number {
-  const keys: ScoreFactorKey[] = [
-    'budget',
-    'healthcare',
-    'taxes',
-    'safety',
-    'housing',
-    'residency',
-    'stability',
-    'climate',
-  ]
-  let total = 0
-  for (const key of keys) {
-    total += subScores[key] * weights[key]
-  }
-  return Math.round((total / 100) * 10) / 10
+function compareRecordForCity(city: CityRow): CompareCityRecord | undefined {
+  return COMPARE_DATA_BY_KEY[cityRowKey(city)] ?? COMPARE_DATA_BY_NAME[city.name.toLowerCase()]
 }
 
 export function getCityCompareMetrics(city: CityRow): CityCompareMetrics {
-  const lifestyle: string[] = []
-  const subScores = computeSubScores(city, COMPARE_REFERENCE_BUDGET, lifestyle)
-  const weights = computeAppliedWeights(DEFAULT_PRIORITIES, lifestyle)
+  const record = compareRecordForCity(city)
+  if (!record) {
+    throw new Error(`Missing compare data for ${city.name}, ${city.country}`)
+  }
 
   return {
     city,
-    monthlyCostOfLiving: estimatedMonthlyCost(city.rent_usd),
-    monthlyRent: city.rent_usd,
-    healthcareScore: subScores.healthcare,
-    safetyScore: subScores.safety,
-    taxScore: subScores.taxes,
-    climateScore: subScores.climate,
-    airportScore: city.airportScore,
-    internetScore: city.internetScore,
-    walkabilityScore: city.walkabilityScore,
-    expatCommunityScore: city.expatCommunityScore,
-    visaAccessScore: city.visaAccessScore,
-    overallRetirementScore: weightedOverallScore(subScores, weights),
+    monthlyCostOfLiving: record.monthlyCostOfLiving,
+    monthlyRent: record.monthlyRent,
+    healthcareScore: record.healthcareScore,
+    safetyScore: record.safetyScore,
+    taxScore: record.taxScore,
+    climateScore: record.climateScore,
+    airportScore: record.airportScore,
+    internetScore: record.internetScore,
+    walkabilityScore: record.walkabilityScore,
+    expatCommunityScore: record.expatCommunityScore,
+    visaAccessScore: record.visaAccessScore,
+    overallRetirementScore: record.overallRetirementScore,
   }
 }
 
