@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { fetchUserProfile, hasMonitorAccess, isPaidPlan } from '@/lib/plan'
+import { fetchUserProfile, isPaidPlan } from '@/lib/plan'
 import type { User } from '@supabase/supabase-js'
 
 interface Props {
@@ -85,7 +85,6 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
   const navRef = useRef<HTMLDivElement>(null)
   const [user, setUser] = useState<User | null>(null)
   const [paid, setPaid] = useState(false)
-  const [monitorAccess, setMonitorAccess] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
@@ -96,11 +95,9 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
       if (data.user) {
         void fetchUserProfile().then((profile) => {
           setPaid(isPaidPlan(profile.plan))
-          setMonitorAccess(hasMonitorAccess(profile))
         })
       } else {
         setPaid(false)
-        setMonitorAccess(false)
       }
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
@@ -108,11 +105,9 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
       if (session?.user) {
         void fetchUserProfile().then((profile) => {
           setPaid(isPaidPlan(profile.plan))
-          setMonitorAccess(hasMonitorAccess(profile))
         })
       } else {
         setPaid(false)
-        setMonitorAccess(false)
       }
     })
     return () => subscription.unsubscribe()
@@ -172,7 +167,7 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
             My Plans
           </Link>
         )}
-        {user && monitorAccess && (
+        {user && paid && (
           <Link href="/plans?tab=monitor" style={pill} onClick={onNavigate}>
             Monitor
           </Link>
@@ -308,7 +303,7 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
                 My Plans
               </Link>
             )}
-            {user && monitorAccess && (
+            {user && paid && (
               <Link href="/plans?tab=monitor" style={mainPillStyle}>
                 Monitor
               </Link>
