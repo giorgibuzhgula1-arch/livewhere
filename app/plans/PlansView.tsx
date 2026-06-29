@@ -13,7 +13,7 @@ import {
   FREE_SAVED_PLANS_LIMIT,
   type SavedRetirementPlan,
 } from '@/lib/saved-plans'
-import { fetchUserPlan, type UserPlan } from '@/lib/plan'
+import { fetchUserProfile, isPaidPlan, type UserProfile } from '@/lib/plan'
 import type { CityResult } from '@/lib/types'
 import SavedPlansCompare from '@/components/SavedPlansCompare'
 import MonitorFeed from '@/components/MonitorFeed'
@@ -43,7 +43,12 @@ export default function PlansView() {
   const [compareA, setCompareA] = useState<string>('')
   const [compareB, setCompareB] = useState<string>('')
   const [paid, setPaid] = useState(false)
-  const [userPlan, setUserPlan] = useState<UserPlan>('free')
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    plan: 'free',
+    monitorUntil: null,
+    monitorActive: false,
+    stripeMonitorSubscriptionId: null,
+  })
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
   const [modalContext, setModalContext] = useState<ModalContext>({})
@@ -99,10 +104,10 @@ export default function PlansView() {
       setAuthReady(true)
 
       if (u) {
-        const plan = await fetchUserPlan()
+        const profile = await fetchUserProfile()
         if (!cancelled) {
-          setPaid(plan === 'pro' || plan === 'lifetime')
-          setUserPlan(plan)
+          setUserProfile(profile)
+          setPaid(isPaidPlan(profile.plan))
         }
         await loadPlans()
       } else {
@@ -116,9 +121,9 @@ export default function PlansView() {
       setUser(session?.user ? { id: session.user.id } : null)
       if (session?.user) {
         void loadPlans()
-        void fetchUserPlan().then((p) => {
-          setUserPlan(p)
-          setPaid(p === 'pro' || p === 'lifetime')
+        void fetchUserProfile().then((profile) => {
+          setUserProfile(profile)
+          setPaid(isPaidPlan(profile.plan))
         })
       } else {
         setPlans([])
@@ -264,15 +269,15 @@ export default function PlansView() {
 
       {activeTab === 'monitor' ? (
         <MonitorFeed
-          userPlan={userPlan}
+          userProfile={userProfile}
           onUpgrade={() => router.push('/pricing')}
         />
       ) : (
         <>
       <p className={styles.subtitle}>
         {paid
-          ? 'Unlimited saved plans on Premium.'
-          : `${plans.length}/${FREE_SAVED_PLANS_LIMIT} plans saved on Free.`}
+          ? 'Unlimited saved plans on Pro & Blueprint.'
+          : `${plans.length}/${FREE_SAVED_PLANS_LIMIT} plan saved on Free.`}
         {' '}Run a new quiz on the home page, then use &ldquo;Save this Plan&rdquo; on your results.
       </p>
 
@@ -521,7 +526,7 @@ export default function PlansView() {
           monthlyBudget={visaMonthlyBudget}
           currency={modalContext.currency}
           lifestyle={modalContext.lifestyle}
-          plan={userPlan}
+          plan={userProfile.plan}
           onClose={() => setSelectedCity(null)}
         />
       )}

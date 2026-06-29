@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { REF_COOKIE_NAME, normalizeReferralCode } from '@/lib/affiliate'
 import { stripe } from '@/lib/stripe'
+import {
+  BLUEPRINT_UPGRADE_CENTS,
+  BLUEPRINT_MONITOR_TRIAL_DAYS,
+  STRIPE_PRICE_BLUEPRINT_LIFETIME,
+  STRIPE_PRICE_MONITOR_MONTHLY,
+  STRIPE_PRICE_PRO_LIFETIME,
+  type CheckoutType,
+} from '@/lib/stripe-prices'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import type Stripe from 'stripe'
 
 function getAppUrl() {
   const configuredUrl =
@@ -12,11 +21,9 @@ function getAppUrl() {
     process.env.VERCEL_URL
 
   if (!configuredUrl) return null
-
   if (configuredUrl.startsWith('http://') || configuredUrl.startsWith('https://')) {
     return configuredUrl
   }
-
   return `https://${configuredUrl}`
 }
 
@@ -27,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
     }
 
-    let payload: { userId?: string; email?: string; checkoutType?: 'pro' | 'report' }
+    let payload: { userId?: string; email?: string; checkoutType?: CheckoutType }
     try {
       payload = JSON.parse(rawBody)
     } catch {
@@ -39,140 +46,132 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: 'You must be signed in to complete this purchase.' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    if (checkoutType === 'pro' && !email) {
-      return NextResponse.json({ error: 'Missing userId or email for pro checkout' }, { status: 400 })
+    if (!email) {
+      return NextResponse.json({ error: 'Missing email for checkout' }, { status: 400 })
     }
 
     const appUrl = getAppUrl()
     const secretKey = process.env.STRIPE_SECRET_KEY?.trim()
-    const proPriceId = process.env.STRIPE_PRO_PRICE_ID?.trim()
 
     if (!appUrl) {
       return NextResponse.json(
         {
           error:
-            'App URL is not configured. Set one of NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_VERCEL_URL, VERCEL_PROJECT_PRODUCTION_URL, or VERCEL_URL',
+            'App URL is not configured. Set NEXT_PUBLIC_APP_URL or NEXT_PUBLIC_SITE_URL.',
         },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
     if (!secretKey) {
       return NextResponse.json(
         { error: 'Stripe is not configured: STRIPE_SECRET_KEY is missing.' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
-    if (checkoutType === 'pro' && !proPriceId) {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('plan, stripe_customer_id')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (checkoutType === 'blueprint_upgrade' && profile?.plan !== 'pro') {
       return NextResponse.json(
-        { error: 'Stripe env vars are not configured. Required: STRIPE_PRO_PRICE_ID' },
-        { status: 500 }
+        { error: 'Blueprint upgrade is only available for Pro Lifetime members.' },
+        { status: 400 },
       )
     }
 
-    // Resolve the checkout mode from the actual Stripe price. The Pro plan is
-    // meant to be a recurring subscription, but if STRIPE_PRO_PRICE_ID points at
-    // a one-time price, Stripe rejects `mode: 'subscription'`. Inspect the price
-    // and pick the matching mode so a mis-typed price still produces a working
-    // checkout (and surface a clear error if the price doesn't exist).
-    let mode: 'subscription' | 'payment' = checkoutType === 'report' ? 'payment' : 'subscription'
-
-    if (checkoutType === 'pro' && proPriceId) {
-      let price: import('stripe').Stripe.Price
-      try {
-        price = await stripe.prices.retrieve(proPriceId)
-      } catch (err) {
-        const e = err as { code?: string; statusCode?: number }
-        if (e?.code === 'resource_missing' || e?.statusCode === 404) {
-          const keyMode = secretKey.startsWith('sk_live_')
-            ? 'live'
-            : secretKey.startsWith('sk_test_')
-              ? 'test'
-              : 'unknown'
-          return NextResponse.json(
-            {
-              error: `Stripe price "${proPriceId}" was not found for the configured API key (${keyMode} mode). Ensure STRIPE_SECRET_KEY and STRIPE_PRO_PRICE_ID are from the SAME Stripe mode (both live or both test).`,
-            },
-            { status: 500 }
-          )
-        }
-        throw err
-      }
-
-      if (!price.active) {
-        return NextResponse.json(
-          { error: `Stripe price "${proPriceId}" is archived/inactive. Use an active recurring price for the Pro plan.` },
-          { status: 500 }
-        )
-      }
-
-      mode = price.recurring ? 'subscription' : 'payment'
+    if (checkoutType === 'blueprint' && profile?.plan === 'lifetime') {
+      return NextResponse.json(
+        { error: 'You already have Blueprint Lifetime access.' },
+        { status: 400 },
+      )
     }
 
-    let customerId: string | null = null
-
-    if (userId && email) {
-      const { data: profile } = await supabaseAdmin
+    let customerId = profile?.stripe_customer_id ?? null
+    if (!customerId) {
+      const customer = await stripe.customers.create({ email, metadata: { userId } })
+      customerId = customer.id
+      await supabaseAdmin
         .from('profiles')
-        .select('stripe_customer_id')
+        .update({ stripe_customer_id: customerId })
         .eq('id', userId)
-        .single()
-
-      if (profile?.stripe_customer_id) {
-        customerId = profile.stripe_customer_id
-      } else {
-        const customer = await stripe.customers.create({ email, metadata: { userId } })
-        customerId = customer.id
-        await supabaseAdmin
-          .from('profiles')
-          .update({ stripe_customer_id: customerId })
-          .eq('id', userId)
-      }
     }
-
-    const lineItems =
-      checkoutType === 'report'
-        ? [{ price: 'price_1Tlz7AD753169kynlRJg6Pmi', quantity: 1 }]
-        : [{ price: proPriceId!, quantity: 1 }]
 
     const refRaw = req.cookies.get(REF_COOKIE_NAME)?.value
     const refCode = refRaw ? normalizeReferralCode(refRaw) : ''
     const sessionMetadata: Record<string, string> = {
-      userId: userId ?? '',
+      userId,
       checkoutType,
     }
-    if (refCode) {
-      sessionMetadata.ref_code = refCode
+    if (refCode) sessionMetadata.ref_code = refCode
+
+    let mode: 'subscription' | 'payment' = checkoutType === 'monitor' ? 'subscription' : 'payment'
+    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+    let subscriptionData: { metadata?: Record<string, string>; trial_period_days?: number } | undefined
+
+    switch (checkoutType) {
+      case 'pro':
+        lineItems = [{ price: STRIPE_PRICE_PRO_LIFETIME, quantity: 1 }]
+        break
+      case 'blueprint':
+        lineItems = [{ price: STRIPE_PRICE_BLUEPRINT_LIFETIME, quantity: 1 }]
+        break
+      case 'blueprint_upgrade':
+        lineItems = [
+          {
+            price_data: {
+              currency: 'usd',
+              unit_amount: BLUEPRINT_UPGRADE_CENTS,
+              product_data: {
+                name: 'Blueprint Lifetime Upgrade',
+                description: 'Upgrade from Pro Lifetime — pay only the difference.',
+              },
+            },
+            quantity: 1,
+          },
+        ]
+        break
+      case 'monitor':
+        lineItems = [{ price: STRIPE_PRICE_MONITOR_MONTHLY, quantity: 1 }]
+        subscriptionData = { metadata: { userId, checkoutType: 'monitor' } }
+        break
+      default:
+        return NextResponse.json({ error: 'Invalid checkout type' }, { status: 400 })
     }
 
     const session = await stripe.checkout.sessions.create({
-      ...(customerId ? { customer: customerId } : {}),
-      ...(!customerId && email ? { customer_email: email } : {}),
+      customer: customerId,
       mode,
       payment_method_types: ['card'],
       line_items: lineItems,
       success_url: `${appUrl}/?upgraded=true`,
-      cancel_url: `${appUrl}/`,
-      metadata: sessionMetadata,
-      ...(refCode
-        ? {
-            payment_intent_data: {
-              metadata: { ref_code: refCode, checkoutType },
-            },
-            ...(mode === 'subscription'
-              ? {
-                  subscription_data: {
-                    metadata: { ref_code: refCode, checkoutType },
-                  },
-                }
-              : {}),
-          }
+      cancel_url: `${appUrl}/pricing`,
+      metadata: {
+        ...sessionMetadata,
+        ...(checkoutType === 'blueprint'
+          ? { includeMonitorTrial: String(BLUEPRINT_MONITOR_TRIAL_DAYS) }
+          : {}),
+      },
+      ...(refCode && mode === 'payment'
+        ? { payment_intent_data: { metadata: { ref_code: refCode, checkoutType } } }
         : {}),
+      ...(refCode && mode === 'subscription'
+        ? {
+            subscription_data: {
+              ...subscriptionData,
+              metadata: { ...subscriptionData?.metadata, ref_code: refCode, checkoutType },
+            },
+          }
+        : subscriptionData
+          ? { subscription_data: subscriptionData }
+          : {}),
     })
 
     if (!session.url) {
@@ -181,28 +180,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
-    const err = error as {
-      message?: string
-      type?: string
-      code?: string
-      statusCode?: number
-      param?: string
-      raw?: { message?: string }
-    }
+    const err = error as { message?: string; raw?: { message?: string } }
     const detail = err?.message || err?.raw?.message || 'Unknown error'
-
-    console.error('Stripe checkout session error:', {
-      message: detail,
-      type: err?.type,
-      code: err?.code,
-      statusCode: err?.statusCode,
-      param: err?.param,
-    })
-    console.error('Stripe checkout full error:', error)
-
+    console.error('Stripe checkout session error:', error)
     return NextResponse.json(
       { error: `Failed to create Stripe checkout session: ${detail}` },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

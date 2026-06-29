@@ -54,4 +54,9 @@ export interface Profile {
   plan: 'free' | 'pro' | 'lifetime';
   searches_this_month: number;
   stripe_customer_id?: string;
+  monitor_until?: string | null;
+  monitor_active?: boolean;
+  stripe_monitor_subscription_id?: string | null;
+  searches_today?: number;
+  search_day?: string | null;
 }

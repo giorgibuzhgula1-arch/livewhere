@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase'
 import type { AnalyzeRequest, CityResult } from '@/lib/types'
-import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
+import { fetchUserPlan, isPaidPlan, FREE_SAVED_PLANS_LIMIT, type UserPlan } from '@/lib/plan'
 
-export const FREE_SAVED_PLANS_LIMIT = 2
+export { FREE_SAVED_PLANS_LIMIT }
 
 export type SavedRetirementPlan = {
   id: string
@@ -85,7 +85,7 @@ export async function saveRetirementPlan(params: {
 
   if (!canSaveMorePlan(plan, count)) {
     throw new Error(
-      `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plans. Upgrade to Premium for unlimited saves.`,
+      `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plan. Upgrade to Pro for unlimited saves.`,
     )
   }
 

@@ -1,4 +1,4 @@
-const PRO_PRICE = 19
+const PRO_PRICE = 49
 const LIFETIME_PRICE = 149
 const DEFAULT_COMMISSION_RATE = 0.4
 
@@ -33,8 +33,8 @@ ${params.referralUrl}
 Commission: ${ratePercent}% on every paid signup attributed to your link.
 
 What you can earn (examples):
-- Pro plan ($${PRO_PRICE}/mo): ${proCommission} per conversion
-- Lifetime plan ($${LIFETIME_PRICE} one-time): ${lifetimeCommission} per conversion
+- Pro Lifetime ($${PRO_PRICE} one-time): ${proCommission} per conversion
+- Blueprint Lifetime ($${LIFETIME_PRICE} one-time): ${lifetimeCommission} per conversion
 
 How it works:
 1. Share your link on social, in your newsletter, or with your audience.
@@ -69,14 +69,14 @@ https://livewhere.io`
           </p>
           <h2 style="margin:0 0 12px;font-size:16px;color:#f0ede8;">What you can earn</h2>
           <ul style="margin:0 0 24px;padding-left:20px;font-size:14px;line-height:1.7;color:rgba(240,237,232,0.75);">
-            <li>Pro ($${PRO_PRICE}/mo) → <strong style="color:#f0ede8;">${proCommission}</strong> per sale</li>
-            <li>Lifetime ($${LIFETIME_PRICE}) → <strong style="color:#f0ede8;">${lifetimeCommission}</strong> per sale</li>
+            <li>Pro Lifetime ($${PRO_PRICE}) → <strong style="color:#f0ede8;">${proCommission}</strong> per sale</li>
+            <li>Blueprint Lifetime ($${LIFETIME_PRICE}) → <strong style="color:#f0ede8;">${lifetimeCommission}</strong> per sale</li>
           </ul>
           <h2 style="margin:0 0 12px;font-size:16px;color:#f0ede8;">How it works</h2>
           <ol style="margin:0 0 28px;padding-left:20px;font-size:14px;line-height:1.7;color:rgba(240,237,232,0.75);">
             <li>Share your link anywhere your audience lives.</li>
             <li>We save your code when they visit — no manual tracking.</li>
-            <li>You earn ${ratePercent}% when they purchase Pro or Lifetime.</li>
+            <li>You earn ${ratePercent}% when they purchase Pro or Blueprint Lifetime.</li>
           </ol>
           <p style="margin:0;font-size:13px;color:rgba(240,237,232,0.45);">Questions? Reply to this email.</p>
         </td></tr>

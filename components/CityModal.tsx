@@ -182,7 +182,7 @@ function FinancialBreakdown({
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
-        Get My Retirement Plan — $39
+        Get My Retirement Plan — $49
       </button>
     </div>
   )

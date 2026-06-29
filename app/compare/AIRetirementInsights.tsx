@@ -282,9 +282,9 @@ export default function AIRetirementInsights({ cityA, cityB, paid }: Props) {
               }}
             >
               <div className={styles.paywallCard}>
-                <h2 className={styles.paywallTitle}>Unlock Full Analysis — Upgrade to Premium</h2>
+                <h2 className={styles.paywallTitle}>Unlock Full Analysis — Upgrade to Pro</h2>
                 <Link href="/pricing" className={styles.paywallBtn}>
-                  Upgrade to Premium
+                  Upgrade to Pro
                 </Link>
               </div>
             </div>

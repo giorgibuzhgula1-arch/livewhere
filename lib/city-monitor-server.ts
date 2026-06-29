@@ -280,20 +280,31 @@ export async function checkCitiesForUser(userId: string, email: string | null): 
   }
 }
 
-export async function getPaidUsersWithSavedPlans(): Promise<{ id: string; email: string | null }[]> {
+function profileHasMonitorAccess(row: {
+  monitor_active?: boolean | null
+  monitor_until?: string | null
+}): boolean {
+  if (row.monitor_active) return true
+  if (row.monitor_until && new Date(row.monitor_until) > new Date()) return true
+  return false
+}
+
+export async function getMonitorUsersWithSavedPlans(): Promise<{ id: string; email: string | null }[]> {
+  const now = new Date().toISOString()
   const { data: profiles, error } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan')
-    .in('plan', ['pro', 'lifetime'])
+    .select('id, monitor_active, monitor_until')
+    .or(`monitor_active.eq.true,monitor_until.gt.${now}`)
 
   if (error || !profiles?.length) return []
 
-  const paidIds = profiles.map((p) => p.id as string)
+  const eligible = profiles.filter((p) => profileHasMonitorAccess(p))
+  const eligibleIds = eligible.map((p) => p.id as string)
 
   const { data: planRows } = await supabaseAdmin
     .from('saved_retirement_plans')
     .select('user_id')
-    .in('user_id', paidIds)
+    .in('user_id', eligibleIds)
 
   const userIdsWithPlans = new Set((planRows ?? []).map((r) => r.user_id as string))
 
@@ -311,11 +322,11 @@ export async function runMonitorCheck(userId?: string): Promise<CheckUserResult[
   if (userId) {
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('plan')
+      .select('monitor_active, monitor_until')
       .eq('id', userId)
       .maybeSingle()
 
-    if (!profile || (profile.plan !== 'pro' && profile.plan !== 'lifetime')) {
+    if (!profile || !profileHasMonitorAccess(profile)) {
       return []
     }
 
@@ -323,7 +334,7 @@ export async function runMonitorCheck(userId?: string): Promise<CheckUserResult[
     return [await checkCitiesForUser(userId, user?.email ?? null)]
   }
 
-  const users = await getPaidUsersWithSavedPlans()
+  const users = await getMonitorUsersWithSavedPlans()
   const outcomes: CheckUserResult[] = []
 
   for (const u of users) {

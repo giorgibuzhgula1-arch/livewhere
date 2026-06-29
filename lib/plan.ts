@@ -1,47 +1,93 @@
 import { supabase } from '@/lib/supabase'
 
+/** `lifetime` = Blueprint Lifetime in product copy. */
 export type UserPlan = 'free' | 'pro' | 'lifetime'
 
-export const PAID_RESULT_COUNT = 12
-/** Free users now receive the full set of cities, but only the first is fully unlocked. */
-export const FREE_RESULT_COUNT = 12
-/** How many cities a free user can see in full detail (the rest are locked/blurred). */
-export const FREE_UNLOCKED_COUNT = 3
-/**
- * How many fully-detailed cities the AI actually generates for a free search.
- * Free users only ever see ONE city in full, so generating all 12 rich objects
- * was pure waste and the main cause of slow (~1 min) analyses. We generate a
- * small detailed set and pad the locked grid with teasers instead.
- */
-export const FREE_DETAILED_COUNT = 3
+export type UserProfile = {
+  plan: UserPlan
+  monitorUntil: string | null
+  monitorActive: boolean
+  stripeMonitorSubscriptionId: string | null
+}
 
+export const PAID_RESULT_COUNT = 12
+export const BLUEPRINT_RESULT_COUNT = 25
+export const FREE_RESULT_COUNT = 12
+export const FREE_UNLOCKED_COUNT = 3
+export const FREE_DETAILED_COUNT = 3
+export const FREE_SEARCHES_PER_DAY = 3
+export const FREE_SAVED_PLANS_LIMIT = 1
+
+export function isProPlan(plan: UserPlan | string | null | undefined): boolean {
+  return plan === 'pro'
+}
+
+export function isBlueprintPlan(plan: UserPlan | string | null | undefined): boolean {
+  return plan === 'lifetime'
+}
+
+/** Pro or Blueprint — paid city access, compare, unlimited saves, etc. */
 export function isPaidPlan(plan: UserPlan | string | null | undefined): boolean {
   return plan === 'pro' || plan === 'lifetime'
 }
 
-export function resultCountForPlan(plan: UserPlan | string | null | undefined): number {
-  return isPaidPlan(plan) ? PAID_RESULT_COUNT : FREE_RESULT_COUNT
+export function hasMonitorAccess(profile: UserProfile): boolean {
+  if (profile.monitorActive) return true
+  if (profile.monitorUntil) {
+    return new Date(profile.monitorUntil).getTime() > Date.now()
+  }
+  return false
 }
 
-/** Whether a given card index should be shown in full for this plan. */
+export function savedPlansLimit(plan: UserPlan): number | null {
+  return isPaidPlan(plan) ? null : FREE_SAVED_PLANS_LIMIT
+}
+
+export function resultCountForPlan(plan: UserPlan | string | null | undefined): number {
+  if (isBlueprintPlan(plan)) return BLUEPRINT_RESULT_COUNT
+  if (isPaidPlan(plan)) return PAID_RESULT_COUNT
+  return FREE_RESULT_COUNT
+}
+
 export function isCardUnlocked(
   plan: UserPlan | string | null | undefined,
-  index: number
+  index: number,
 ): boolean {
   return isPaidPlan(plan) || index < FREE_UNLOCKED_COUNT
 }
 
-export async function fetchUserPlan(): Promise<UserPlan> {
+function normalizePlan(raw: string | null | undefined): UserPlan {
+  if (raw === 'pro' || raw === 'lifetime') return raw
+  return 'free'
+}
+
+export async function fetchUserProfile(): Promise<UserProfile> {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return 'free'
+  if (!user) {
+    return {
+      plan: 'free',
+      monitorUntil: null,
+      monitorActive: false,
+      stripeMonitorSubscriptionId: null,
+    }
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan')
+    .select('plan, monitor_until, monitor_active, stripe_monitor_subscription_id')
     .eq('id', user.id)
     .single()
 
-  const plan = profile?.plan
-  if (plan === 'pro' || plan === 'lifetime') return plan
-  return 'free'
+  return {
+    plan: normalizePlan(profile?.plan),
+    monitorUntil: profile?.monitor_until ?? null,
+    monitorActive: profile?.monitor_active ?? false,
+    stripeMonitorSubscriptionId: profile?.stripe_monitor_subscription_id ?? null,
+  }
+}
+
+/** @deprecated Prefer fetchUserProfile() */
+export async function fetchUserPlan(): Promise<UserPlan> {
+  const profile = await fetchUserProfile()
+  return profile.plan
 }

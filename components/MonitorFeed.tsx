@@ -10,23 +10,23 @@ import {
   type CityMonitor,
   type MonitorSnapshot,
 } from '@/lib/city-monitor'
-import { isPaidPlan, type UserPlan } from '@/lib/plan'
+import { hasMonitorAccess, type UserProfile } from '@/lib/plan'
 import styles from '../app/compare/compare.module.css'
 
 type Props = {
-  userPlan: UserPlan
+  userProfile: UserProfile
   onUpgrade: () => void
 }
 
-export default function MonitorFeed({ userPlan, onUpgrade }: Props) {
-  const paid = isPaidPlan(userPlan)
+export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
+  const hasAccess = hasMonitorAccess(userProfile)
   const [alerts, setAlerts] = useState<CityMonitor[]>([])
   const [monitored, setMonitored] = useState<CityMonitor[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    if (!paid) {
+    if (!hasAccess) {
       setLoading(false)
       return
     }
@@ -45,13 +45,13 @@ export default function MonitorFeed({ userPlan, onUpgrade }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [paid])
+  }, [hasAccess])
 
   useEffect(() => {
     void load()
   }, [load])
 
-  if (!paid) {
+  if (!hasAccess) {
     return (
       <div
         style={{
@@ -91,8 +91,9 @@ export default function MonitorFeed({ userPlan, onUpgrade }: Props) {
             margin: '0 auto 24px',
           }}
         >
-          Get weekly alerts when taxes, visa rules, healthcare scores, or cost of living change
-          for your top saved cities. Available on Retirement Report and Blueprint plans.
+          Get weekly alerts when taxes, visa rules, healthcare scores, or cost of living
+          change for your top saved cities. Available with Monitor ($9.99/mo) or included
+          for 12 months with Blueprint Lifetime.
         </p>
         <button
           type="button"
@@ -109,7 +110,7 @@ export default function MonitorFeed({ userPlan, onUpgrade }: Props) {
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Upgrade to unlock Monitor
+          Start Monitoring
         </button>
         <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.4)', marginTop: 16 }}>
           <Link href="/pricing" style={{ color: '#c8f05a' }}>

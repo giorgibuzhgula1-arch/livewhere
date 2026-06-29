@@ -606,10 +606,10 @@ export default function CompareView() {
               <div className={styles.paywallOverlay}>
                 <div className={styles.paywallCard}>
                   <h2 className={styles.paywallTitle}>
-                    Unlock City Comparison — Upgrade to Premium
+                    Unlock City Comparison — Upgrade to Pro
                   </h2>
                   <Link href="/pricing" className={styles.paywallBtn}>
-                    Upgrade to Premium
+                    Upgrade to Pro
                   </Link>
                 </div>
               </div>

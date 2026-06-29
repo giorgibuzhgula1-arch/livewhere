@@ -1,126 +1,361 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { fetchUserProfile, isProPlan, type UserPlan } from '@/lib/plan'
+import type { CheckoutType } from '@/lib/stripe-prices'
 
-interface Props { onUpgrade: () => void }
+interface Props {
+  onUpgrade: () => void
+}
+
+type PlanFeature = {
+  text: string
+  included?: boolean
+}
+
+type PricingTier = {
+  id: string
+  name: string
+  price: string
+  period: string
+  features: PlanFeature[]
+  btn: string
+  style: 'primary' | 'ghost'
+  popular?: boolean
+  note?: string
+  checkoutType?: CheckoutType
+  action?: 'signup'
+}
 
 export default function Pricing({ onUpgrade }: Props) {
-  const [loadingPlan, setLoadingPlan] = useState<'pro' | 'report' | null>(null)
+  const [loadingPlan, setLoadingPlan] = useState<CheckoutType | 'signup' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [userPlan, setUserPlan] = useState<UserPlan>('free')
 
-  async function handleCheckout(checkoutType: 'pro' | 'report') {
-    // Guard against re-entrancy: never start a second checkout while one is in flight.
+  useEffect(() => {
+    void fetchUserProfile().then((p) => setUserPlan(p.plan))
+  }, [])
+
+  async function handleCheckout(checkoutType: CheckoutType) {
     if (loadingPlan) return
     setError(null)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { onUpgrade(); return }
+    if (!user) {
+      onUpgrade()
+      return
+    }
     setLoadingPlan(checkoutType)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
-        body: JSON.stringify({ userId: user?.id, email: user?.email, checkoutType })
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ userId: user.id, email: user.email, checkoutType }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || 'Unable to start Stripe checkout')
-      if (data?.url) { window.location.assign(data.url); return }
+      if (data?.url) {
+        window.location.assign(data.url)
+        return
+      }
       throw new Error('Stripe checkout URL not returned')
-    } catch (err: any) {
-      setError(err?.message || 'Unable to start Stripe checkout')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unable to start Stripe checkout')
     } finally {
       setLoadingPlan(null)
     }
   }
 
-  // Single click handler so checkout is ONLY ever started by an explicit user
-  // click — never as a side effect of rendering.
-  function handlePlanClick(planName: string) {
-    if (planName === 'Retirement Report') {
-      void handleCheckout('pro')
-    } else if (planName === 'Retirement Relocation Blueprint') {
-      void handleCheckout('report')
-    } else {
-      onUpgrade()
-    }
-  }
+  const blueprintCheckout: CheckoutType = isProPlan(userPlan) ? 'blueprint_upgrade' : 'blueprint'
+  const blueprintPrice = isProPlan(userPlan) ? '$100' : '$149'
+  const blueprintBtn =
+    loadingPlan === 'blueprint' || loadingPlan === 'blueprint_upgrade'
+      ? 'Loading…'
+      : isProPlan(userPlan)
+        ? 'Upgrade to Blueprint — $100'
+        : 'Get Retirement Blueprint'
 
-  const plans = [
+  const tiers: PricingTier[] = [
     {
-      name: 'Free', price: '$0', originalPrice: '', period: 'forever', sale: false,
-      features: ['Top 3 city names only', '3 searches/month'],
-      btn: 'Get started free', style: 'ghost', popular: false
-    },
-    {
-      name: 'Retirement Report', price: '$39', originalPrice: '$99', period: 'one-time payment', sale: true, limitedOffer: true,
-      features: ['Top 12 cities full analysis', 'Tax rates & savings breakdown per city', 'Unlimited searches', 'City comparisons', 'Visa difficulty scores'],
-      btn: loadingPlan === 'pro' ? 'Loading...' : 'Get My Retirement Plan', style: 'primary', popular: true
-    },
-    {
-      name: 'Retirement Relocation Blueprint', price: '$99', originalPrice: '$249', period: 'one-time payment', sale: true, limitedOffer: true,
+      id: 'free',
+      name: 'Free',
+      price: '$0',
+      period: 'forever',
       features: [
-        'Top 25 cities full analysis',
-        '10-Year Retirement Projection',
-        'Retirement Risk Assessment',
-        'Wealth Preservation Analysis',
-        'PDF report',
-        'Lifetime access',
-        'Unlimited re-runs',
-        'Priority support',
+        { text: '3 searches/day' },
+        { text: 'Top 3 recommendations' },
+        { text: 'Basic country scores' },
+        { text: 'Basic city pages' },
+        { text: 'Save 1 plan' },
+        { text: 'Newsletter' },
       ],
-      btn: loadingPlan === 'report' ? 'Loading...' : 'Get Retirement Relocation Blueprint — $99', style: 'ghost', popular: false
+      btn: 'Get started free',
+      style: 'ghost',
+      action: 'signup',
+    },
+    {
+      id: 'pro',
+      name: 'Pro Lifetime',
+      price: '$49',
+      period: 'one-time',
+      popular: true,
+      features: [
+        { text: 'Unlimited searches' },
+        { text: 'All 200+ cities' },
+        { text: 'Compare Cities' },
+        { text: 'AI Retirement Insights' },
+        { text: 'Full City Details' },
+        { text: 'Save Unlimited Plans' },
+        { text: 'AI Plan Summary' },
+        { text: 'Future updates included' },
+        { text: 'Retirement Monitor', included: false },
+        { text: 'PDF Blueprint', included: false },
+      ],
+      btn: loadingPlan === 'pro' ? 'Loading…' : 'Get My Retirement Plan',
+      style: 'primary',
+      checkoutType: 'pro',
+      note: 'Already have Pro? Upgrade to Blueprint — pay only $100 more.',
+    },
+    {
+      id: 'blueprint',
+      name: 'Blueprint Lifetime',
+      price: blueprintPrice,
+      period: isProPlan(userPlan) ? 'upgrade (one-time)' : 'one-time',
+      features: [
+        { text: 'Everything in Pro +' },
+        { text: 'Personalized 30–50 page PDF Blueprint' },
+        { text: '10-Year Financial Projection' },
+        { text: 'Tax strategy & Visa roadmap' },
+        { text: 'Move checklist & Risk analysis' },
+        { text: 'AI Retirement Twin (coming soon)' },
+        { text: 'Priority Support' },
+        { text: '12 months Retirement Monitor included free' },
+        { text: 'Future Blueprint updates' },
+      ],
+      btn: blueprintBtn,
+      style: 'ghost',
+      checkoutType: blueprintCheckout,
+    },
+    {
+      id: 'monitor',
+      name: 'Monitor',
+      price: '$9.99',
+      period: '/month',
+      features: [
+        { text: 'Weekly city alerts' },
+        { text: 'Tax & Visa changes' },
+        { text: 'Healthcare changes' },
+        { text: 'Cost of living changes' },
+        { text: 'New retirement programs' },
+        { text: 'Better city recommendations' },
+        { text: 'AI notifications' },
+      ],
+      btn: loadingPlan === 'monitor' ? 'Loading…' : 'Start Monitoring',
+      style: 'ghost',
+      checkoutType: 'monitor',
+      note: 'Add-on for Pro users. Included free for 12 months with Blueprint.',
     },
   ]
 
+  function handleTierClick(tier: PricingTier) {
+    if (tier.action === 'signup') {
+      onUpgrade()
+      return
+    }
+    if (tier.checkoutType) {
+      void handleCheckout(tier.checkoutType)
+    }
+  }
+
   return (
-    <section style={{ maxWidth: 900, margin: '0 auto', padding: '80px 20px', position: 'relative', zIndex: 1, textAlign: 'center' }}>
-      <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#c8f05a', marginBottom: 12, fontWeight: 600 }}>✦ Pricing</div>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, marginBottom: 48 }}>Simple, honest pricing</h2>
-      {error && <div style={{ maxWidth: 560, margin: '0 auto 24px', background: 'rgba(240,90,140,0.1)', border: '1px solid rgba(240,90,140,0.3)', borderRadius: 10, padding: '12px 16px', color: '#f05a8c', fontSize: 13 }}>{error}</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 20 }}>
-        {plans.map(plan => {
-          const isProPlan = plan.name === 'Retirement Report'
-          const isLifetimePlan = plan.name === 'Retirement Relocation Blueprint'
-          const isLoading = (isProPlan && loadingPlan === 'pro') || (isLifetimePlan && loadingPlan === 'report')
+    <section
+      style={{
+        maxWidth: 1200,
+        margin: '0 auto',
+        padding: '80px 20px',
+        position: 'relative',
+        zIndex: 1,
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          letterSpacing: 2,
+          textTransform: 'uppercase',
+          color: '#c8f05a',
+          marginBottom: 12,
+          fontWeight: 600,
+        }}
+      >
+        ✦ Pricing
+      </div>
+      <h2
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 'clamp(32px,4vw,52px)',
+          fontWeight: 700,
+          marginBottom: 48,
+        }}
+      >
+        Simple, honest pricing
+      </h2>
+      {error && (
+        <div
+          style={{
+            maxWidth: 560,
+            margin: '0 auto 24px',
+            background: 'rgba(240,90,140,0.1)',
+            border: '1px solid rgba(240,90,140,0.3)',
+            borderRadius: 10,
+            padding: '12px 16px',
+            color: '#f05a8c',
+            fontSize: 13,
+          }}
+        >
+          {error}
+        </div>
+      )}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+          gap: 20,
+        }}
+      >
+        {tiers.map((tier) => {
+          const isLoading = tier.checkoutType && loadingPlan === tier.checkoutType
           return (
-            <div key={plan.name} style={{ background: plan.popular ? 'rgba(200,240,90,0.05)' : '#12121a', border: plan.popular ? '1px solid rgba(200,240,90,0.3)' : '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32, textAlign: 'left', position: 'relative', zIndex: 1 }}>
-              {(plan.popular || plan.limitedOffer) && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                  {plan.popular && (
-                    <div style={{ background: '#c8f05a', color: '#0a0a0f', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                      Most Popular
-                    </div>
-                  )}
-                  {plan.limitedOffer && (
-                    <div style={{ background: 'rgba(240,90,140,0.15)', color: '#f05a8c', border: '1px solid rgba(240,90,140,0.35)', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'inline-block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                      Limited Time Offer
-                    </div>
-                  )}
+            <div
+              key={tier.id}
+              style={{
+                background: tier.popular ? 'rgba(200,240,90,0.05)' : '#12121a',
+                border: tier.popular
+                  ? '1px solid rgba(200,240,90,0.3)'
+                  : '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 20,
+                padding: 28,
+                textAlign: 'left',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {tier.popular && (
+                <div
+                  style={{
+                    background: '#c8f05a',
+                    color: '#0a0a0f',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    borderRadius: 20,
+                    display: 'inline-block',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    marginBottom: 16,
+                    alignSelf: 'flex-start',
+                  }}
+                >
+                  Most Popular
                 </div>
               )}
-              <div style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', marginBottom: 8, fontWeight: 500 }}>{plan.name}</div>
-              {plan.sale && plan.originalPrice && (
-                <div style={{ marginBottom: 6 }}>
-                  <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: 'rgba(240,237,232,0.4)', textDecoration: 'line-through' }}>{plan.originalPrice}</span>
-                </div>
-              )}
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 42, fontWeight: 900, marginBottom: 4 }}>{plan.price}</div>
-              {plan.sale && (
-                <div style={{ fontSize: 12, color: '#c8f05a', marginBottom: 4 }}>Founding Member Pricing</div>
-              )}
-              <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 24 }}>{plan.period}</div>
-              <ul style={{ listStyle: 'none', marginBottom: 24 }}>
-                {plan.features.map(f => (
-                  <li key={f} style={{ fontSize: 13, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 8, color: 'rgba(240,237,232,0.6)' }}>
-                    <span style={{ color: '#c8f05a', fontWeight: 700 }}>✓</span> {f}
+              <div
+                style={{
+                  fontSize: 14,
+                  color: 'rgba(240,237,232,0.45)',
+                  marginBottom: 8,
+                  fontWeight: 500,
+                }}
+              >
+                {tier.name}
+              </div>
+              <div
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: 42,
+                  fontWeight: 900,
+                  marginBottom: 4,
+                }}
+              >
+                {tier.price}
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: 'rgba(240,237,232,0.45)',
+                  marginBottom: 24,
+                }}
+              >
+                {tier.period}
+              </div>
+              <ul style={{ listStyle: 'none', marginBottom: 24, flex: 1 }}>
+                {tier.features.map((f) => (
+                  <li
+                    key={f.text}
+                    style={{
+                      fontSize: 13,
+                      padding: '8px 0',
+                      borderBottom: '1px solid rgba(255,255,255,0.07)',
+                      display: 'flex',
+                      gap: 8,
+                      color:
+                        f.included === false
+                          ? 'rgba(240,237,232,0.35)'
+                          : 'rgba(240,237,232,0.6)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: f.included === false ? '#f05a8c' : '#c8f05a',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {f.included === false ? '✕' : '✓'}
+                    </span>
+                    {f.text}
                   </li>
                 ))}
               </ul>
-              <button type="button" onClick={() => handlePlanClick(plan.name)} disabled={isLoading} style={{ width: '100%', padding: 14, borderRadius: 12, fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, cursor: 'pointer', border: 'none', transition: 'all 0.2s', background: plan.style === 'primary' ? '#c8f05a' : '#1a1a26', color: plan.style === 'primary' ? '#0a0a0f' : '#f0ede8', position: 'relative', zIndex: 2, pointerEvents: 'auto' }}>
-                {plan.btn}
+              <button
+                type="button"
+                onClick={() => handleTierClick(tier)}
+                disabled={Boolean(isLoading)}
+                style={{
+                  width: '100%',
+                  padding: 14,
+                  borderRadius: 12,
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: isLoading ? 'wait' : 'pointer',
+                  border: 'none',
+                  background: tier.style === 'primary' ? '#c8f05a' : '#1a1a26',
+                  color: tier.style === 'primary' ? '#0a0a0f' : '#f0ede8',
+                  opacity: isLoading ? 0.7 : 1,
+                }}
+              >
+                {tier.btn}
               </button>
+              {tier.note && (
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: 'rgba(240,237,232,0.4)',
+                    marginTop: 10,
+                    lineHeight: 1.5,
+                    marginBottom: 0,
+                  }}
+                >
+                  {tier.note}
+                </p>
+              )}
             </div>
           )
         })}

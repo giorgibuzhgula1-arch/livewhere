@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { streamRecommendCities, buildTeaserCities } from '@/lib/recommendation'
-import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT } from '@/lib/plan'
+import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT, FREE_SEARCHES_PER_DAY } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
@@ -50,6 +50,10 @@ function getClientIp(req: NextRequest): string {
   return 'unknown'
 }
 
+function getSearchDayUtc(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
 function getSearchMonth(): string {
   const now = new Date()
   const year = now.getUTCFullYear()
@@ -82,7 +86,8 @@ export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization')
   let userId: string | null = null
   let plan = 'free'
-  let searchesThisMonth = 0
+  let searchesToday = 0
+  const today = getSearchDayUtc()
 
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7)
@@ -91,17 +96,18 @@ export async function POST(req: NextRequest) {
       userId = user.id
       const { data: profile } = await supabaseAdmin
         .from('profiles')
-        .select('plan, searches_this_month')
+        .select('plan, searches_today, search_day')
         .eq('id', user.id)
         .single()
 
       plan = profile?.plan || 'free'
-      searchesThisMonth = profile?.searches_this_month ?? 0
+      searchesToday =
+        profile?.search_day === today ? (profile?.searches_today ?? 0) : 0
 
-      if (plan === 'free' && searchesThisMonth >= 3) {
+      if (plan === 'free' && searchesToday >= FREE_SEARCHES_PER_DAY) {
         return NextResponse.json(
           { error: FREE_SEARCH_LIMIT_MESSAGE },
-          { status: 403 }
+          { status: 403 },
         )
       }
     }
@@ -151,7 +157,7 @@ export async function POST(req: NextRequest) {
 
       try {
         const paid = isPaidPlan(plan)
-        const resultCount = plan === 'lifetime' ? 25 : resultCountForPlan(plan)
+        const resultCount = resultCountForPlan(plan)
         // Free users only ever see ONE city in full, so we generate a small
         // detailed set instead of all 12 rich objects (the cause of the ~1 min
         // analyses). The locked grid is padded with cheap teasers below.
@@ -205,7 +211,7 @@ export async function POST(req: NextRequest) {
 
           await supabaseAdmin
             .from('profiles')
-            .update({ searches_this_month: searchesThisMonth + 1 })
+            .update({ searches_today: searchesToday + 1, search_day: today })
             .eq('id', userId)
         }
 

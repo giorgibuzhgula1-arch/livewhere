@@ -12,7 +12,7 @@ const SavePlanModal = dynamic(() => import('./SavePlanModal'), { ssr: false })
 import { CityResult, type AnalyzeRequest } from '@/lib/types'
 import { loadPendingAnalyze } from '@/lib/pending-analyze'
 import { getSiteUrl } from '@/lib/site-url'
-import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
+import { fetchUserPlan, isBlueprintPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
 import { exportRetirementReport } from '@/lib/export-pdf'
 
 function buildShareLine(city: CityResult): string {
@@ -106,7 +106,7 @@ export default function Results({
   }, [])
 
   const paid = isPaidPlan(plan)
-  const isLifetime = plan === 'lifetime'
+  const isBlueprint = isBlueprintPlan(plan)
   const locked = !paid
   const isUnlocked = (city: CityResult) => paid || !city.locked
   const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
@@ -307,7 +307,7 @@ export default function Results({
           )}
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {isLifetime && (
+          {isBlueprint && (
             <button
               type="button"
               onClick={handleDownloadPdf}
@@ -632,7 +632,7 @@ export default function Results({
         <CityComparison cities={compareSelection} currency={currency} />
       )}
 
-      {isLifetime && (
+      {isBlueprint && (
         <LifetimeInsights
           cities={ordered.filter(isUnlocked)}
           budget={typeof monthlyBudget === 'number' && monthlyBudget > 0 ? monthlyBudget : 0}

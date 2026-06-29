@@ -87,7 +87,7 @@ export default function SavePlanModal({
     try {
       if (!canSaveMorePlan(plan, savedCount)) {
         throw new Error(
-          `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plans. Upgrade to Premium for unlimited saves.`,
+          `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plan. Upgrade to Pro for unlimited saves.`,
         )
       }
 
@@ -185,7 +185,7 @@ export default function SavePlanModal({
                 <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.5)', marginBottom: 16, lineHeight: 1.5 }}>
                   Store this quiz and your city matches to compare scenarios later.
                   {!isPaidPlan(plan) && (
-                    <> Free: {savedCount}/{FREE_SAVED_PLANS_LIMIT} plans used.</>
+                    <> Free: {savedCount}/{FREE_SAVED_PLANS_LIMIT} plan used.</>
                   )}
                 </p>
 
@@ -203,7 +203,7 @@ export default function SavePlanModal({
                   >
                     Plan limit reached.{' '}
                     <Link href="/pricing" style={{ color: '#c8f05a' }}>
-                      Upgrade to Premium
+                      Upgrade to Pro
                     </Link>{' '}
                     for unlimited saves.
                   </div>
