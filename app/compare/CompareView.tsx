@@ -178,6 +178,89 @@ function buildOverallSummary(
   return `${winner.city.name} is the better retirement destination based on ${basis}.`
 }
 
+function shortMetricLabel(label: string): string {
+  return label.replace(/ Score$/, '')
+}
+
+type CategoryBreakdown = {
+  won: string[]
+  lost: string[]
+}
+
+function buildCategoryBreakdown(
+  winner: CityCompareMetrics,
+  loser: CityCompareMetrics,
+): CategoryBreakdown {
+  const won: string[] = []
+  const lost: string[] = []
+
+  for (const row of METRIC_ROWS) {
+    const result = rowWinner(
+      row.getValue(winner),
+      row.getValue(loser),
+      row.higherIsBetter,
+    )
+    const label = shortMetricLabel(row.label)
+    if (result === 'a') won.push(label)
+    else if (result === 'b') lost.push(label)
+  }
+
+  return { won, lost }
+}
+
+const chipRowStyle: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  gap: 8,
+  marginBottom: 16,
+}
+
+const chipSectionLabelStyle: React.CSSProperties = {
+  fontSize: 11,
+  letterSpacing: 1.5,
+  textTransform: 'uppercase',
+  color: 'rgba(240, 237, 232, 0.45)',
+  fontWeight: 600,
+  marginBottom: 8,
+}
+
+const wonChipStyle: React.CSSProperties = {
+  display: 'inline-block',
+  fontSize: 11,
+  fontWeight: 600,
+  color: '#c8f05a',
+  background: 'rgba(200, 240, 90, 0.12)',
+  border: '1px solid rgba(200, 240, 90, 0.28)',
+  borderRadius: 999,
+  padding: '4px 10px',
+}
+
+const lostChipStyle: React.CSSProperties = {
+  display: 'inline-block',
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'rgba(240, 237, 232, 0.5)',
+  background: 'rgba(255, 255, 255, 0.04)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  borderRadius: 999,
+  padding: '4px 10px',
+}
+
+function CategoryChips({ labels, variant }: { labels: string[]; variant: 'won' | 'lost' }) {
+  if (labels.length === 0) return null
+  const chipStyle = variant === 'won' ? wonChipStyle : lostChipStyle
+  return (
+    <div style={chipRowStyle}>
+      {labels.map((label) => (
+        <span key={label} style={chipStyle}>
+          {label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function WinnerBadge({ result }: { result: RowWinner }) {
   if (result === 'tie') {
     return <span className={styles.tieBadge}>Tie</span>
@@ -278,6 +361,7 @@ export default function CompareView() {
         winsA,
         winsB,
         isTie: false,
+        breakdown: buildCategoryBreakdown(metricsA, metricsB),
       }
     }
     if (winsB > winsA) {
@@ -287,20 +371,24 @@ export default function CompareView() {
         winsA,
         winsB,
         isTie: false,
+        breakdown: buildCategoryBreakdown(metricsB, metricsA),
       }
     }
 
     if (metricsA.overallRetirementScore === metricsB.overallRetirementScore) {
-      return { winner: null, loser: null, winsA, winsB, isTie: true }
+      return { winner: null, loser: null, winsA, winsB, isTie: true, breakdown: null }
     }
 
     const aWinsOverall = metricsA.overallRetirementScore > metricsB.overallRetirementScore
+    const winner = aWinsOverall ? metricsA : metricsB
+    const loser = aWinsOverall ? metricsB : metricsA
     return {
-      winner: aWinsOverall ? metricsA : metricsB,
-      loser: aWinsOverall ? metricsB : metricsA,
+      winner,
+      loser,
       winsA,
       winsB,
       isTie: false,
+      breakdown: buildCategoryBreakdown(winner, loser),
     }
   }, [metricsA, metricsB])
 
@@ -448,6 +536,56 @@ export default function CompareView() {
                       <p className={styles.overallSummary}>
                         {buildOverallSummary(overallResult.winner!, overallResult.loser!)}
                       </p>
+
+                      <div style={{ marginTop: 20, marginBottom: 4 }}>
+                        <p style={chipSectionLabelStyle}>Average Monthly Cost</p>
+                        <p
+                          style={{
+                            fontSize: 18,
+                            fontWeight: 600,
+                            color: '#f0ede8',
+                            margin: '0 0 20px',
+                          }}
+                        >
+                          ~{fmtUsd(overallResult.winner!.monthlyCostOfLiving)}/mo estimated
+                          living cost
+                        </p>
+
+                        {overallResult.breakdown && overallResult.breakdown.won.length > 0 && (
+                          <>
+                            <p style={chipSectionLabelStyle}>Won Categories</p>
+                            <CategoryChips labels={overallResult.breakdown.won} variant="won" />
+                          </>
+                        )}
+
+                        {overallResult.breakdown && overallResult.breakdown.lost.length > 0 && (
+                          <>
+                            <p style={chipSectionLabelStyle}>Lost Categories</p>
+                            <CategoryChips labels={overallResult.breakdown.lost} variant="lost" />
+                          </>
+                        )}
+
+                        {overallResult.breakdown && overallResult.breakdown.won.length > 0 && (
+                          <p
+                            className={styles.overallMeta}
+                            style={{ marginBottom: 6, color: 'rgba(240, 237, 232, 0.65)' }}
+                          >
+                            <span style={{ color: 'rgba(200, 240, 90, 0.85)' }}>Strongest in:</span>{' '}
+                            {overallResult.breakdown.won.join(' · ')}
+                          </p>
+                        )}
+
+                        {overallResult.breakdown && overallResult.breakdown.lost.length > 0 && (
+                          <p
+                            className={styles.overallMeta}
+                            style={{ marginBottom: 16, color: 'rgba(240, 237, 232, 0.55)' }}
+                          >
+                            <span style={{ color: 'rgba(240, 237, 232, 0.45)' }}>Watch out for:</span>{' '}
+                            {overallResult.breakdown.lost.join(' · ')}
+                          </p>
+                        )}
+                      </div>
+
                       <p className={styles.overallMeta}>
                         Won {Math.max(overallResult.winsA, overallResult.winsB)} of{' '}
                         {METRIC_ROWS.length} categories
