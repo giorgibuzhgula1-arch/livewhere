@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/monitor/check-cities",
+      "schedule": "0 9 * * 1"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import PlansView from './PlansView'
 
 export const metadata: Metadata = {
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 }
 
 export default function PlansPage() {
-  return <PlansView />
+  return (
+    <Suspense fallback={<main style={{ padding: 120, textAlign: 'center', color: 'rgba(240,237,232,0.5)' }}>Loading…</main>}>
+      <PlansView />
+    </Suspense>
+  )
 }

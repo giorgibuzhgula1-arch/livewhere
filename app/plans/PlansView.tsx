@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
@@ -15,6 +16,7 @@ import {
 import { fetchUserPlan, type UserPlan } from '@/lib/plan'
 import type { CityResult } from '@/lib/types'
 import SavedPlansCompare from '@/components/SavedPlansCompare'
+import MonitorFeed from '@/components/MonitorFeed'
 import styles from '../compare/compare.module.css'
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -27,6 +29,10 @@ type ModalContext = {
 }
 
 export default function PlansView() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const activeTab = searchParams.get('tab') === 'monitor' ? 'monitor' : 'plans'
+
   const [user, setUser] = useState<{ id: string } | null>(null)
   const [authReady, setAuthReady] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
@@ -171,6 +177,10 @@ export default function PlansView() {
       ? Math.round(modalContext.monthlyBudget)
       : undefined
 
+  function setTab(tab: 'plans' | 'monitor') {
+    router.replace(tab === 'monitor' ? '/plans?tab=monitor' : '/plans')
+  }
+
   if (!authReady) {
     return (
       <main className={styles.page}>
@@ -223,8 +233,42 @@ export default function PlansView() {
         ← Back to LiveWhere
       </Link>
 
-      <p className={styles.kicker}>My Plans</p>
-      <h1 className={styles.title}>Saved retirement plans</h1>
+      <p className={styles.kicker}>Dashboard</p>
+      <h1 className={styles.title}>
+        {activeTab === 'monitor' ? 'Retirement Monitor' : 'Saved retirement plans'}
+      </h1>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          marginBottom: 24,
+          flexWrap: 'wrap',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setTab('plans')}
+          style={tabBtn(activeTab === 'plans')}
+        >
+          My Plans
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('monitor')}
+          style={tabBtn(activeTab === 'monitor')}
+        >
+          Monitor
+        </button>
+      </div>
+
+      {activeTab === 'monitor' ? (
+        <MonitorFeed
+          userPlan={userPlan}
+          onUpgrade={() => router.push('/pricing')}
+        />
+      ) : (
+        <>
       <p className={styles.subtitle}>
         {paid
           ? 'Unlimited saved plans on Premium.'
@@ -468,6 +512,8 @@ export default function PlansView() {
           </div>
         </>
       )}
+        </>
+      )}
 
       {selectedCity && (
         <CityModal
@@ -481,6 +527,20 @@ export default function PlansView() {
       )}
     </main>
   )
+}
+
+function tabBtn(active: boolean): React.CSSProperties {
+  return {
+    background: active ? 'rgba(200,240,90,0.12)' : 'transparent',
+    border: `1px solid ${active ? 'rgba(200,240,90,0.4)' : 'rgba(255,255,255,0.12)'}`,
+    color: active ? '#c8f05a' : 'rgba(240,237,232,0.6)',
+    padding: '10px 18px',
+    borderRadius: 10,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: "'DM Sans', sans-serif",
+  }
 }
 
 function pillBtn(active: boolean): React.CSSProperties {
