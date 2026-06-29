@@ -12,6 +12,7 @@ import {
   type CityCompareMetrics,
 } from '@/lib/compare'
 import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
+import AIRetirementInsights from './AIRetirementInsights'
 import styles from './compare.module.css'
 
 function fmtUsd(n: number): string {
@@ -614,6 +615,10 @@ export default function CompareView() {
               </div>
             )}
           </div>
+
+          {comparingTwo && metricsA && metricsB && (
+            <AIRetirementInsights cityA={metricsA} cityB={metricsB} paid={paid} />
+          )}
         </div>
       )}
     </main>
