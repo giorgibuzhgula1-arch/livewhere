@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { CityResult } from '@/lib/types'
 import { compareHrefForCity } from '@/lib/compare'
+import { fetchUserPlan, isPaidPlan } from '@/lib/plan'
 import { visaScoreForCountry, visaScoreColor } from '@/lib/visa-data'
 
 interface Props {
@@ -125,6 +127,206 @@ function VisaBadge({ country }: { country: string }) {
   )
 }
 
+type CityInsight = {
+  savingsOver10Years: string
+  healthcareNote: string
+  taxNote: string
+  matchSummary: string
+}
+
+function toInsightPayload(city: CityResult) {
+  return {
+    name: city.name,
+    country: city.country,
+    score: city.score,
+    taxRate: city.taxRate,
+    monthlyCost: city.monthlyCost,
+    monthlyRent: city.monthlyRent,
+    monthlySavings: city.monthlySavings,
+    takeHomeMonthly: city.takeHomeMonthly,
+    scores: city.scores,
+  }
+}
+
+const insightShimmer: React.CSSProperties = {
+  background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)',
+  backgroundSize: '200% 100%',
+  animation: 'cityInsightShimmer 1.4s ease-in-out infinite',
+  borderRadius: 8,
+}
+
+function InsightSkeleton() {
+  return (
+    <div style={{ marginTop: 4 }}>
+      <style>{`
+        @keyframes cityInsightShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+      <div style={{ ...insightShimmer, width: '55%', height: 10, marginBottom: 12 }} />
+      {[1, 2, 3].map((i) => (
+        <div key={i} style={{ ...insightShimmer, width: `${90 - i * 8}%`, height: 12, marginBottom: 8 }} />
+      ))}
+      <div style={{ ...insightShimmer, width: '100%', height: 12, marginTop: 4, marginBottom: 6 }} />
+      <div style={{ ...insightShimmer, width: '72%', height: 12 }} />
+    </div>
+  )
+}
+
+function WhyThisMatchesYou({ city }: { city: CityResult }) {
+  const [paid, setPaid] = useState(false)
+  const [insight, setInsight] = useState<CityInsight | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchUserPlan().then((plan) => {
+      if (!cancelled) setPaid(isPaidPlan(plan))
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    setInsight(null)
+
+    void fetch('/api/city-insight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ city: toInsightPayload(city) }),
+    })
+      .then(async (res) => {
+        const data = (await res.json()) as { ok?: boolean; insight?: CityInsight; error?: string }
+        if (!res.ok || !data.ok || !data.insight) {
+          throw new Error(data.error ?? 'Failed to load insight')
+        }
+        return data.insight
+      })
+      .then((result) => {
+        if (!cancelled) setInsight(result)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load insight')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [city.name, city.country])
+
+  return (
+    <div
+      style={{
+        marginTop: 18,
+        paddingTop: 18,
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+      }}
+    >
+      <p
+        style={{
+          fontSize: 11,
+          letterSpacing: 1.5,
+          textTransform: 'uppercase',
+          color: '#c8f05a',
+          fontWeight: 600,
+          marginBottom: 12,
+        }}
+      >
+        Why this matches you
+      </p>
+
+      {loading && <InsightSkeleton />}
+
+      {!loading && error && (
+        <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', margin: 0 }}>{error}</p>
+      )}
+
+      {!loading && insight && (
+        <div style={{ position: 'relative' }}>
+          <div
+            style={
+              !paid
+                ? { filter: 'blur(7px)', userSelect: 'none', pointerEvents: 'none', opacity: 0.85 }
+                : undefined
+            }
+          >
+            <ul
+              style={{
+                margin: '0 0 12px',
+                padding: '0 0 0 18px',
+                fontSize: 13,
+                lineHeight: 1.55,
+                color: 'rgba(240,237,232,0.78)',
+              }}
+            >
+              <li style={{ marginBottom: 6 }}>
+                <span style={{ color: '#c8f05a', fontWeight: 600 }}>Savings:</span>{' '}
+                {insight.savingsOver10Years} over 10 years
+              </li>
+              <li style={{ marginBottom: 6 }}>
+                <span style={{ color: '#c8f05a', fontWeight: 600 }}>Healthcare:</span>{' '}
+                {insight.healthcareNote}
+              </li>
+              <li>
+                <span style={{ color: '#c8f05a', fontWeight: 600 }}>Taxes:</span>{' '}
+                {insight.taxNote}
+              </li>
+            </ul>
+            <p
+              style={{
+                fontSize: 14,
+                lineHeight: 1.55,
+                color: 'rgba(240,237,232,0.88)',
+                margin: 0,
+                fontStyle: 'italic',
+              }}
+            >
+              {insight.matchSummary}
+            </p>
+          </div>
+
+          {!paid && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Link
+                href="/pricing"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: '#c8f05a',
+                  color: '#0a0a0f',
+                  textDecoration: 'none',
+                  padding: '10px 18px',
+                  borderRadius: 10,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  fontFamily: "'DM Sans', sans-serif",
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Unlock — Upgrade to Premium
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false }: Props) {
   const color = getScoreColor(city.score)
 
@@ -188,6 +390,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
     >
       <CityDetails city={city} color={color} showCompareLink={showCompareLink} />
+      <WhyThisMatchesYou city={city} />
     </div>
   )
 }
