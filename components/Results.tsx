@@ -8,7 +8,8 @@ import CityComparison from './CityComparison'
 import LifetimeInsights from './LifetimeInsights'
 
 const CityModal = dynamic(() => import('./CityModal'), { ssr: false })
-import { CityResult } from '@/lib/types'
+const SavePlanModal = dynamic(() => import('./SavePlanModal'), { ssr: false })
+import { CityResult, type AnalyzeRequest } from '@/lib/types'
 import { getSiteUrl } from '@/lib/site-url'
 import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
 import { exportRetirementReport } from '@/lib/export-pdf'
@@ -28,6 +29,8 @@ interface Props {
   monthlyBudget?: number
   currency?: string
   lifestyle?: string[]
+  quizInput?: AnalyzeRequest | null
+  onAuthClick?: () => void
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
@@ -46,6 +49,8 @@ export default function Results({
   monthlyBudget,
   currency = 'USD',
   lifestyle,
+  quizInput = null,
+  onAuthClick,
 }: Props) {
   const showStreamingIndicator =
     streaming && (maxCities == null || cities.length < maxCities)
@@ -56,6 +61,7 @@ export default function Results({
   const [pdfLoading, setPdfLoading] = useState(false)
   const [compareSelection, setCompareSelection] = useState<CityResult[]>([])
   const [showComparison, setShowComparison] = useState(false)
+  const [savePlanOpen, setSavePlanOpen] = useState(false)
   const shareCardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -289,6 +295,25 @@ export default function Results({
               }}
             >
               Share Your Match 🌍
+            </button>
+          )}
+          {!streaming && cities.length > 0 && quizInput && (
+            <button
+              type="button"
+              onClick={() => setSavePlanOpen(true)}
+              style={{
+                background: 'rgba(200,240,90,0.1)',
+                border: '1px solid rgba(200,240,90,0.35)',
+                color: '#c8f05a',
+                padding: '10px 18px',
+                borderRadius: 10,
+                fontSize: 13,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              Save this Plan
             </button>
           )}
           <button type="button" onClick={onReset} style={{
@@ -598,6 +623,20 @@ export default function Results({
           plan={plan}
           onUnlock={onUnlockPro}
           onClose={() => setSelectedCity(null)}
+        />
+      )}
+
+      {quizInput && (
+        <SavePlanModal
+          isOpen={savePlanOpen}
+          onClose={() => setSavePlanOpen(false)}
+          quizInput={quizInput}
+          cities={cities}
+          maxCities={maxCities}
+          onAuthRequired={() => {
+            setSavePlanOpen(false)
+            onAuthClick?.()
+          }}
         />
       )}
     </section>

@@ -115,6 +115,20 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
             New
           </span>
         </Link>
+        {user && (
+          <Link
+            href="/plans"
+            style={{
+              fontSize: 13,
+              color: 'rgba(240,237,232,0.6)',
+              textDecoration: 'none',
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500,
+            }}
+          >
+            My Plans
+          </Link>
+        )}
         <Link
           href="/blog"
           style={{

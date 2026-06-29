@@ -35,6 +35,7 @@ import {
   saveOAuthNext,
 } from '@/lib/wait-for-session'
 import { startProCheckout } from '@/lib/start-pro-checkout'
+import { fetchSavedPlanById } from '@/lib/saved-plans'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -289,7 +290,14 @@ export default function HomePageClient({
 
   const runAnalyzeRef = useRef(runAnalyze)
   runAnalyzeRef.current = runAnalyze
+  const openAuthForSave = useCallback(() => {
+    setAuthVariant('default')
+    setAuthMode('login')
+    setAuthOpen(true)
+  }, [])
+
   const restoreAttemptedRef = useRef(false)
+  const savedPlanAttemptedRef = useRef(false)
 
   // Never show "Finishing sign-in…" longer than 1.5s — then go home.
   useEffect(() => {
@@ -309,6 +317,49 @@ export default function HomePageClient({
 
     return () => window.clearTimeout(timeoutId)
   }, [restoringAfterOAuth])
+
+  // Load a saved plan from /?savedPlan=<id> (logged-in users only).
+  useEffect(() => {
+    if (savedPlanAttemptedRef.current) return
+    if (typeof window === 'undefined') return
+
+    const planId = new URLSearchParams(window.location.search).get('savedPlan')
+    if (!planId) return
+
+    const savedPlanId = planId
+    savedPlanAttemptedRef.current = true
+    let cancelled = false
+
+    async function loadSavedPlan() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (cancelled) return
+
+      if (!user) {
+        openAuthForSave()
+        return
+      }
+
+      try {
+        const plan = await fetchSavedPlanById(savedPlanId)
+        if (cancelled || !plan) return
+
+        setQuizData(plan.quiz_input)
+        setMatches(plan.city_results)
+        setResultMaxCities(plan.max_cities)
+        setAwaitingAuthToView(false)
+        setError(null)
+        window.history.replaceState(null, '', '/')
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Could not load saved plan')
+        }
+      }
+    }
+
+    void loadSavedPlan()
+
+    return () => { cancelled = true }
+  }, [openAuthForSave])
 
   // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
@@ -545,6 +596,8 @@ export default function HomePageClient({
           monthlyBudget={quizData?.monthlyBudget}
           currency={quizData?.currency}
           lifestyle={quizData?.lifestyle}
+          quizInput={quizData}
+          onAuthClick={openAuthForSave}
         />
       )}
 
