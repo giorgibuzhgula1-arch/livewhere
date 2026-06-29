@@ -71,12 +71,12 @@ export default function Pricing({ onUpgrade }: Props) {
     }
   }
 
-  const blueprintCheckout: CheckoutType = isProPlan(userPlan) ? 'blueprint_upgrade' : 'blueprint'
-  const blueprintPrice = isProPlan(userPlan) ? '$100' : '$149'
+  const isProUpgrade = isProPlan(userPlan)
+  const blueprintCheckout: CheckoutType = isProUpgrade ? 'blueprint_upgrade' : 'blueprint'
   const blueprintBtn =
     loadingPlan === 'blueprint' || loadingPlan === 'blueprint_upgrade'
       ? 'Loading…'
-      : isProPlan(userPlan)
+      : isProUpgrade
         ? 'Upgrade to Blueprint — $100'
         : 'Get Retirement Blueprint'
 
@@ -124,8 +124,8 @@ export default function Pricing({ onUpgrade }: Props) {
     {
       id: 'blueprint',
       name: 'Blueprint Lifetime',
-      price: blueprintPrice,
-      period: isProPlan(userPlan) ? 'upgrade (one-time)' : 'one-time',
+      price: '$149',
+      period: 'one-time',
       features: [
         { text: 'Everything in Pro +' },
         { text: 'Personalized 30–50 page PDF Blueprint' },
@@ -140,6 +140,7 @@ export default function Pricing({ onUpgrade }: Props) {
       btn: blueprintBtn,
       style: 'ghost',
       checkoutType: blueprintCheckout,
+      note: isProUpgrade ? 'Pro member upgrade: pay only $100 more.' : undefined,
     },
     {
       id: 'monitor',
