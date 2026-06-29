@@ -183,8 +183,18 @@ export default function PlansView() {
       : undefined
 
   function setTab(tab: 'plans' | 'monitor') {
+    if (tab === 'monitor' && userProfile.plan === 'free') {
+      router.push('/pricing')
+      return
+    }
     router.replace(tab === 'monitor' ? '/plans?tab=monitor' : '/plans')
   }
+
+  useEffect(() => {
+    if (authReady && activeTab === 'monitor' && userProfile.plan === 'free') {
+      router.replace('/pricing')
+    }
+  }, [authReady, activeTab, userProfile.plan, router])
 
   if (!authReady) {
     return (

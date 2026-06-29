@@ -10,7 +10,12 @@ import {
   type CityMonitor,
   type MonitorSnapshot,
 } from '@/lib/city-monitor'
-import { hasMonitorAccess, isPaidPlan, type UserProfile } from '@/lib/plan'
+import {
+  hasMonitorAccess,
+  isBlueprintPlan,
+  isProPlan,
+  type UserProfile,
+} from '@/lib/plan'
 import { startMonitorCheckout } from '@/lib/start-monitor-checkout'
 import styles from '../app/compare/compare.module.css'
 
@@ -21,12 +26,21 @@ type Props = {
 
 export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
   const hasAccess = hasMonitorAccess(userProfile)
-  const isPaid = isPaidPlan(userProfile.plan)
+  const isPro = isProPlan(userProfile.plan)
+  const isBlueprint = isBlueprintPlan(userProfile.plan)
+  const isFree = userProfile.plan === 'free'
+  const showMonitorCheckout = isPro || (isBlueprint && !hasAccess)
   const [alerts, setAlerts] = useState<CityMonitor[]>([])
   const [monitored, setMonitored] = useState<CityMonitor[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+
+  useEffect(() => {
+    if (isFree) {
+      onUpgrade()
+    }
+  }, [isFree, onUpgrade])
 
   const load = useCallback(async () => {
     if (!hasAccess) {
@@ -55,7 +69,7 @@ export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
   }, [load])
 
   async function handleUpgradeClick() {
-    if (isPaid) {
+    if (showMonitorCheckout) {
       setCheckoutLoading(true)
       setError(null)
       try {
@@ -65,9 +79,11 @@ export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
       } finally {
         setCheckoutLoading(false)
       }
-      return
     }
-    onUpgrade()
+  }
+
+  if (isFree) {
+    return null
   }
 
   if (!hasAccess) {
@@ -110,9 +126,9 @@ export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
             margin: '0 auto 24px',
           }}
         >
-          {isPaid
-            ? 'Get weekly alerts when taxes, visa rules, healthcare scores, or cost of living change for your top saved cities. Add Monitor to your plan for $9.99/month.'
-            : 'Get weekly alerts when taxes, visa rules, healthcare scores, or cost of living change for your top saved cities. Available with Monitor ($9.99/mo) or included for 12 months with Blueprint Lifetime.'}
+          {isPro
+            ? 'Get weekly alerts when taxes, visa rules, healthcare scores, or cost of living change for your top saved cities. Add Monitor to your Pro plan for $9.99/month.'
+            : 'Your included 12 months of Monitor has ended. Continue weekly city alerts for $9.99/month.'}
         </p>
         {error && (
           <p
@@ -142,19 +158,8 @@ export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
             opacity: checkoutLoading ? 0.7 : 1,
           }}
         >
-          {checkoutLoading
-            ? 'Loading…'
-            : isPaid
-              ? 'Add Monitor — $9.99/month'
-              : 'Start Monitoring'}
+          {checkoutLoading ? 'Loading…' : 'Add Monitor — $9.99/month'}
         </button>
-        {!isPaid && (
-          <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.4)', marginTop: 16 }}>
-            <Link href="/pricing" style={{ color: '#c8f05a' }}>
-              View pricing
-            </Link>
-          </p>
-        )}
       </div>
     )
   }
