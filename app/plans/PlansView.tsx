@@ -1,21 +1,30 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import {
   deleteSavedPlan,
+  ensurePlanSummary,
   fetchSavedPlans,
   formatPlanDate,
   FREE_SAVED_PLANS_LIMIT,
   type SavedRetirementPlan,
 } from '@/lib/saved-plans'
-import { fetchUserPlan, isPaidPlan } from '@/lib/plan'
+import { fetchUserPlan, type UserPlan } from '@/lib/plan'
+import type { CityResult } from '@/lib/types'
 import SavedPlansCompare from '@/components/SavedPlansCompare'
 import styles from '../compare/compare.module.css'
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
+const CityModal = dynamic(() => import('@/components/CityModal'), { ssr: false })
+
+type ModalContext = {
+  monthlyBudget?: number
+  currency?: string
+  lifestyle?: string[]
+}
 
 export default function PlansView() {
   const [user, setUser] = useState<{ id: string } | null>(null)
@@ -28,7 +37,33 @@ export default function PlansView() {
   const [compareA, setCompareA] = useState<string>('')
   const [compareB, setCompareB] = useState<string>('')
   const [paid, setPaid] = useState(false)
+  const [userPlan, setUserPlan] = useState<UserPlan>('free')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
+  const [modalContext, setModalContext] = useState<ModalContext>({})
+  const [summaryLoadingIds, setSummaryLoadingIds] = useState<Set<string>>(new Set())
+  const summaryRequestedRef = useRef<Set<string>>(new Set())
+
+  const backfillSummaries = useCallback((rows: SavedRetirementPlan[]) => {
+    for (const plan of rows) {
+      if (plan.ai_summary?.trim() || summaryRequestedRef.current.has(plan.id)) continue
+      summaryRequestedRef.current.add(plan.id)
+      setSummaryLoadingIds((prev) => new Set(prev).add(plan.id))
+
+      void ensurePlanSummary(plan).then((summary) => {
+        setSummaryLoadingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(plan.id)
+          return next
+        })
+        if (summary) {
+          setPlans((prev) =>
+            prev.map((p) => (p.id === plan.id ? { ...p, ai_summary: summary } : p)),
+          )
+        }
+      })
+    }
+  }, [])
 
   const loadPlans = useCallback(async () => {
     setLoading(true)
@@ -39,13 +74,14 @@ export default function PlansView() {
       if (rows.length > 0) {
         setActiveId((prev) => prev ?? rows[0].id)
       }
+      backfillSummaries(rows)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Could not load plans')
       setPlans([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [backfillSummaries])
 
   useEffect(() => {
     let cancelled = false
@@ -58,7 +94,10 @@ export default function PlansView() {
 
       if (u) {
         const plan = await fetchUserPlan()
-        if (!cancelled) setPaid(isPaidPlan(plan))
+        if (!cancelled) {
+          setPaid(plan === 'pro' || plan === 'lifetime')
+          setUserPlan(plan)
+        }
         await loadPlans()
       } else {
         setLoading(false)
@@ -71,7 +110,10 @@ export default function PlansView() {
       setUser(session?.user ? { id: session.user.id } : null)
       if (session?.user) {
         void loadPlans()
-        void fetchUserPlan().then((p) => setPaid(isPaidPlan(p)))
+        void fetchUserPlan().then((p) => {
+          setUserPlan(p)
+          setPaid(p === 'pro' || p === 'lifetime')
+        })
       } else {
         setPlans([])
         setActiveId(null)
@@ -98,12 +140,22 @@ export default function PlansView() {
     [plans, compareB],
   )
 
+  function handleCityClick(city: CityResult, plan: SavedRetirementPlan) {
+    setModalContext({
+      monthlyBudget: plan.quiz_input.monthlyBudget,
+      currency: plan.quiz_input.currency,
+      lifestyle: plan.quiz_input.lifestyle,
+    })
+    setSelectedCity(city)
+  }
+
   async function handleDelete(id: string) {
     if (!window.confirm('Delete this saved plan?')) return
     setDeletingId(id)
     try {
       await deleteSavedPlan(id)
       setPlans((prev) => prev.filter((p) => p.id !== id))
+      summaryRequestedRef.current.delete(id)
       if (activeId === id) setActiveId(null)
       if (compareA === id) setCompareA('')
       if (compareB === id) setCompareB('')
@@ -113,6 +165,11 @@ export default function PlansView() {
       setDeletingId(null)
     }
   }
+
+  const visaMonthlyBudget =
+    typeof modalContext.monthlyBudget === 'number' && modalContext.monthlyBudget > 0
+      ? Math.round(modalContext.monthlyBudget)
+      : undefined
 
   if (!authReady) {
     return (
@@ -290,9 +347,31 @@ export default function PlansView() {
                 marginBottom: 28,
               }}
             >
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, marginBottom: 8 }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, marginBottom: 12 }}>
                 {activePlan.name}
               </h2>
+
+              {activePlan.ai_summary ? (
+                <p
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.7,
+                    color: 'rgba(240,237,232,0.75)',
+                    marginBottom: 16,
+                    padding: '14px 16px',
+                    background: 'rgba(200,240,90,0.04)',
+                    border: '1px solid rgba(200,240,90,0.15)',
+                    borderRadius: 12,
+                  }}
+                >
+                  {activePlan.ai_summary}
+                </p>
+              ) : summaryLoadingIds.has(activePlan.id) ? (
+                <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, fontStyle: 'italic' }}>
+                  Generating plan summary…
+                </p>
+              ) : null}
+
               <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.5)', marginBottom: 16 }}>
                 Budget {activePlan.quiz_input.monthlyBudget.toLocaleString()} {activePlan.quiz_input.currency}/mo
                 {activePlan.quiz_input.lifestyle?.length
@@ -301,23 +380,39 @@ export default function PlansView() {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {activePlan.city_results.slice(0, 12).map((city, i) => (
-                  <div
+                  <button
                     key={`${city.name}|${city.country}`}
+                    type="button"
+                    onClick={() => handleCityClick(city, activePlan)}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       gap: 12,
                       padding: '10px 12px',
                       background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.06)',
                       borderRadius: 10,
                       fontSize: 14,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      color: 'inherit',
+                      fontFamily: "'DM Sans', sans-serif",
+                      transition: 'border-color 0.15s, background 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(200,240,90,0.35)'
+                      e.currentTarget.style.background = 'rgba(200,240,90,0.04)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
                     }}
                   >
                     <span>
                       {i + 1}. {city.flag} {city.name}, {city.country}
                     </span>
                     <span style={{ color: '#c8f05a', fontWeight: 600 }}>{city.score}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -361,13 +456,28 @@ export default function PlansView() {
               </select>
             </div>
             {comparePlanA && comparePlanB && comparePlanA.id !== comparePlanB.id && (
-              <SavedPlansCompare planA={comparePlanA} planB={comparePlanB} />
+              <SavedPlansCompare
+                planA={comparePlanA}
+                planB={comparePlanB}
+                onCityClick={handleCityClick}
+              />
             )}
             {compareA && compareB && compareA === compareB && (
               <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.5)' }}>Choose two different plans.</p>
             )}
           </div>
         </>
+      )}
+
+      {selectedCity && (
+        <CityModal
+          city={selectedCity}
+          monthlyBudget={visaMonthlyBudget}
+          currency={modalContext.currency}
+          lifestyle={modalContext.lifestyle}
+          plan={userPlan}
+          onClose={() => setSelectedCity(null)}
+        />
       )}
     </main>
   )

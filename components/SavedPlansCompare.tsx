@@ -1,6 +1,7 @@
 'use client'
 
 import type { SavedRetirementPlan } from '@/lib/saved-plans'
+import type { CityResult } from '@/lib/types'
 
 function fmtUsd(n: number, currency = 'USD'): string {
   const sym: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' }
@@ -10,9 +11,50 @@ function fmtUsd(n: number, currency = 'USD'): string {
 type Props = {
   planA: SavedRetirementPlan
   planB: SavedRetirementPlan
+  onCityClick?: (city: CityResult, plan: SavedRetirementPlan) => void
 }
 
-export default function SavedPlansCompare({ planA, planB }: Props) {
+function CityCell({
+  city,
+  plan,
+  currency,
+  onCityClick,
+}: {
+  city: CityResult | undefined
+  plan: SavedRetirementPlan
+  currency: string
+  onCityClick?: (city: CityResult, plan: SavedRetirementPlan) => void
+}) {
+  if (!city) return <>—</>
+
+  return (
+    <button
+      type="button"
+      onClick={() => onCityClick?.(city, plan)}
+      style={{
+        background: 'none',
+        border: 'none',
+        padding: 0,
+        margin: 0,
+        textAlign: 'left',
+        cursor: onCityClick ? 'pointer' : 'default',
+        color: 'inherit',
+        font: 'inherit',
+        width: '100%',
+      }}
+    >
+      {city.flag} {city.name} — {city.score}
+      <div style={{ fontSize: 11, color: 'rgba(240,237,232,0.45)', marginTop: 4 }}>
+        {fmtUsd(city.monthlyCost, currency)}/mo
+      </div>
+      {onCityClick && (
+        <div style={{ fontSize: 11, color: '#c8f05a', marginTop: 4 }}>View details →</div>
+      )}
+    </button>
+  )
+}
+
+export default function SavedPlansCompare({ planA, planB, onCityClick }: Props) {
   const currencyA = planA.quiz_input.currency || 'USD'
   const currencyB = planB.quiz_input.currency || 'USD'
   const rows = Math.min(Math.max(planA.city_results.length, planB.city_results.length, 5), 12)
@@ -96,29 +138,11 @@ export default function SavedPlansCompare({ planA, planB }: Props) {
             return (
               <tr key={i}>
                 <td style={tdStyle}>{i + 1}</td>
-                <td style={tdStyle}>
-                  {cityA ? (
-                    <>
-                      {cityA.flag} {cityA.name} — {cityA.score}
-                      <div style={{ fontSize: 11, color: 'rgba(240,237,232,0.45)', marginTop: 4 }}>
-                        {fmtUsd(cityA.monthlyCost, currencyA)}/mo
-                      </div>
-                    </>
-                  ) : (
-                    '—'
-                  )}
+                <td style={{ ...tdStyle, ...(onCityClick && cityA ? clickableCell : {}) }}>
+                  <CityCell city={cityA} plan={planA} currency={currencyA} onCityClick={onCityClick} />
                 </td>
-                <td style={tdStyle}>
-                  {cityB ? (
-                    <>
-                      {cityB.flag} {cityB.name} — {cityB.score}
-                      <div style={{ fontSize: 11, color: 'rgba(240,237,232,0.45)', marginTop: 4 }}>
-                        {fmtUsd(cityB.monthlyCost, currencyB)}/mo
-                      </div>
-                    </>
-                  ) : (
-                    '—'
-                  )}
+                <td style={{ ...tdStyle, ...(onCityClick && cityB ? clickableCell : {}) }}>
+                  <CityCell city={cityB} plan={planB} currency={currencyB} onCityClick={onCityClick} />
                 </td>
               </tr>
             )
@@ -127,6 +151,10 @@ export default function SavedPlansCompare({ planA, planB }: Props) {
       </table>
     </div>
   )
+}
+
+const clickableCell: React.CSSProperties = {
+  transition: 'background 0.15s',
 }
 
 const thStyle: React.CSSProperties = {

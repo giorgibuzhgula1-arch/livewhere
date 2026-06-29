@@ -11,6 +11,7 @@ export type SavedRetirementPlan = {
   quiz_input: AnalyzeRequest
   city_results: CityResult[]
   max_cities: number | null
+  ai_summary: string | null
   created_at: string
   updated_at: string
 }
@@ -104,7 +105,42 @@ export async function saveRetirementPlan(params: {
     .single()
 
   if (error) throw new Error(error.message)
-  return data as SavedRetirementPlan
+  const saved = data as SavedRetirementPlan
+  void ensurePlanSummary(saved)
+  return saved
+}
+
+async function authFetchHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (session?.access_token) {
+    headers.Authorization = `Bearer ${session.access_token}`
+  }
+  return headers
+}
+
+/** Generate and persist AI summary for a saved plan (no-op if summary exists). */
+export async function ensurePlanSummary(plan: SavedRetirementPlan): Promise<string | null> {
+  if (plan.ai_summary?.trim()) return plan.ai_summary
+
+  const headers = await authFetchHeaders()
+  if (!headers.Authorization) return null
+
+  const res = await fetch('/api/plan-summary', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      planId: plan.id,
+      planName: plan.name,
+      quizInput: plan.quiz_input,
+      cityResults: plan.city_results,
+    }),
+  })
+
+  if (!res.ok) return null
+
+  const json = (await res.json()) as { summary?: string }
+  return json.summary?.trim() ?? null
 }
 
 export async function deleteSavedPlan(id: string): Promise<void> {
