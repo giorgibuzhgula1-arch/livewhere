@@ -174,6 +174,9 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
         <Link href="/blog" style={secondary} onClick={onNavigate}>
           Blog
         </Link>
+        <Link href="/affiliates" style={secondary} onClick={onNavigate}>
+          Affiliates
+        </Link>
       </>
     )
   }
@@ -306,6 +309,9 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
             </Link>
             <Link href="/blog" style={secondaryLinkStyle}>
               Blog
+            </Link>
+            <Link href="/affiliates" style={secondaryLinkStyle}>
+              Affiliates
             </Link>
           </div>
 
