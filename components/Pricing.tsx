@@ -12,6 +12,7 @@ interface Props {
 type PlanFeature = {
   text: string
   included?: boolean
+  highlighted?: boolean
 }
 
 type PricingTier = {
@@ -24,6 +25,7 @@ type PricingTier = {
   style: 'primary' | 'ghost'
   popular?: boolean
   note?: string
+  valueSummary?: string
   checkoutType?: CheckoutType
   action?: 'signup'
 }
@@ -124,9 +126,13 @@ export default function Pricing({ onUpgrade }: Props) {
     {
       id: 'blueprint',
       name: 'Blueprint Lifetime',
-      price: '$149',
+      price: isProUpgrade ? '$100' : '$149',
       period: 'one-time',
       features: [
+        {
+          text: 'Includes 12 months of Retirement Monitor — $120 value',
+          highlighted: true,
+        },
         { text: 'Everything in Pro +' },
         { text: 'Personalized 30–50 page PDF Blueprint' },
         { text: '10-Year Financial Projection' },
@@ -140,7 +146,10 @@ export default function Pricing({ onUpgrade }: Props) {
       btn: blueprintBtn,
       style: 'ghost',
       checkoutType: blueprintCheckout,
-      note: isProUpgrade ? 'Pro member upgrade: pay only $100 more.' : undefined,
+      valueSummary: isProUpgrade ? undefined : 'Total value: $269 — yours for $149',
+      note: isProUpgrade
+        ? "Pro member price — you've already paid $49. Total value: $269"
+        : undefined,
     },
     {
       id: 'monitor',
@@ -295,35 +304,84 @@ export default function Pricing({ onUpgrade }: Props) {
               >
                 {tier.period}
               </div>
-              <ul style={{ listStyle: 'none', marginBottom: 24, flex: 1 }}>
+              <ul style={{ listStyle: 'none', marginBottom: tier.valueSummary ? 12 : 24, flex: 1 }}>
                 {tier.features.map((f) => (
                   <li
                     key={f.text}
                     style={{
                       fontSize: 13,
-                      padding: '8px 0',
-                      borderBottom: '1px solid rgba(255,255,255,0.07)',
+                      padding: f.highlighted ? '10px 12px' : '8px 0',
+                      marginBottom: f.highlighted ? 10 : 0,
+                      borderBottom: f.highlighted
+                        ? 'none'
+                        : '1px solid rgba(255,255,255,0.07)',
+                      borderRadius: f.highlighted ? 10 : undefined,
+                      background: f.highlighted ? 'rgba(200,240,90,0.1)' : undefined,
+                      border: f.highlighted
+                        ? '1px solid rgba(200,240,90,0.35)'
+                        : undefined,
                       display: 'flex',
                       gap: 8,
+                      alignItems: f.highlighted ? 'flex-start' : 'center',
                       color:
-                        f.included === false
-                          ? 'rgba(240,237,232,0.35)'
-                          : 'rgba(240,237,232,0.6)',
+                        f.highlighted
+                          ? '#c8f05a'
+                          : f.included === false
+                            ? 'rgba(240,237,232,0.35)'
+                            : 'rgba(240,237,232,0.6)',
+                      fontWeight: f.highlighted ? 600 : 400,
                     }}
                   >
-                    <span
-                      style={{
-                        color: f.included === false ? '#f05a8c' : '#c8f05a',
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {f.included === false ? '✕' : '✓'}
-                    </span>
-                    {f.text}
+                    {f.highlighted ? (
+                      <span
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          letterSpacing: 0.6,
+                          textTransform: 'uppercase',
+                          color: '#0a0a0f',
+                          background: '#c8f05a',
+                          padding: '3px 6px',
+                          borderRadius: 4,
+                          flexShrink: 0,
+                          lineHeight: 1.2,
+                          marginTop: 1,
+                        }}
+                      >
+                        Bonus
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          color: f.included === false ? '#f05a8c' : '#c8f05a',
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {f.included === false ? '✕' : '✓'}
+                      </span>
+                    )}
+                    <span style={{ lineHeight: 1.45 }}>{f.text}</span>
                   </li>
                 ))}
               </ul>
+              {tier.valueSummary && (
+                <p
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#c8f05a',
+                    marginBottom: 20,
+                    padding: '10px 12px',
+                    background: 'rgba(200,240,90,0.06)',
+                    borderRadius: 10,
+                    border: '1px solid rgba(200,240,90,0.15)',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {tier.valueSummary}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => handleTierClick(tier)}
