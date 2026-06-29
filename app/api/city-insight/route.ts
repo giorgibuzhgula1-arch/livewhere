@@ -12,49 +12,55 @@ export type CityInsight = {
   matchSummary: string
 }
 
-type CityInsightPayload = {
-  name: string
-  country: string
-  score: number
-  monthlyCost: number
-  monthlySavings: number
-  taxRate: number
-  healthcareScore: number
-  safetyScore: number
+function asNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
 }
 
-type CityInsightRequest = {
-  city?: CityInsightPayload
+function pickNumber(city: Record<string, unknown>, keys: string[]): number {
+  for (const key of keys) {
+    const value = asNumber(city[key])
+    if (value != null) return value
+  }
+  const scores = city.scores
+  if (scores && typeof scores === 'object') {
+    const scoreRecord = scores as Record<string, unknown>
+    for (const key of keys) {
+      const value = asNumber(scoreRecord[key])
+      if (value != null) return value
+    }
+  }
+  return 0
 }
 
-function isCityInsightPayload(value: unknown): value is CityInsightPayload {
-  if (!value || typeof value !== 'object') return false
-  const city = value as Record<string, unknown>
-  return (
-    typeof city.name === 'string' &&
-    city.name.trim().length > 0 &&
-    typeof city.country === 'string' &&
-    city.country.trim().length > 0 &&
-    typeof city.score === 'number' &&
-    Number.isFinite(city.score) &&
-    typeof city.monthlyCost === 'number' &&
-    Number.isFinite(city.monthlyCost) &&
-    typeof city.monthlySavings === 'number' &&
-    Number.isFinite(city.monthlySavings) &&
-    typeof city.taxRate === 'number' &&
-    Number.isFinite(city.taxRate) &&
-    typeof city.healthcareScore === 'number' &&
-    Number.isFinite(city.healthcareScore) &&
-    typeof city.safetyScore === 'number' &&
-    Number.isFinite(city.safetyScore)
-  )
+function normalizeCity(city: Record<string, unknown>) {
+  return {
+    name: String(city.name ?? 'Unknown city').trim(),
+    country: String(city.country ?? 'Unknown country').trim(),
+    score: pickNumber(city, ['score', 'matchScore', 'match_score']),
+    monthlyCost: pickNumber(city, ['monthlyCost', 'monthly_cost', 'monthlyCostOfLiving']),
+    monthlySavings: pickNumber(city, ['monthlySavings', 'monthly_savings']),
+    taxRate: pickNumber(city, ['taxRate', 'tax_rate']),
+    healthcareScore: pickNumber(city, ['healthcareScore', 'healthcare_score', 'health']),
+    safetyScore: pickNumber(city, ['safetyScore', 'safety_score', 'safety']),
+  }
+}
+
+function hasCityName(city: unknown): city is Record<string, unknown> {
+  if (!city || typeof city !== 'object') return false
+  const name = (city as Record<string, unknown>).name
+  return typeof name === 'string' && name.trim().length > 0
 }
 
 function formatUsd(amount: number): string {
   return `$${Math.round(Math.abs(amount)).toLocaleString('en-US')}`
 }
 
-function buildPrompt(city: CityInsightPayload): string {
+function buildPrompt(city: ReturnType<typeof normalizeCity>): string {
   const tenYearSavings = Math.round(city.monthlySavings * 12 * 10)
   const savingsLabel =
     tenYearSavings >= 0
@@ -83,7 +89,7 @@ Return ONLY valid JSON with these keys (no markdown):
 
 Rules:
 - savingsOver10Years must reflect the estimated 10-year savings (${savingsLabel}), formatted like "$42,000" or "-$12,000".
-- healthcareNote must mention the healthcare score (${city.healthcareScore}/100) in context — e.g. stronger or weaker than typical matches.
+- healthcareNote must mention the healthcare score (${city.healthcareScore}/100) in context.
 - taxNote must reference the ${city.taxRate}% tax rate specifically.
 - matchSummary must include the city name "${city.name}" and be unique to this city's data.
 - Never copy example numbers from instructions; every value must come from the CITY DATA above.`
@@ -110,16 +116,23 @@ function parseInsight(raw: string): CityInsight | null {
 }
 
 export async function POST(req: NextRequest) {
-  let body: CityInsightRequest
+  let body: unknown
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  if (!isCityInsightPayload(body.city)) {
-    return NextResponse.json({ error: 'city is required with valid fields' }, { status: 400 })
+  console.log('[city-insight] received body:', JSON.stringify(body, null, 2))
+
+  const record = body && typeof body === 'object' ? (body as Record<string, unknown>) : null
+  const rawCity = record?.city ?? record
+
+  if (!hasCityName(rawCity)) {
+    return NextResponse.json({ error: 'city.name is required' }, { status: 400 })
   }
+
+  const city = normalizeCity(rawCity)
 
   const apiKey = process.env.OPENAI_API_KEY?.trim()
   if (!apiKey) {
@@ -146,7 +159,7 @@ export async function POST(req: NextRequest) {
           },
           {
             role: 'user',
-            content: buildPrompt(body.city),
+            content: buildPrompt(city),
           },
         ],
       }),

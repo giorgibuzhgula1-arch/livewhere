@@ -135,15 +135,23 @@ type CityInsight = {
 }
 
 function toInsightPayload(city: CityResult) {
+  console.log('[WhyThisMatchesYou] city prop:', city)
   return {
     name: city.name,
     country: city.country,
+    continent: city.continent,
+    flag: city.flag,
     score: city.score,
-    monthlyCost: city.monthlyCost,
-    monthlySavings: city.monthlySavings,
     taxRate: city.taxRate,
-    healthcareScore: city.scores.health,
-    safetyScore: city.scores.safety,
+    monthlyRent: city.monthlyRent,
+    monthlyCost: city.monthlyCost,
+    takeHomeMonthly: city.takeHomeMonthly,
+    monthlySavings: city.monthlySavings,
+    healthcare: city.healthcare,
+    visa: city.visa,
+    tags: city.tags,
+    scores: city.scores,
+    aiInsight: city.aiInsight,
   }
 }
 
@@ -193,10 +201,13 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
     setError(null)
     setInsight(null)
 
+    const payload = toInsightPayload(city)
+    console.log('[WhyThisMatchesYou] API payload:', payload)
+
     void fetch('/api/city-insight', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ city: toInsightPayload(city) }),
+      body: JSON.stringify({ city: payload }),
     })
       .then(async (res) => {
         const data = (await res.json()) as { ok?: boolean; insight?: CityInsight; error?: string }
@@ -225,8 +236,8 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
     city.monthlyCost,
     city.monthlySavings,
     city.taxRate,
-    city.scores.health,
-    city.scores.safety,
+    city.scores,
+    city.healthcare,
   ])
 
   return (
