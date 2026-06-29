@@ -12,8 +12,11 @@ interface Props {
   mode: 'login' | 'signup'
   onClose: () => void
   onModeSwitch: () => void
-  /** When true, show Google sign-in only (e.g. before running analysis). */
+  /** @deprecated Use variant="results" instead */
   googleOnly?: boolean
+  /** `results` — after quiz; redirects back to saved results. */
+  variant?: 'default' | 'results'
+  onAuthSuccess?: () => void
 }
 
 export default function AuthModal({
@@ -22,21 +25,23 @@ export default function AuthModal({
   onClose,
   onModeSwitch,
   googleOnly = false,
+  variant = 'default',
+  onAuthSuccess,
 }: Props) {
-  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [checkEmail, setCheckEmail] = useState(false)
+
+  const restoreResults = variant === 'results' || googleOnly
 
   useEffect(() => {
     if (!isOpen) {
-      setFullName('')
       setEmail('')
       setPassword('')
       setError(null)
-      setSuccess(false)
+      setCheckEmail(false)
       setLoading(false)
     }
   }, [isOpen])
@@ -45,18 +50,27 @@ export default function AuthModal({
     return typeof window !== 'undefined' ? window.location.origin : getSiteUrl()
   }
 
+  function resultsNextPath() {
+    return '/?restore=results'
+  }
+
+  function prepareResultsRestore() {
+    markPendingAuthRestore()
+    saveOAuthNext(resultsNextPath())
+  }
+
   async function signInWithGoogle() {
     setLoading(true)
     setError(null)
-    const nextPath = googleOnly ? '/?restore=results' : '/'
-    saveOAuthNext(nextPath)
-    if (googleOnly) {
-      markPendingAuthRestore()
+
+    const nextPath = restoreResults ? resultsNextPath() : '/'
+    if (restoreResults) {
+      prepareResultsRestore()
+    } else {
+      saveOAuthNext(nextPath)
     }
 
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : getSiteUrl()
-    const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`
+    const redirectTo = `${authRedirectOrigin()}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -69,52 +83,47 @@ export default function AuthModal({
     }
   }
 
-  async function handleSubmit(e?: FormEvent) {
-    e?.preventDefault()
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
     setLoading(true)
     setError(null)
+    setCheckEmail(false)
 
     const trimmedEmail = email.trim()
-    const trimmedName = fullName.trim()
 
     try {
-      if (mode === 'signup') {
-        if (!trimmedName) {
-          throw new Error('Please enter your full name')
-        }
-        if (!trimmedEmail) {
-          throw new Error('Please enter your email')
-        }
-        if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters')
-        }
+      if (!trimmedEmail) throw new Error('Enter your email')
+      if (password.length < 6) throw new Error('Password must be at least 6 characters')
 
-        const redirectTo = `${authRedirectOrigin()}/auth/callback?next=${encodeURIComponent('/')}`
+      if (mode === 'signup') {
+        if (restoreResults) prepareResultsRestore()
+
+        const nextPath = restoreResults ? resultsNextPath() : '/'
+        const redirectTo = `${authRedirectOrigin()}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: trimmedEmail,
           password,
-          options: {
-            data: { full_name: trimmedName },
-            emailRedirectTo: redirectTo,
-          },
+          options: { emailRedirectTo: redirectTo },
         })
         if (signUpError) throw signUpError
 
         trackSignUp('email')
 
         if (data.session) {
+          onAuthSuccess?.()
           onClose()
           return
         }
 
-        setSuccess(true)
+        setCheckEmail(true)
       } else {
-        if (!trimmedEmail) {
-          throw new Error('Please enter your email')
-        }
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password })
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        })
         if (signInError) throw signInError
+        onAuthSuccess?.()
         onClose()
       }
     } catch (err: unknown) {
@@ -124,30 +133,34 @@ export default function AuthModal({
     }
   }
 
-  function handleModeSwitch() {
-    setError(null)
-    setSuccess(false)
-    onModeSwitch()
-  }
+  const title = restoreResults
+    ? 'View your results'
+    : mode === 'signup'
+      ? 'Sign up'
+      : 'Sign in'
 
-  const inputStyle = {
+  const inputStyle: React.CSSProperties = {
     width: '100%',
     background: '#1a1a26',
     border: '1px solid rgba(255,255,255,0.07)',
     color: '#f0ede8',
-    padding: '14px 18px',
-    borderRadius: 12,
+    padding: '12px 14px',
+    borderRadius: 10,
     fontSize: 15,
     fontFamily: "'DM Sans', sans-serif",
     outline: 'none',
-    marginBottom: 12,
+    boxSizing: 'border-box',
   }
 
-  const title = googleOnly
-    ? 'Sign in to analyze your cities'
-    : mode === 'login'
-      ? 'Welcome back'
-      : 'Create account'
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: 'rgba(240,237,232,0.45)',
+    fontWeight: 600,
+    marginBottom: 6,
+  }
 
   return (
     <AnimatePresence>
@@ -178,66 +191,47 @@ export default function AuthModal({
             style={{
               background: '#12121a',
               border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 24,
-              padding: 40,
-              maxWidth: 400,
+              borderRadius: 20,
+              padding: '28px 24px',
+              maxWidth: 380,
               width: '100%',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 32,
-              }}
-            >
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700 }}>
                 {title}
               </div>
               <button
                 type="button"
                 onClick={onClose}
+                aria-label="Close"
                 style={{
                   background: 'none',
                   border: 'none',
                   color: 'rgba(240,237,232,0.45)',
-                  fontSize: 20,
+                  fontSize: 18,
                   cursor: 'pointer',
+                  lineHeight: 1,
                 }}
               >
                 ✕
               </button>
             </div>
 
-            {success ? (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: 40, marginBottom: 16 }}>✉️</div>
-                <p style={{ color: 'rgba(240,237,232,0.7)', lineHeight: 1.6 }}>
-                  Check your email to confirm your account, then come back to sign in.
-                </p>
-              </div>
+            {checkEmail ? (
+              <p style={{ color: 'rgba(240,237,232,0.7)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                Check your email to confirm your account, then sign in here.
+              </p>
             ) : (
               <>
-                {googleOnly && (
-                  <p style={{
-                    fontSize: 14,
-                    color: 'rgba(240,237,232,0.55)',
-                    lineHeight: 1.6,
-                    marginBottom: 20,
-                  }}>
-                    Sign in with Google to run your personalized city analysis and save your results.
-                  </p>
-                )}
-
                 {error && (
                   <div
                     style={{
                       background: 'rgba(240,90,140,0.1)',
                       border: '1px solid rgba(240,90,140,0.3)',
                       borderRadius: 10,
-                      padding: '12px 16px',
-                      marginBottom: 16,
+                      padding: '10px 12px',
+                      marginBottom: 14,
                       color: '#f05a8c',
                       fontSize: 13,
                     }}
@@ -255,14 +249,14 @@ export default function AuthModal({
                     background: '#fff',
                     color: '#0a0a0f',
                     border: '1px solid rgba(255,255,255,0.15)',
-                    padding: '14px 16px',
-                    borderRadius: 12,
-                    fontSize: 15,
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    fontSize: 14,
                     fontWeight: 600,
                     cursor: loading ? 'not-allowed' : 'pointer',
                     opacity: loading ? 0.7 : 1,
                     fontFamily: "'DM Sans', sans-serif",
-                    marginBottom: googleOnly ? 0 : 16,
+                    marginBottom: 16,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -270,98 +264,96 @@ export default function AuthModal({
                   }}
                 >
                   <GoogleIcon />
-                  Sign in with Google
+                  Continue with Google
                 </button>
 
-                {!googleOnly && (
-                  <>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        margin: '20px 0',
-                        color: 'rgba(240,237,232,0.35)',
-                        fontSize: 12,
-                      }}
-                    >
-                      <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                      or
-                      <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                    </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    margin: '0 0 16px',
+                    color: 'rgba(240,237,232,0.35)',
+                    fontSize: 11,
+                  }}
+                >
+                  <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
+                  or email
+                  <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
+                </div>
 
-                    <form onSubmit={handleSubmit}>
-                      {mode === 'signup' && (
-                        <input
-                          type="text"
-                          name="fullName"
-                          autoComplete="name"
-                          placeholder="Full Name"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          style={inputStyle}
-                        />
-                      )}
-                      <input
-                        type="email"
-                        name="email"
-                        autoComplete="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        style={inputStyle}
-                      />
-                      <input
-                        type="password"
-                        name="password"
-                        autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        style={inputStyle}
-                      />
+                <form onSubmit={handleSubmit}>
+                  <label style={labelStyle}>
+                    Email
+                    <input
+                      type="email"
+                      name="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      style={{ ...inputStyle, marginTop: 6, marginBottom: 12 }}
+                    />
+                  </label>
 
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                          width: '100%',
-                          background: '#c8f05a',
-                          color: '#0a0a0f',
-                          border: 'none',
-                          padding: '16px',
-                          borderRadius: 12,
-                          fontSize: 15,
-                          fontWeight: 700,
-                          cursor: loading ? 'not-allowed' : 'pointer',
-                          opacity: loading ? 0.7 : 1,
-                          fontFamily: "'DM Sans', sans-serif",
-                          marginBottom: 16,
-                        }}
-                      >
-                        {loading ? 'Loading...' : mode === 'login' ? 'Sign in' : 'Create account'}
-                      </button>
-                    </form>
+                  <label style={labelStyle}>
+                    Password
+                    <input
+                      type="password"
+                      name="password"
+                      autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      style={{ ...inputStyle, marginTop: 6, marginBottom: 16 }}
+                    />
+                  </label>
 
-                    <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>
-                      {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-                      <button
-                        type="button"
-                        onClick={handleModeSwitch}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#c8f05a',
-                          cursor: 'pointer',
-                          fontSize: 13,
-                          fontFamily: "'DM Sans', sans-serif",
-                        }}
-                      >
-                        {mode === 'login' ? 'Sign up' : 'Sign in'}
-                      </button>
-                    </p>
-                  </>
-                )}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      width: '100%',
+                      background: '#c8f05a',
+                      color: '#0a0a0f',
+                      border: 'none',
+                      padding: '14px',
+                      borderRadius: 10,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.7 : 1,
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    {loading ? 'Please wait…' : mode === 'signup' ? 'Sign up' : 'Sign in'}
+                  </button>
+                </form>
+
+                <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 14, marginBottom: 0 }}>
+                  {mode === 'login' ? 'New here? ' : 'Have an account? '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null)
+                      setCheckEmail(false)
+                      onModeSwitch()
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#c8f05a',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontFamily: "'DM Sans', sans-serif",
+                      padding: 0,
+                    }}
+                  >
+                    {mode === 'login' ? 'Sign up' : 'Sign in'}
+                  </button>
+                </p>
               </>
             )}
           </motion.div>

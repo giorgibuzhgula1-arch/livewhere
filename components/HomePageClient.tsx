@@ -88,8 +88,8 @@ export default function HomePageClient({
   const [matches, setMatches] = useState<CityResult[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
-  const [authGoogleOnly, setAuthGoogleOnly] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup')
+  const [authVariant, setAuthVariant] = useState<'default' | 'results'>('default')
   const [error, setError] = useState<string | null>(null)
   const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
   const [quizData, setQuizData] = useState<AnalyzeRequest | null>(null)
@@ -123,18 +123,18 @@ export default function HomePageClient({
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)
     setAuthOpen(false)
-    setAuthGoogleOnly(false)
+    setAuthVariant('default')
     if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
       window.history.replaceState(null, '', '/')
     }
     return true
   }, [])
 
-  const openGoogleSignInForAnalyze = useCallback(() => {
+  const openAuthForResults = useCallback(() => {
     saveOAuthNext('/?restore=results')
     markPendingAuthRestore()
-    setAuthGoogleOnly(true)
-    setAuthMode('login')
+    setAuthVariant('results')
+    setAuthMode('signup')
     setAuthOpen(true)
   }, [])
 
@@ -142,8 +142,8 @@ export default function HomePageClient({
     savePendingResults(cities, maxCities)
     setMatches(null)
     setAwaitingAuthToView(true)
-    openGoogleSignInForAnalyze()
-  }, [openGoogleSignInForAnalyze])
+    openAuthForResults()
+  }, [openAuthForResults])
 
   const runAnalyze = useCallback(async (data: AnalyzeRequest) => {
     setLoading(true)
@@ -389,7 +389,7 @@ export default function HomePageClient({
         const quiz = loadPendingAnalyze()
         if (!quiz) return
         setAuthOpen(false)
-        setAuthGoogleOnly(false)
+        setAuthVariant('default')
         await runAnalyzeRef.current(quiz)
       })()
     })
@@ -401,12 +401,6 @@ export default function HomePageClient({
   }, [revealPendingResults])
 
   async function handleAnalyzeRequest(data: AnalyzeRequest) {
-    savePendingAnalyze(data)
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) {
-      openGoogleSignInForAnalyze()
-      return
-    }
     await runAnalyze(data)
   }
 
@@ -421,14 +415,14 @@ export default function HomePageClient({
   }
 
   function openSignInToView() {
-    openGoogleSignInForAnalyze()
+    openAuthForResults()
   }
 
   async function handleUnlockPro() {
     try {
       await startProCheckout()
     } catch {
-      setAuthGoogleOnly(false)
+      setAuthVariant('default')
       setAuthMode('login')
       setAuthOpen(true)
     }
@@ -437,7 +431,7 @@ export default function HomePageClient({
   return (
     <main style={{ position: 'relative' }}>
       <Navbar
-        onAuthClick={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('login') }}
+        onAuthClick={() => { setAuthVariant('default'); setAuthOpen(true); setAuthMode('login') }}
         onLogoClick={handleResetMatches}
       />
 
@@ -454,7 +448,7 @@ export default function HomePageClient({
           </div>
           <RetirementStatsBar />
           <HowItWorks />
-          <Pricing onUpgrade={() => { setAuthGoogleOnly(false); setAuthOpen(true); setAuthMode('signup') }} />
+          <Pricing onUpgrade={() => { setAuthVariant('default'); setAuthOpen(true); setAuthMode('signup') }} />
         </>
       )}
 
@@ -512,7 +506,7 @@ export default function HomePageClient({
             Your top city matches are ready
           </h2>
           <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
-            Sign in with Google to view your personalized results — your #1 match in full, free.
+            Create a free account to view your matches — Google or email, no extra forms.
           </p>
           <button
             type="button"
@@ -523,7 +517,7 @@ export default function HomePageClient({
               cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            Sign in to view results
+            View my results
           </button>
           <button
             type="button"
@@ -590,14 +584,17 @@ export default function HomePageClient({
       <AuthModal
         isOpen={authOpen}
         mode={authMode}
-        googleOnly={authGoogleOnly}
+        variant={authVariant}
         onClose={() => {
           setAuthOpen(false)
           if (!loadPendingResults()) {
-            setAuthGoogleOnly(false)
+            setAuthVariant('default')
           }
         }}
         onModeSwitch={() => setAuthMode(m => m === 'login' ? 'signup' : 'login')}
+        onAuthSuccess={() => {
+          void revealPendingResults()
+        }}
       />
     </main>
   )
