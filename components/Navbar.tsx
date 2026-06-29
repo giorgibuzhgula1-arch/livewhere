@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { fetchUserPlan, isPaidPlan } from '@/lib/plan'
 import type { User } from '@supabase/supabase-js'
 
 interface Props {
@@ -29,11 +30,24 @@ function userLabel(user: User): string {
 export default function Navbar({ onAuthClick, onLogoClick }: Props) {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
+  const [paid, setPaid] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+      if (data.user) {
+        void fetchUserPlan().then((plan) => setPaid(isPaidPlan(plan)))
+      } else {
+        setPaid(false)
+      }
+    })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) {
+        void fetchUserPlan().then((plan) => setPaid(isPaidPlan(plan)))
+      } else {
+        setPaid(false)
+      }
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -127,6 +141,20 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
             }}
           >
             My Plans
+          </Link>
+        )}
+        {user && paid && (
+          <Link
+            href="/plans?tab=monitor"
+            style={{
+              fontSize: 13,
+              color: 'rgba(240,237,232,0.6)',
+              textDecoration: 'none',
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500,
+            }}
+          >
+            Monitor
           </Link>
         )}
         <Link
