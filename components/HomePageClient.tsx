@@ -361,6 +361,13 @@ export default function HomePageClient({
     return () => { cancelled = true }
   }, [openAuthForSave])
 
+  // Keep quiz inputs in sync when results are shown (e.g. after auth restore).
+  useEffect(() => {
+    if (matches === null || matches.length === 0 || quizData) return
+    const pending = loadPendingAnalyze()
+    if (pending) setQuizData(pending)
+  }, [matches, quizData])
+
   // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
     if (restoreAttemptedRef.current) return
@@ -457,6 +464,7 @@ export default function HomePageClient({
 
   function handleResetMatches() {
     setMatches(null)
+    setQuizData(null)
     setError(null)
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)

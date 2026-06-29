@@ -10,6 +10,7 @@ import LifetimeInsights from './LifetimeInsights'
 const CityModal = dynamic(() => import('./CityModal'), { ssr: false })
 const SavePlanModal = dynamic(() => import('./SavePlanModal'), { ssr: false })
 import { CityResult, type AnalyzeRequest } from '@/lib/types'
+import { loadPendingAnalyze } from '@/lib/pending-analyze'
 import { getSiteUrl } from '@/lib/site-url'
 import { fetchUserPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
 import { exportRetirementReport } from '@/lib/export-pdf'
@@ -38,6 +39,38 @@ const MAX_COMPARE_CITIES = 3
 
 function cityKey(city: CityResult): string {
   return `${city.name}|${city.country}`
+}
+
+function resolveQuizInput(
+  quizInput: AnalyzeRequest | null | undefined,
+  monthlyBudget?: number,
+  currency?: string,
+  lifestyle?: string[],
+): AnalyzeRequest | null {
+  if (quizInput) return quizInput
+
+  const pending = loadPendingAnalyze()
+  if (pending) return pending
+
+  if (typeof monthlyBudget === 'number' && monthlyBudget > 0) {
+    return {
+      monthlyBudget,
+      currency: currency || 'USD',
+      priorities: {
+        tax: 5,
+        housing: 5,
+        climate: 5,
+        health: 5,
+        stability: 5,
+        safety: 5,
+        expat_community: 5,
+        visa_residency: 5,
+      },
+      lifestyle: lifestyle ?? [],
+    }
+  }
+
+  return null
 }
 
 export default function Results({
@@ -77,6 +110,17 @@ export default function Results({
   const locked = !paid
   const isUnlocked = (city: CityResult) => paid || !city.locked
   const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
+
+  const effectiveQuizInput = resolveQuizInput(quizInput, monthlyBudget, currency, lifestyle)
+  const canSavePlan = !streaming && cities.length > 0
+
+  function handleSavePlanClick() {
+    if (!effectiveQuizInput) {
+      onAuthClick?.()
+      return
+    }
+    setSavePlanOpen(true)
+  }
 
   // Always show unlocked card(s) first, then by descending score.
   const ordered = [...cities].sort((a, b) => {
@@ -144,7 +188,7 @@ export default function Results({
   }
 
   return (
-    <section style={{ maxWidth: 1100, margin: '0 auto', padding: '120px 20px 80px', position: 'relative', zIndex: 1 }}>
+    <section style={{ maxWidth: 1100, margin: '0 auto', padding: '120px 20px 120px', position: 'relative', zIndex: 1 }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
@@ -295,25 +339,6 @@ export default function Results({
               }}
             >
               Share Your Match 🌍
-            </button>
-          )}
-          {!streaming && cities.length > 0 && quizInput && (
-            <button
-              type="button"
-              onClick={() => setSavePlanOpen(true)}
-              style={{
-                background: 'rgba(200,240,90,0.1)',
-                border: '1px solid rgba(200,240,90,0.35)',
-                color: '#c8f05a',
-                padding: '10px 18px',
-                borderRadius: 10,
-                fontSize: 13,
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              Save this Plan
             </button>
           )}
           <button type="button" onClick={onReset} style={{
@@ -614,6 +639,112 @@ export default function Results({
         />
       )}
 
+      {canSavePlan && (
+        <div
+          style={{
+            marginTop: 40,
+            padding: '28px 24px',
+            background: 'linear-gradient(135deg, rgba(200,240,90,0.08) 0%, rgba(200,240,90,0.02) 100%)',
+            border: '1px solid rgba(200,240,90,0.25)',
+            borderRadius: 18,
+            textAlign: 'center',
+          }}
+        >
+          <p
+            style={{
+              fontSize: 11,
+              letterSpacing: 1.5,
+              textTransform: 'uppercase',
+              color: '#c8f05a',
+              fontWeight: 600,
+              marginBottom: 8,
+            }}
+          >
+            Saved plans
+          </p>
+          <h3
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 'clamp(20px,3vw,26px)',
+              fontWeight: 700,
+              marginBottom: 8,
+            }}
+          >
+            Save this scenario for later
+          </h3>
+          <p
+            style={{
+              fontSize: 14,
+              color: 'rgba(240,237,232,0.55)',
+              marginBottom: 20,
+              lineHeight: 1.6,
+              maxWidth: 480,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            Name this plan and compare it with other options — like Plan A vs Plan B.
+          </p>
+          <button
+            type="button"
+            onClick={handleSavePlanClick}
+            style={{
+              background: '#c8f05a',
+              color: '#0a0a0f',
+              border: 'none',
+              padding: '14px 28px',
+              borderRadius: 12,
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Save this Plan
+          </button>
+        </div>
+      )}
+
+      {canSavePlan && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 90,
+            padding: '12px 20px calc(12px + env(safe-area-inset-bottom))',
+            background: 'linear-gradient(to top, rgba(10,10,15,0.98) 70%, transparent)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleSavePlanClick}
+            style={{
+              pointerEvents: 'auto',
+              background: '#c8f05a',
+              color: '#0a0a0f',
+              border: 'none',
+              padding: '14px 32px',
+              borderRadius: 14,
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: "'DM Sans', sans-serif",
+              boxShadow: '0 8px 32px rgba(200,240,90,0.25)',
+              maxWidth: 420,
+              width: '100%',
+            }}
+          >
+            Save this Plan
+          </button>
+        </div>
+      )}
+
       {selectedCity && (
         <CityModal
           city={selectedCity}
@@ -626,11 +757,11 @@ export default function Results({
         />
       )}
 
-      {quizInput && (
+      {effectiveQuizInput && (
         <SavePlanModal
           isOpen={savePlanOpen}
           onClose={() => setSavePlanOpen(false)}
-          quizInput={quizInput}
+          quizInput={effectiveQuizInput}
           cities={cities}
           maxCities={maxCities}
           onAuthRequired={() => {
