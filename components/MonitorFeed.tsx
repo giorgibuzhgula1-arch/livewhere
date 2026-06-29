@@ -21,10 +21,9 @@ import styles from '../app/compare/compare.module.css'
 
 type Props = {
   userProfile: UserProfile
-  onUpgrade: () => void
 }
 
-export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
+export default function MonitorFeed({ userProfile }: Props) {
   const hasAccess = hasMonitorAccess(userProfile)
   const isPro = isProPlan(userProfile.plan)
   const isBlueprint = isBlueprintPlan(userProfile.plan)
@@ -35,12 +34,6 @@ export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
-
-  useEffect(() => {
-    if (isFree) {
-      onUpgrade()
-    }
-  }, [isFree, onUpgrade])
 
   const load = useCallback(async () => {
     if (!hasAccess) {
@@ -84,6 +77,64 @@ export default function MonitorFeed({ userProfile, onUpgrade }: Props) {
 
   if (isFree) {
     return null
+  }
+
+  if (!hasAccess && isPro) {
+    return (
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 18,
+          padding: '36px 32px',
+          textAlign: 'center',
+          maxWidth: 440,
+          margin: '0 auto',
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 22,
+            fontWeight: 700,
+            marginBottom: 20,
+            lineHeight: 1.35,
+          }}
+        >
+          Add Retirement Monitor — $9.99/month
+        </h2>
+        {error && (
+          <p
+            style={{
+              fontSize: 13,
+              color: '#f05a8c',
+              marginBottom: 16,
+            }}
+          >
+            {error}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={() => void handleUpgradeClick()}
+          disabled={checkoutLoading}
+          style={{
+            background: '#c8f05a',
+            color: '#0a0a0f',
+            border: 'none',
+            padding: '14px 32px',
+            borderRadius: 12,
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: checkoutLoading ? 'wait' : 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+            opacity: checkoutLoading ? 0.7 : 1,
+          }}
+        >
+          {checkoutLoading ? 'Loading…' : 'Subscribe'}
+        </button>
+      </div>
+    )
   }
 
   if (!hasAccess) {

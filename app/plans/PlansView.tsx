@@ -42,6 +42,7 @@ export default function PlansView() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [compareA, setCompareA] = useState<string>('')
   const [compareB, setCompareB] = useState<string>('')
+  const [profileReady, setProfileReady] = useState(false)
   const [paid, setPaid] = useState(false)
   const [userProfile, setUserProfile] = useState<UserProfile>({
     plan: 'free',
@@ -108,9 +109,11 @@ export default function PlansView() {
         if (!cancelled) {
           setUserProfile(profile)
           setPaid(isPaidPlan(profile.plan))
+          setProfileReady(true)
         }
         await loadPlans()
       } else {
+        setProfileReady(true)
         setLoading(false)
       }
     }
@@ -124,10 +127,12 @@ export default function PlansView() {
         void fetchUserProfile().then((profile) => {
           setUserProfile(profile)
           setPaid(isPaidPlan(profile.plan))
+          setProfileReady(true)
         })
       } else {
         setPlans([])
         setActiveId(null)
+        setProfileReady(true)
       }
     })
 
@@ -183,7 +188,7 @@ export default function PlansView() {
       : undefined
 
   function setTab(tab: 'plans' | 'monitor') {
-    if (tab === 'monitor' && userProfile.plan === 'free') {
+    if (tab === 'monitor' && profileReady && user && userProfile.plan === 'free') {
       router.push('/pricing')
       return
     }
@@ -191,10 +196,16 @@ export default function PlansView() {
   }
 
   useEffect(() => {
-    if (authReady && activeTab === 'monitor' && userProfile.plan === 'free') {
+    if (
+      authReady &&
+      profileReady &&
+      user &&
+      activeTab === 'monitor' &&
+      userProfile.plan === 'free'
+    ) {
       router.replace('/pricing')
     }
-  }, [authReady, activeTab, userProfile.plan, router])
+  }, [authReady, profileReady, user, activeTab, userProfile.plan, router])
 
   if (!authReady) {
     return (
@@ -278,10 +289,11 @@ export default function PlansView() {
       </div>
 
       {activeTab === 'monitor' ? (
-        <MonitorFeed
-          userProfile={userProfile}
-          onUpgrade={() => router.push('/pricing')}
-        />
+        profileReady ? (
+          <MonitorFeed userProfile={userProfile} />
+        ) : (
+          <p className={styles.subtitle}>Loading…</p>
+        )
       ) : (
         <>
       <p className={styles.subtitle}>
