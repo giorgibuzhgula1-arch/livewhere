@@ -139,12 +139,11 @@ function toInsightPayload(city: CityResult) {
     name: city.name,
     country: city.country,
     score: city.score,
-    taxRate: city.taxRate,
     monthlyCost: city.monthlyCost,
-    monthlyRent: city.monthlyRent,
     monthlySavings: city.monthlySavings,
-    takeHomeMonthly: city.takeHomeMonthly,
-    scores: city.scores,
+    taxRate: city.taxRate,
+    healthcareScore: city.scores.health,
+    safetyScore: city.scores.safety,
   }
 }
 
@@ -219,7 +218,16 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
       })
 
     return () => { cancelled = true }
-  }, [city.name, city.country])
+  }, [
+    city.name,
+    city.country,
+    city.score,
+    city.monthlyCost,
+    city.monthlySavings,
+    city.taxRate,
+    city.scores.health,
+    city.scores.safety,
+  ])
 
   return (
     <div

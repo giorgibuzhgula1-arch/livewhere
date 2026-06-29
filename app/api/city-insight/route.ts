@@ -16,20 +16,11 @@ type CityInsightPayload = {
   name: string
   country: string
   score: number
-  taxRate: number
   monthlyCost: number
-  monthlyRent: number
   monthlySavings: number
-  takeHomeMonthly: number
-  scores: {
-    tax: number
-    housing: number
-    climate: number
-    health: number
-    stability: number
-    safety: number
-    expat?: number
-  }
+  taxRate: number
+  healthcareScore: number
+  safetyScore: number
 }
 
 type CityInsightRequest = {
@@ -39,49 +30,63 @@ type CityInsightRequest = {
 function isCityInsightPayload(value: unknown): value is CityInsightPayload {
   if (!value || typeof value !== 'object') return false
   const city = value as Record<string, unknown>
-  const scores = city.scores
-  if (!scores || typeof scores !== 'object') return false
-  const s = scores as Record<string, unknown>
   return (
     typeof city.name === 'string' &&
+    city.name.trim().length > 0 &&
     typeof city.country === 'string' &&
+    city.country.trim().length > 0 &&
     typeof city.score === 'number' &&
-    typeof city.taxRate === 'number' &&
+    Number.isFinite(city.score) &&
     typeof city.monthlyCost === 'number' &&
-    typeof city.monthlyRent === 'number' &&
+    Number.isFinite(city.monthlyCost) &&
     typeof city.monthlySavings === 'number' &&
-    typeof city.takeHomeMonthly === 'number' &&
-    typeof s.tax === 'number' &&
-    typeof s.housing === 'number' &&
-    typeof s.climate === 'number' &&
-    typeof s.health === 'number' &&
-    typeof s.stability === 'number' &&
-    typeof s.safety === 'number'
+    Number.isFinite(city.monthlySavings) &&
+    typeof city.taxRate === 'number' &&
+    Number.isFinite(city.taxRate) &&
+    typeof city.healthcareScore === 'number' &&
+    Number.isFinite(city.healthcareScore) &&
+    typeof city.safetyScore === 'number' &&
+    Number.isFinite(city.safetyScore)
   )
 }
 
+function formatUsd(amount: number): string {
+  return `$${Math.round(Math.abs(amount)).toLocaleString('en-US')}`
+}
+
 function buildPrompt(city: CityInsightPayload): string {
-  return `You are a retirement relocation advisor. Analyze this city match for a US retiree.
+  const tenYearSavings = Math.round(city.monthlySavings * 12 * 10)
+  const savingsLabel =
+    tenYearSavings >= 0
+      ? formatUsd(tenYearSavings)
+      : `-${formatUsd(tenYearSavings)}`
 
-City: ${city.name}, ${city.country}
-${JSON.stringify(city, null, 2)}
+  return `Analyze this specific retirement city match. Use ONLY the numbers below — do not invent or reuse placeholder figures.
 
-The match score (0–100) reflects how well this city fits the user's priorities.
-Sub-scores (tax, housing, climate, health, stability, safety) are also 0–100.
+CITY DATA (use these exact values):
+- City: ${city.name}, ${city.country}
+- Match score: ${city.score}/100
+- Monthly cost of living: ${formatUsd(city.monthlyCost)}/mo
+- Monthly savings vs US baseline: ${city.monthlySavings >= 0 ? '+' : ''}${formatUsd(city.monthlySavings)}/mo
+- Estimated 10-year savings: ${savingsLabel} (monthly savings × 120 months)
+- Tax rate: ${city.taxRate}%
+- Healthcare score: ${city.healthcareScore}/100
+- Safety score: ${city.safetyScore}/100
 
-Return ONLY valid JSON with exactly these keys:
+Return ONLY valid JSON with these keys (no markdown):
 {
-  "savingsOver10Years": "$187,000",
-  "healthcareNote": "Healthcare 12% better than average matches",
-  "taxNote": "Tax burden 18% lower",
-  "matchSummary": "One sentence why this city matches the user"
+  "savingsOver10Years": "<formatted dollar amount derived from the 10-year savings figure above>",
+  "healthcareNote": "<short phrase referencing ${city.name}'s healthcare score of ${city.healthcareScore}/100>",
+  "taxNote": "<short phrase referencing ${city.name}'s ${city.taxRate}% tax rate and how it compares for retirees>",
+  "matchSummary": "<one sentence naming ${city.name} and why its ${city.score}/100 match score fits this retiree>"
 }
 
 Rules:
-- savingsOver10Years: estimate 10-year savings based on monthlySavings and monthlyCost, formatted like "$187,000".
-- healthcareNote: short phrase about healthcare fit using the health score (e.g. "Healthcare 12% better than average matches").
-- taxNote: short phrase about tax advantage using taxRate and tax score (e.g. "Tax burden 18% lower").
-- matchSummary: one compelling personalized sentence for why this city matches the user.`
+- savingsOver10Years must reflect the estimated 10-year savings (${savingsLabel}), formatted like "$42,000" or "-$12,000".
+- healthcareNote must mention the healthcare score (${city.healthcareScore}/100) in context — e.g. stronger or weaker than typical matches.
+- taxNote must reference the ${city.taxRate}% tax rate specifically.
+- matchSummary must include the city name "${city.name}" and be unique to this city's data.
+- Never copy example numbers from instructions; every value must come from the CITY DATA above.`
 }
 
 function parseInsight(raw: string): CityInsight | null {
@@ -113,7 +118,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!isCityInsightPayload(body.city)) {
-    return NextResponse.json({ error: 'city is required' }, { status: 400 })
+    return NextResponse.json({ error: 'city is required with valid fields' }, { status: 400 })
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim()
@@ -130,14 +135,14 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: OPENAI_MODEL,
-        temperature: 0.6,
+        temperature: 0.7,
         max_tokens: 300,
         response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
             content:
-              'You personalize retirement city matches. Respond with valid JSON only, no markdown.',
+              'You write city-specific retirement insights. Always use the exact numbers provided in the user message. Never return generic or identical text across different cities. Respond with valid JSON only.',
           },
           {
             role: 'user',
