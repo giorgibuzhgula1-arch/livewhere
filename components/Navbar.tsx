@@ -181,9 +181,10 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
   return (
     <div ref={navRef}>
       <style>{`
-        .navbar-desktop-main,
-        .navbar-desktop-secondary,
-        .navbar-desktop-ai {
+        .navbar-desktop-links {
+          display: flex;
+        }
+        .navbar-desktop-auth-extras {
           display: flex;
         }
         .navbar-hamburger {
@@ -192,9 +193,6 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
         .navbar-mobile-panel {
           display: none;
         }
-        .navbar-user-details {
-          display: flex;
-        }
         @media (max-width: 767px) {
           .navbar-root {
             padding: 16px 20px !important;
@@ -202,16 +200,12 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
           .navbar-logo {
             font-size: 28px !important;
           }
-          .navbar-desktop-main,
-          .navbar-desktop-secondary,
-          .navbar-desktop-ai {
+          .navbar-desktop-links,
+          .navbar-desktop-auth-extras {
             display: none !important;
           }
           .navbar-hamburger {
             display: inline-flex;
-          }
-          .navbar-user-details {
-            display: none !important;
           }
           .navbar-mobile-panel {
             display: flex;
@@ -275,67 +269,44 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
         </Link>
 
         <div
-          className="navbar-desktop-main"
           style={{
-            gap: 8,
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            flex: 1,
-          }}
-        >
-          <Link href="/compare" style={mainPillStyle}>
-            Compare Cities
-            <span style={newBadgeStyle}>New</span>
-          </Link>
-          {user && (
-            <Link href="/plans" style={mainPillStyle}>
-              My Plans
-            </Link>
-          )}
-          {user && paid && (
-            <Link href="/plans?tab=monitor" style={mainPillStyle}>
-              Monitor
-            </Link>
-          )}
-        </div>
-
-        <div
-          style={{
+            marginLeft: 'auto',
             display: 'flex',
-            gap: 12,
             alignItems: 'center',
+            gap: 16,
             flexShrink: 0,
             flexWrap: 'wrap',
             justifyContent: 'flex-end',
           }}
         >
           <div
-            className="navbar-desktop-secondary"
-            style={{ gap: 12, alignItems: 'center' }}
+            className="navbar-desktop-links"
+            style={{
+              gap: 8,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
           >
+            <Link href="/compare" style={mainPillStyle}>
+              Compare Cities
+              <span style={newBadgeStyle}>New</span>
+            </Link>
+            {user && (
+              <Link href="/plans" style={mainPillStyle}>
+                My Plans
+              </Link>
+            )}
+            {user && paid && (
+              <Link href="/plans?tab=monitor" style={mainPillStyle}>
+                Monitor
+              </Link>
+            )}
             <Link href="/city-guides" style={secondaryLinkStyle}>
               City Guides
             </Link>
             <Link href="/blog" style={secondaryLinkStyle}>
               Blog
             </Link>
-          </div>
-
-          <div
-            className="navbar-desktop-ai"
-            style={{
-              background: 'rgba(200,240,90,0.1)',
-              border: '1px solid rgba(200,240,90,0.3)',
-              color: '#c8f05a',
-              padding: '6px 14px',
-              borderRadius: 20,
-              fontSize: 12,
-              fontWeight: 500,
-              alignItems: 'center',
-            }}
-          >
-            ✦ AI-Powered
           </div>
 
           {user ? (
@@ -375,7 +346,7 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
                 </div>
               )}
               <div
-                className="navbar-user-details"
+                className="navbar-desktop-auth-extras"
                 style={{ flexDirection: 'column', alignItems: 'flex-end', maxWidth: 180 }}
               >
                 <span
@@ -408,7 +379,7 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
               </div>
               <button
                 type="button"
-                className="navbar-desktop-secondary"
+                className="navbar-desktop-auth-extras"
                 onClick={() => supabase.auth.signOut()}
                 style={{
                   background: 'rgba(255,255,255,0.05)',
@@ -491,23 +462,6 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
           }}
         >
           {renderMobileLinks(closeMobile)}
-
-          <div
-            style={{
-              marginTop: 8,
-              padding: '10px 14px',
-              textAlign: 'center',
-              background: 'rgba(200,240,90,0.08)',
-              border: '1px solid rgba(200,240,90,0.2)',
-              borderRadius: 12,
-              color: '#c8f05a',
-              fontSize: 12,
-              fontWeight: 500,
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            ✦ AI-Powered
-          </div>
 
           {user && (
             <button
