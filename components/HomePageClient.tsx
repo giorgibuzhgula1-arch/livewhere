@@ -30,8 +30,7 @@ import {
 import {
   waitForAuthSession,
   clearPostAuthRestoreState,
-  markPendingAuthRestore,
-  shouldRestoreAfterAuth,
+  isOAuthReturnPending,
   saveOAuthNext,
 } from '@/lib/wait-for-session'
 import type { Session } from '@supabase/supabase-js'
@@ -84,6 +83,12 @@ async function isLoggedIn(): Promise<boolean> {
 /** Poll up to ~8s for session after OAuth before giving up on restore. */
 const RESTORE_SESSION_MAX_ATTEMPTS = 64
 const RESTORE_SESSION_POLL_MS = 125
+
+function isPostOAuthRestore(): boolean {
+  if (typeof window === 'undefined') return false
+  if (new URLSearchParams(window.location.search).get('restore') === 'results') return true
+  return isOAuthReturnPending()
+}
 
 export default function HomePageClient({
   defaultSavingsLocation = 'Florida',
@@ -145,7 +150,6 @@ export default function HomePageClient({
 
   const openAuthForResults = useCallback(() => {
     saveOAuthNext('/?restore=results')
-    markPendingAuthRestore()
     setAuthVariant('results')
     setAuthMode('signup')
     setAuthOpen(true)
@@ -313,6 +317,8 @@ export default function HomePageClient({
   runAnalyzeRef.current = runAnalyze
 
   const attemptPostAuthRestore = useCallback(async (): Promise<boolean> => {
+    if (!isPostOAuthRestore()) return false
+
     const hasResults = hasPendingResults()
     const quiz = loadPendingAnalyze()
 
@@ -457,14 +463,7 @@ export default function HomePageClient({
     if (restoreAttemptedRef.current) return
     restoreAttemptedRef.current = true
 
-    const restoreRequested =
-      typeof window !== 'undefined' &&
-      (new URLSearchParams(window.location.search).get('restore') === 'results' ||
-        shouldRestoreAfterAuth())
-
-    if (!restoreRequested && !hasPendingResults() && !loadPendingAnalyze()) {
-      return
-    }
+    if (!isPostOAuthRestore()) return
 
     const pending = loadPendingResults()
     if (pending?.cities.length) {
@@ -486,13 +485,10 @@ export default function HomePageClient({
       ) {
         return
       }
+      if (!isPostOAuthRestore()) return
       void (async () => {
-        if (hasPendingResults() && (await revealPendingResults(session))) {
-          return
-        }
-        if (hasPendingResults()) {
-          return
-        }
+        if (await revealPendingResults(session)) return
+        if (hasPendingResults()) return
         const quiz = loadPendingAnalyze()
         if (!quiz) return
         setAuthOpen(false)
@@ -739,13 +735,16 @@ export default function HomePageClient({
         }}
         onModeSwitch={() => setAuthMode(m => m === 'login' ? 'signup' : 'login')}
         onAuthSuccess={() => {
-          setRestoringAfterOAuth(true)
-          setRestoreError(null)
           void (async () => {
-            const session = await waitForRestoreSession()
-            if (session?.user && (await revealPendingResults(session))) {
-              return
-            }
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session?.user && (await revealPendingResults(session))) return
+
+            if (!isPostOAuthRestore()) return
+
+            setRestoringAfterOAuth(true)
+            setRestoreError(null)
+            const waited = await waitForRestoreSession()
+            if (waited?.user && (await revealPendingResults(waited))) return
             if (hasPendingResults()) {
               setRestoringAfterOAuth(false)
               setRestoreError(

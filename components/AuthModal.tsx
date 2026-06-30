@@ -30,6 +30,7 @@ export default function AuthModal({
 }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checkEmail, setCheckEmail] = useState(false)
@@ -40,6 +41,7 @@ export default function AuthModal({
     if (!isOpen) {
       setEmail('')
       setPassword('')
+      setFullName('')
       setError(null)
       setCheckEmail(false)
       setLoading(false)
@@ -96,6 +98,9 @@ export default function AuthModal({
       if (password.length < 6) throw new Error('Password must be at least 6 characters')
 
       if (mode === 'signup') {
+        const trimmedName = fullName.trim()
+        if (!trimmedName) throw new Error('Enter your full name')
+
         if (restoreResults) prepareResultsRestore()
 
         const nextPath = restoreResults ? resultsNextPath() : '/'
@@ -104,7 +109,10 @@ export default function AuthModal({
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: trimmedEmail,
           password,
-          options: { emailRedirectTo: redirectTo },
+          options: {
+            emailRedirectTo: redirectTo,
+            data: { full_name: trimmedName },
+          },
         })
         if (signUpError) throw signUpError
 
@@ -283,6 +291,21 @@ export default function AuthModal({
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                  {mode === 'signup' && (
+                    <label style={labelStyle}>
+                      Full Name
+                      <input
+                        type="text"
+                        name="name"
+                        autoComplete="name"
+                        required
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        style={{ ...inputStyle, marginTop: 6, marginBottom: 12 }}
+                      />
+                    </label>
+                  )}
+
                   <label style={labelStyle}>
                     Email
                     <input
