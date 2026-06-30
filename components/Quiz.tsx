@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AnalyzeRequest, UserPriorities } from '@/lib/types'
-import { trackFunnelStep } from '@/lib/gtag'
+import {
+  trackBudgetSelected,
+  trackPrioritiesCompleted,
+  trackQuizCompleted,
+  trackQuizStarted,
+} from '@/lib/analytics'
 
 interface Props {
   onSubmit: (data: AnalyzeRequest) => void
@@ -50,17 +55,37 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   })
   const [lifestyle, setLifestyle] = useState<string[]>([])
 
+  const prioritiesTracked = useRef(false)
+
   useEffect(() => {
     if (tracked.current) return
     tracked.current = true
-    trackFunnelStep(1)
+    trackQuizStarted()
   }, [])
+
+  function handleBudgetChange(value: number) {
+    setMonthlyBudget(value)
+    trackBudgetSelected(value)
+  }
+
+  function handlePriorityChange(key: keyof UserPriorities, value: number) {
+    setPriorities((p) => ({ ...p, [key]: value }))
+    if (!prioritiesTracked.current) {
+      prioritiesTracked.current = true
+      trackPrioritiesCompleted()
+    }
+  }
 
   function toggleLifestyle(key: string) {
     setLifestyle(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])
+    if (!prioritiesTracked.current) {
+      prioritiesTracked.current = true
+      trackPrioritiesCompleted()
+    }
   }
 
   function handleSubmit() {
+    trackQuizCompleted({ budget: monthlyBudget, lifestyleCount: lifestyle.length })
     onSubmit({ monthlyBudget, currency: 'USD', priorities, lifestyle })
   }
 
@@ -104,7 +129,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               max={10000}
               step={100}
               value={monthlyBudget}
-              onChange={e => setMonthlyBudget(Number(e.target.value))}
+              onChange={e => handleBudgetChange(Number(e.target.value))}
               style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
             />
           </div>
@@ -125,7 +150,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                   </div>
                   <input type="range" min={1} max={5}
                     value={priorities[key as keyof UserPriorities]}
-                    onChange={e => setPriorities(p => ({ ...p, [key]: Number(e.target.value) }))}
+                    onChange={e => handlePriorityChange(key as keyof UserPriorities, Number(e.target.value))}
                     style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
                   />
                 </div>

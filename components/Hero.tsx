@@ -1,14 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { trackCtaClick } from '@/lib/gtag'
+import { trackHeroCtaClick } from '@/lib/analytics'
 import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
 
 interface Props { onStart: () => void }
 
 export default function Hero({ onStart }: Props) {
   function handleStart() {
-    trackCtaClick('hero_find_my_city')
+    trackHeroCtaClick('hero_find_my_city')
     onStart()
   }
   return (

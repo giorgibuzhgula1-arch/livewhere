@@ -18,6 +18,7 @@ import {
 } from '@/lib/plan'
 import { startMonitorCheckout } from '@/lib/start-monitor-checkout'
 import { startBlueprintUpgradeCheckout } from '@/lib/start-blueprint-upgrade-checkout'
+import { trackPremiumButtonClicked } from '@/lib/analytics'
 import styles from '../app/compare/compare.module.css'
 
 type CheckoutAction = 'monitor' | 'blueprint' | null
@@ -65,6 +66,7 @@ export default function MonitorFeed({ userProfile }: Props) {
   }, [load])
 
   async function handleMonitorSubscribe() {
+    trackPremiumButtonClicked({ plan: 'monitor', location: 'monitor_tab' })
     setCheckoutLoading('monitor')
     setError(null)
     try {
@@ -76,6 +78,7 @@ export default function MonitorFeed({ userProfile }: Props) {
   }
 
   async function handleBlueprintUpgrade() {
+    trackPremiumButtonClicked({ plan: 'blueprint_upgrade', location: 'monitor_tab' })
     setCheckoutLoading('blueprint')
     setError(null)
     try {

@@ -7,14 +7,21 @@ declare global {
   }
 }
 
-export const GA_MEASUREMENT_ID = 'G-8BKJ3L5SQB'
+export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? ''
 
-function gtag(...args: unknown[]) {
-  if (typeof window === 'undefined') return
+export function gtag(...args: unknown[]) {
+  if (typeof window === 'undefined' || !GA_MEASUREMENT_ID) return
   window.gtag?.(...args)
 }
 
-export function trackEvent(
+export function pageview(url: string) {
+  if (!GA_MEASUREMENT_ID) return
+  gtag('config', GA_MEASUREMENT_ID, {
+    page_path: url,
+  })
+}
+
+export function gaEvent(
   eventName: string,
   params?: Record<string, string | number | boolean | undefined>,
 ) {
@@ -26,14 +33,14 @@ export function trackEvent(
   gtag('event', eventName, cleaned)
 }
 
-export function trackCtaClick(location = 'hero') {
-  trackEvent('cta_click', { location })
+/** @deprecated Use analytics helpers instead */
+export function trackEvent(
+  eventName: string,
+  params?: Record<string, string | number | boolean | undefined>,
+) {
+  gaEvent(eventName, params)
 }
 
 export function trackSignUp(method: 'email' | 'google' = 'email') {
-  trackEvent('sign_up', { method })
-}
-
-export function trackFunnelStep(step: number) {
-  trackEvent(`funnel_step_${step}`)
+  gaEvent('sign_up', { method })
 }

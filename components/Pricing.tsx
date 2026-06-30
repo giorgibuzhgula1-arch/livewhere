@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { fetchUserProfile, isProPlan, type UserPlan } from '@/lib/plan'
 import type { CheckoutType } from '@/lib/stripe-prices'
+import {
+  trackCheckoutStarted,
+  trackPremiumButtonClicked,
+  trackPricingViewed,
+  type PremiumPlan,
+} from '@/lib/analytics'
 
 interface Props {
   onUpgrade: () => void
@@ -34,10 +40,19 @@ export default function Pricing({ onUpgrade }: Props) {
   const [loadingPlan, setLoadingPlan] = useState<CheckoutType | 'signup' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userPlan, setUserPlan] = useState<UserPlan>('free')
+  const [plansLoaded, setPlansLoaded] = useState(false)
 
   useEffect(() => {
-    void fetchUserProfile().then((p) => setUserPlan(p.plan))
+    void fetchUserProfile().then((p) => {
+      setUserPlan(p.plan)
+      setPlansLoaded(true)
+    })
   }, [])
+
+  useEffect(() => {
+    if (!plansLoaded) return
+    trackPricingViewed()
+  }, [plansLoaded])
 
   async function handleCheckout(checkoutType: CheckoutType) {
     if (loadingPlan) return
@@ -48,6 +63,7 @@ export default function Pricing({ onUpgrade }: Props) {
       return
     }
     setLoadingPlan(checkoutType)
+    trackCheckoutStarted({ plan: checkoutType, location: 'pricing_page' })
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/stripe/checkout', {
@@ -178,6 +194,10 @@ export default function Pricing({ onUpgrade }: Props) {
       return
     }
     if (tier.checkoutType) {
+      trackPremiumButtonClicked({
+        plan: tier.checkoutType as PremiumPlan,
+        location: 'pricing_page',
+      })
       void handleCheckout(tier.checkoutType)
     }
   }

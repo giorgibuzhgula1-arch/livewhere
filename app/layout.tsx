@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import RefClickTracker from '@/components/RefClickTracker'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { getSiteUrl } from '@/lib/site-url'
 import { dmSans, playfair } from '@/lib/fonts'
 import './globals.css'
 
-const GA_MEASUREMENT_ID = 'G-8BKJ3L5SQB'
 const CLARITY_PROJECT_ID = 'x4vqdz3sfo'
 
 export const metadata: Metadata = {
@@ -28,20 +28,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
       <head>
-        <Script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}');
-            console.log('[GA4] gtag configured:', '${GA_MEASUREMENT_ID}');
-          `}
-        </Script>
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
@@ -58,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={dmSans.className}>
+        <GoogleAnalytics />
         <div className="orb orb1" aria-hidden />
         <div className="orb orb2" aria-hidden />
         <RefClickTracker />

@@ -37,6 +37,7 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import { startProCheckout } from '@/lib/start-pro-checkout'
 import { fetchSavedPlanById } from '@/lib/saved-plans'
+import { trackPremiumButtonClicked, trackPurchaseCompleted, type PremiumPlan } from '@/lib/analytics'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -378,6 +379,28 @@ export default function HomePageClient({
 
   const restoreAttemptedRef = useRef(false)
   const savedPlanAttemptedRef = useRef(false)
+  const purchaseTrackedRef = useRef(false)
+
+  // Track successful Stripe purchase return.
+  useEffect(() => {
+    if (purchaseTrackedRef.current || typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('upgraded') !== 'true') return
+
+    const sessionId = params.get('session_id')
+    const plan = (params.get('plan') ?? 'pro') as PremiumPlan
+    if (!sessionId) return
+
+    purchaseTrackedRef.current = true
+    trackPurchaseCompleted({ transactionId: sessionId, plan })
+
+    params.delete('upgraded')
+    params.delete('session_id')
+    params.delete('plan')
+    const remaining = params.toString()
+    window.history.replaceState(null, '', remaining ? `/?${remaining}` : '/')
+  }, [])
 
   // Load a saved plan from /?savedPlan=<id> (logged-in users only).
   useEffect(() => {
@@ -508,8 +531,9 @@ export default function HomePageClient({
   }
 
   async function handleUnlockPro() {
+    trackPremiumButtonClicked({ plan: 'pro', location: 'results' })
     try {
-      await startProCheckout()
+      await startProCheckout('results')
     } catch {
       setAuthVariant('default')
       setAuthMode('login')

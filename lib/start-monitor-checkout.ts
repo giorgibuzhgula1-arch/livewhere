@@ -1,10 +1,13 @@
 import { supabase } from '@/lib/supabase'
+import { trackCheckoutStarted } from '@/lib/analytics'
 
-export async function startMonitorCheckout(): Promise<void> {
+export async function startMonitorCheckout(location = 'monitor_tab'): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     throw new Error('Sign in required')
   }
+
+  trackCheckoutStarted({ plan: 'monitor', location })
 
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/stripe/checkout', {

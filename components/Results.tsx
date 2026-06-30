@@ -14,6 +14,7 @@ import { loadPendingAnalyze } from '@/lib/pending-analyze'
 import { getSiteUrl } from '@/lib/site-url'
 import { fetchUserPlan, isBlueprintPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
 import { exportRetirementReport } from '@/lib/export-pdf'
+import { trackResultsViewed } from '@/lib/analytics'
 
 function buildShareLine(city: CityResult): string {
   return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
@@ -97,6 +98,8 @@ export default function Results({
   const [savePlanOpen, setSavePlanOpen] = useState(false)
   const shareCardRef = useRef<HTMLDivElement>(null)
 
+  const resultsTracked = useRef(false)
+
   useEffect(() => {
     let cancelled = false
     void fetchUserPlan().then((p) => {
@@ -104,6 +107,12 @@ export default function Results({
     })
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (resultsTracked.current || streaming || cities.length === 0) return
+    resultsTracked.current = true
+    trackResultsViewed({ cityCount: cities.length })
+  }, [cities.length, streaming])
 
   const paid = isPaidPlan(plan)
   const isBlueprint = isBlueprintPlan(plan)
