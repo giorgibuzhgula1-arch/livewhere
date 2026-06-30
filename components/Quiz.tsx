@@ -85,6 +85,15 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   function handleSubmit() {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      console.log('[quiz-auth-debug] Quiz handleSubmit — quiz submitted', {
+        href: window.location.href,
+        search: window.location.search,
+        restoreParam: params.get('restore'),
+        budget: monthlyBudget,
+      })
+    }
     trackQuizCompleted({ budget: monthlyBudget, lifestyleCount: lifestyle.length })
     onSubmit({ monthlyBudget, currency: 'USD', priorities, lifestyle })
   }

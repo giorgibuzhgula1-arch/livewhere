@@ -30,6 +30,7 @@ import {
 import {
   waitForAuthSession,
   clearPostAuthRestoreState,
+  clearOAuthReturn,
   isOAuthReturnPending,
   saveOAuthNext,
 } from '@/lib/wait-for-session'
@@ -84,10 +85,49 @@ async function isLoggedIn(): Promise<boolean> {
 const RESTORE_SESSION_MAX_ATTEMPTS = 64
 const RESTORE_SESSION_POLL_MS = 125
 
+/** Cached after first read so stale `livewhere_oauth_return` cannot leak into a later quiz. */
+let postOAuthRestoreCached: boolean | null = null
+
+function resetPostOAuthRestoreCache(): void {
+  if (typeof window === 'undefined') {
+    postOAuthRestoreCached = null
+    return
+  }
+  const fromUrl = new URLSearchParams(window.location.search).get('restore') === 'results'
+  postOAuthRestoreCached = fromUrl
+}
+
 function isPostOAuthRestore(): boolean {
   if (typeof window === 'undefined') return false
-  if (new URLSearchParams(window.location.search).get('restore') === 'results') return true
-  return isOAuthReturnPending()
+  if (postOAuthRestoreCached !== null) return postOAuthRestoreCached
+
+  const fromUrl = new URLSearchParams(window.location.search).get('restore') === 'results'
+  const fromOAuthFlag = isOAuthReturnPending()
+  if (fromOAuthFlag) {
+    clearOAuthReturn()
+  }
+  postOAuthRestoreCached = fromUrl || fromOAuthFlag
+  return postOAuthRestoreCached
+}
+
+function logQuizAuthDebug(context: string, extra?: Record<string, unknown>) {
+  if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search)
+  const restoreParam = params.get('restore')
+  const oauthReturnPending = isOAuthReturnPending()
+  console.log('[quiz-auth-debug]', context, {
+    href: window.location.href,
+    search: window.location.search,
+    restoreParam,
+    oauthReturnPending,
+    isPostOAuthRestore: isPostOAuthRestore(),
+    localStorage_oauth_return: localStorage.getItem('livewhere_oauth_return'),
+    localStorage_pending_auth_restore: localStorage.getItem('livewhere_pending_auth_restore'),
+    localStorage_oauth_next: localStorage.getItem('livewhere_oauth_next'),
+    hasPendingResults: hasPendingResults(),
+    hasPendingAnalyze: Boolean(loadPendingAnalyze()),
+    ...extra,
+  })
 }
 
 export default function HomePageClient({
@@ -106,6 +146,18 @@ export default function HomePageClient({
   const [awaitingAuthToView, setAwaitingAuthToView] = useState(false)
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
   const [restoreError, setRestoreError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!awaitingAuthToView && !authOpen && !restoringAfterOAuth) return
+    logQuizAuthDebug('auth UI state changed', {
+      awaitingAuthToView,
+      restoringAfterOAuth,
+      authOpen,
+      loading,
+      matchesIsNull: matches === null,
+      authVariant,
+    })
+  }, [awaitingAuthToView, restoringAfterOAuth, authOpen, loading, matches, authVariant])
 
   const showLanding =
     matches === null && !loading && !awaitingAuthToView && !restoringAfterOAuth
@@ -139,23 +191,53 @@ export default function HomePageClient({
     if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
       window.history.replaceState(null, '', '/')
     }
+    resetPostOAuthRestoreCache()
     return true
   }, [])
 
-  const waitForRestoreSession = useCallback(async (): Promise<Session | null> => {
+  const waitForRestoreSession = useCallback(async (reason: string): Promise<Session | null> => {
+    logQuizAuthDebug('waitForRestoreSession CALLED', { reason })
+    const startedAt = Date.now()
     const { data: { session: existing } } = await supabase.auth.getSession()
-    if (existing?.user) return existing
-    return waitForAuthSession(RESTORE_SESSION_MAX_ATTEMPTS, RESTORE_SESSION_POLL_MS)
+    if (existing?.user) {
+      logQuizAuthDebug('waitForRestoreSession DONE (existing session)', {
+        reason,
+        elapsedMs: Date.now() - startedAt,
+        userId: existing.user.id,
+      })
+      return existing
+    }
+    logQuizAuthDebug('waitForRestoreSession polling waitForAuthSession', {
+      reason,
+      maxAttempts: RESTORE_SESSION_MAX_ATTEMPTS,
+      pollMs: RESTORE_SESSION_POLL_MS,
+      maxWaitMs: RESTORE_SESSION_MAX_ATTEMPTS * RESTORE_SESSION_POLL_MS,
+    })
+    const session = await waitForAuthSession(RESTORE_SESSION_MAX_ATTEMPTS, RESTORE_SESSION_POLL_MS)
+    logQuizAuthDebug('waitForRestoreSession DONE (after poll)', {
+      reason,
+      elapsedMs: Date.now() - startedAt,
+      hasSession: Boolean(session?.user),
+      userId: session?.user?.id ?? null,
+    })
+    return session
   }, [])
 
   const openAuthForResults = useCallback(() => {
+    logQuizAuthDebug('openAuthForResults')
     saveOAuthNext('/?restore=results')
     setAuthVariant('results')
     setAuthMode('signup')
     setAuthOpen(true)
+    logQuizAuthDebug('openAuthForResults — authOpen set true')
   }, [])
 
   const promptSignInToView = useCallback((cities: CityResult[], maxCities: number | null) => {
+    logQuizAuthDebug('promptSignInToView — quiz completed, anonymous user', {
+      cityCount: cities.length,
+      maxCities,
+      isPostOAuthRestore: isPostOAuthRestore(),
+    })
     savePendingResults(cities, maxCities)
     setMatches(null)
     setAwaitingAuthToView(true)
@@ -166,6 +248,15 @@ export default function HomePageClient({
     data: AnalyzeRequest,
     options?: { isRestoreRefetch?: boolean },
   ) => {
+    if (!options?.isRestoreRefetch) {
+      clearOAuthReturn()
+      resetPostOAuthRestoreCache()
+    }
+    logQuizAuthDebug('runAnalyze START', {
+      isRestoreRefetch: Boolean(options?.isRestoreRefetch),
+      isPostOAuthRestore: isPostOAuthRestore(),
+      clearedOAuthReturn: !options?.isRestoreRefetch,
+    })
     setLoading(true)
     setError(null)
     setRestoreError(null)
@@ -230,7 +321,13 @@ export default function HomePageClient({
 
       const finishWithCities = async (cities: CityResult[]) => {
         const capped = capMatches(cities)
-        if (await isLoggedIn()) {
+        const loggedInNow = await isLoggedIn()
+        logQuizAuthDebug('finishWithCities — analyze stream done', {
+          cityCount: capped.length,
+          loggedIn: loggedInNow,
+          isPostOAuthRestore: isPostOAuthRestore(),
+        })
+        if (loggedInNow) {
           setMatches(capped)
           setAwaitingAuthToView(false)
           clearPendingResults()
@@ -310,6 +407,9 @@ export default function HomePageClient({
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
+      logQuizAuthDebug('runAnalyze FINALLY — loading=false', {
+        isPostOAuthRestore: isPostOAuthRestore(),
+      })
     }
   }, [promptSignInToView])
 
@@ -317,24 +417,31 @@ export default function HomePageClient({
   runAnalyzeRef.current = runAnalyze
 
   const attemptPostAuthRestore = useCallback(async (): Promise<boolean> => {
-    if (!isPostOAuthRestore()) return false
+    const postOAuth = isPostOAuthRestore()
+    logQuizAuthDebug('attemptPostAuthRestore CALLED', { isPostOAuthRestore: postOAuth })
+    if (!postOAuth) {
+      logQuizAuthDebug('attemptPostAuthRestore SKIP — not post-OAuth restore')
+      return false
+    }
 
     const hasResults = hasPendingResults()
     const quiz = loadPendingAnalyze()
 
     if (!hasResults && !quiz) {
       clearPostAuthRestoreState()
+      resetPostOAuthRestoreCache()
       setRestoringAfterOAuth(false)
       setRestoreError(null)
       return false
     }
 
     if (hasResults) {
+      logQuizAuthDebug('attemptPostAuthRestore — has pending results, will wait for session')
       setAwaitingAuthToView(true)
       setRestoringAfterOAuth(true)
       setRestoreError(null)
 
-      const session = await waitForRestoreSession()
+      const session = await waitForRestoreSession('attemptPostAuthRestore:hasResults')
       if (session?.user && (await revealPendingResults(session))) {
         return true
       }
@@ -357,7 +464,8 @@ export default function HomePageClient({
 
     setRestoringAfterOAuth(true)
     setRestoreError(null)
-    const session = await waitForRestoreSession()
+    logQuizAuthDebug('attemptPostAuthRestore — no results snapshot, refetching quiz after session')
+    const session = await waitForRestoreSession('attemptPostAuthRestore:refetchQuiz')
     if (!session?.user) {
       setRestoringAfterOAuth(false)
       setRestoreError(
@@ -373,6 +481,7 @@ export default function HomePageClient({
     if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
       window.history.replaceState(null, '', '/')
     }
+    resetPostOAuthRestoreCache()
     await runAnalyzeRef.current(quiz, { isRestoreRefetch: true })
     return true
   }, [revealPendingResults, waitForRestoreSession])
@@ -460,10 +569,19 @@ export default function HomePageClient({
 
   // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
-    if (restoreAttemptedRef.current) return
+    logQuizAuthDebug('restore useEffect mount')
+    if (restoreAttemptedRef.current) {
+      logQuizAuthDebug('restore useEffect SKIP — already attempted')
+      return
+    }
     restoreAttemptedRef.current = true
 
-    if (!isPostOAuthRestore()) return
+    const postOAuth = isPostOAuthRestore()
+    logQuizAuthDebug('restore useEffect — isPostOAuthRestore check', { isPostOAuthRestore: postOAuth })
+    if (!postOAuth) {
+      logQuizAuthDebug('restore useEffect SKIP — not post-OAuth restore')
+      return
+    }
 
     const pending = loadPendingResults()
     if (pending?.cities.length) {
@@ -479,6 +597,11 @@ export default function HomePageClient({
     })()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      logQuizAuthDebug('onAuthStateChange', {
+        event,
+        hasUser: Boolean(session?.user),
+        isPostOAuthRestore: isPostOAuthRestore(),
+      })
       if (
         !session?.user ||
         (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED')
@@ -518,6 +641,7 @@ export default function HomePageClient({
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)
     clearPostAuthRestoreState()
+    resetPostOAuthRestoreCache()
     clearPendingResults()
     clearPendingAnalyze()
   }
@@ -735,15 +859,27 @@ export default function HomePageClient({
         }}
         onModeSwitch={() => setAuthMode(m => m === 'login' ? 'signup' : 'login')}
         onAuthSuccess={() => {
+          logQuizAuthDebug('AuthModal onAuthSuccess')
           void (async () => {
             const { data: { session } } = await supabase.auth.getSession()
-            if (session?.user && (await revealPendingResults(session))) return
+            logQuizAuthDebug('onAuthSuccess — getSession', {
+              hasSession: Boolean(session?.user),
+              isPostOAuthRestore: isPostOAuthRestore(),
+            })
+            if (session?.user && (await revealPendingResults(session))) {
+              logQuizAuthDebug('onAuthSuccess — revealPendingResults succeeded (immediate)')
+              return
+            }
 
-            if (!isPostOAuthRestore()) return
+            if (!isPostOAuthRestore()) {
+              logQuizAuthDebug('onAuthSuccess SKIP waitForRestoreSession — not post-OAuth')
+              return
+            }
 
+            logQuizAuthDebug('onAuthSuccess — will call waitForRestoreSession')
             setRestoringAfterOAuth(true)
             setRestoreError(null)
-            const waited = await waitForRestoreSession()
+            const waited = await waitForRestoreSession('onAuthSuccess')
             if (waited?.user && (await revealPendingResults(waited))) return
             if (hasPendingResults()) {
               setRestoringAfterOAuth(false)
