@@ -34,6 +34,7 @@ import {
   shouldRestoreAfterAuth,
   saveOAuthNext,
 } from '@/lib/wait-for-session'
+import type { Session } from '@supabase/supabase-js'
 import { startProCheckout } from '@/lib/start-pro-checkout'
 import { fetchSavedPlanById } from '@/lib/saved-plans'
 
@@ -79,7 +80,9 @@ async function isLoggedIn(): Promise<boolean> {
   return Boolean(session?.user)
 }
 
-const OAUTH_RESTORE_MAX_MS = 1500
+/** Poll up to ~8s for session after OAuth before giving up on restore. */
+const RESTORE_SESSION_MAX_ATTEMPTS = 64
+const RESTORE_SESSION_POLL_MS = 125
 
 export default function HomePageClient({
   defaultSavingsLocation = 'Florida',
@@ -96,22 +99,23 @@ export default function HomePageClient({
   const [quizData, setQuizData] = useState<AnalyzeRequest | null>(null)
   const [awaitingAuthToView, setAwaitingAuthToView] = useState(false)
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
 
-  const showLanding = matches === null && !loading && !awaitingAuthToView
+  const showLanding =
+    matches === null && !loading && !awaitingAuthToView && !restoringAfterOAuth
   const showHero =
     !(matches !== null && matches.length > 0) &&
     !(matches !== null && loading && matches.length === 0)
 
-  const revealPendingResults = useCallback(async (): Promise<boolean> => {
+  const revealPendingResults = useCallback(async (existingSession?: Session | null): Promise<boolean> => {
     const pending = loadPendingResults()
     if (!pending?.cities.length) return false
 
-    const { data: { session: existing } } = await supabase.auth.getSession()
-    const session =
-      existing?.user
-        ? existing
-        : await waitForAuthSession(shouldRestoreAfterAuth() ? 40 : 10, 100)
-
+    let session = existingSession ?? null
+    if (!session?.user) {
+      const { data: { session: quick } } = await supabase.auth.getSession()
+      session = quick
+    }
     if (!session?.user) return false
 
     const pendingRequest = loadPendingAnalyze()
@@ -123,12 +127,19 @@ export default function HomePageClient({
     clearPostAuthRestoreState()
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)
+    setRestoreError(null)
     setAuthOpen(false)
     setAuthVariant('default')
     if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
       window.history.replaceState(null, '', '/')
     }
     return true
+  }, [])
+
+  const waitForRestoreSession = useCallback(async (): Promise<Session | null> => {
+    const { data: { session: existing } } = await supabase.auth.getSession()
+    if (existing?.user) return existing
+    return waitForAuthSession(RESTORE_SESSION_MAX_ATTEMPTS, RESTORE_SESSION_POLL_MS)
   }, [])
 
   const openAuthForResults = useCallback(() => {
@@ -146,13 +157,21 @@ export default function HomePageClient({
     openAuthForResults()
   }, [openAuthForResults])
 
-  const runAnalyze = useCallback(async (data: AnalyzeRequest) => {
+  const runAnalyze = useCallback(async (
+    data: AnalyzeRequest,
+    options?: { isRestoreRefetch?: boolean },
+  ) => {
     setLoading(true)
     setError(null)
-    setAwaitingAuthToView(false)
+    setRestoreError(null)
+    if (!options?.isRestoreRefetch) {
+      setAwaitingAuthToView(false)
+    }
     setQuizData(data)
     savePendingAnalyze(data)
-    clearPendingResults()
+    if (!options?.isRestoreRefetch) {
+      clearPendingResults()
+    }
     setMatches([])
     setResultMaxCities(null)
 
@@ -209,6 +228,7 @@ export default function HomePageClient({
         if (await isLoggedIn()) {
           setMatches(capped)
           setAwaitingAuthToView(false)
+          clearPendingResults()
           clearPendingAnalyze()
           clearPostAuthRestoreState()
         } else {
@@ -290,6 +310,66 @@ export default function HomePageClient({
 
   const runAnalyzeRef = useRef(runAnalyze)
   runAnalyzeRef.current = runAnalyze
+
+  const attemptPostAuthRestore = useCallback(async (): Promise<boolean> => {
+    const hasResults = hasPendingResults()
+    const quiz = loadPendingAnalyze()
+
+    if (!hasResults && !quiz) {
+      clearPostAuthRestoreState()
+      setRestoringAfterOAuth(false)
+      setRestoreError(null)
+      return false
+    }
+
+    if (hasResults) {
+      setAwaitingAuthToView(true)
+      setRestoringAfterOAuth(true)
+      setRestoreError(null)
+
+      const session = await waitForRestoreSession()
+      if (session?.user && (await revealPendingResults(session))) {
+        return true
+      }
+
+      if (hasPendingResults()) {
+        setRestoringAfterOAuth(false)
+        setRestoreError(
+          'Could not verify your sign-in. Your results are still saved — try signing in again.',
+        )
+        setAwaitingAuthToView(true)
+        return false
+      }
+    }
+
+    if (!quiz) {
+      clearPostAuthRestoreState()
+      setRestoringAfterOAuth(false)
+      return false
+    }
+
+    setRestoringAfterOAuth(true)
+    setRestoreError(null)
+    const session = await waitForRestoreSession()
+    if (!session?.user) {
+      setRestoringAfterOAuth(false)
+      setRestoreError(
+        'Could not verify your sign-in. Your quiz answers are saved — try signing in again.',
+      )
+      setAwaitingAuthToView(true)
+      return false
+    }
+
+    setRestoringAfterOAuth(false)
+    setAwaitingAuthToView(false)
+    clearPostAuthRestoreState()
+    if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
+      window.history.replaceState(null, '', '/')
+    }
+    await runAnalyzeRef.current(quiz, { isRestoreRefetch: true })
+    return true
+  }, [revealPendingResults, waitForRestoreSession])
+
   const openAuthForSave = useCallback(() => {
     setAuthVariant('default')
     setAuthMode('login')
@@ -298,25 +378,6 @@ export default function HomePageClient({
 
   const restoreAttemptedRef = useRef(false)
   const savedPlanAttemptedRef = useRef(false)
-
-  // Never show "Finishing sign-in…" longer than 1.5s — then go home.
-  useEffect(() => {
-    if (!restoringAfterOAuth) return
-
-    const timeoutId = window.setTimeout(() => {
-      setRestoringAfterOAuth(false)
-      setAwaitingAuthToView(false)
-      clearPostAuthRestoreState()
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search)
-        if (params.get('restore') === 'results') {
-          window.location.replace('/')
-        }
-      }
-    }, OAUTH_RESTORE_MAX_MS)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [restoringAfterOAuth])
 
   // Load a saved plan from /?savedPlan=<id> (logged-in users only).
   useEffect(() => {
@@ -372,10 +433,15 @@ export default function HomePageClient({
   useEffect(() => {
     if (restoreAttemptedRef.current) return
     restoreAttemptedRef.current = true
+
     const restoreRequested =
       typeof window !== 'undefined' &&
       (new URLSearchParams(window.location.search).get('restore') === 'results' ||
         shouldRestoreAfterAuth())
+
+    if (!restoreRequested && !hasPendingResults() && !loadPendingAnalyze()) {
+      return
+    }
 
     const pending = loadPendingResults()
     if (pending?.cities.length) {
@@ -385,54 +451,10 @@ export default function HomePageClient({
 
     let cancelled = false
 
-    async function tryRestoreAfterAuth() {
-      if (!restoreRequested && !hasPendingResults() && !loadPendingAnalyze()) {
-        clearPostAuthRestoreState()
-        setRestoringAfterOAuth(false)
-        return
-      }
-
-      const { data: { session: existing } } = await supabase.auth.getSession()
-      if (existing?.user) {
-        setRestoringAfterOAuth(false)
-        if (await revealPendingResults()) return
-        const quiz = loadPendingAnalyze()
-        if (quiz && !cancelled) {
-          clearPostAuthRestoreState()
-          setAwaitingAuthToView(false)
-          if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
-            window.history.replaceState(null, '', '/')
-          }
-          await runAnalyzeRef.current(quiz)
-        }
-        return
-      }
-
-      setRestoringAfterOAuth(true)
-      await waitForAuthSession(15, 100)
+    void (async () => {
       if (cancelled) return
-      setRestoringAfterOAuth(false)
-
-      if (await revealPendingResults()) return
-
-      const quiz = loadPendingAnalyze()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (quiz && session?.user) {
-        clearPostAuthRestoreState()
-        setAwaitingAuthToView(false)
-        if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
-          window.history.replaceState(null, '', '/')
-        }
-        await runAnalyzeRef.current(quiz)
-        return
-      }
-
-      if (!cancelled) {
-        clearPostAuthRestoreState()
-      }
-    }
-
-    void tryRestoreAfterAuth()
+      await attemptPostAuthRestore()
+    })()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (
@@ -442,13 +464,20 @@ export default function HomePageClient({
         return
       }
       void (async () => {
-        setRestoringAfterOAuth(false)
-        if (await revealPendingResults()) return
+        if (hasPendingResults() && (await revealPendingResults(session))) {
+          return
+        }
+        if (hasPendingResults()) {
+          return
+        }
         const quiz = loadPendingAnalyze()
         if (!quiz) return
         setAuthOpen(false)
         setAuthVariant('default')
-        await runAnalyzeRef.current(quiz)
+        setRestoringAfterOAuth(false)
+        setRestoreError(null)
+        clearPostAuthRestoreState()
+        await runAnalyzeRef.current(quiz, { isRestoreRefetch: true })
       })()
     })
 
@@ -456,7 +485,7 @@ export default function HomePageClient({
       cancelled = true
       subscription.unsubscribe()
     }
-  }, [revealPendingResults])
+  }, [attemptPostAuthRestore, revealPendingResults])
 
   async function handleAnalyzeRequest(data: AnalyzeRequest) {
     await runAnalyze(data)
@@ -466,6 +495,7 @@ export default function HomePageClient({
     setMatches(null)
     setQuizData(null)
     setError(null)
+    setRestoreError(null)
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)
     clearPostAuthRestoreState()
@@ -547,8 +577,39 @@ export default function HomePageClient({
               }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
               <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center' }}>
-                Finishing sign-in…
+                Restoring your results…
               </p>
+            </>
+          ) : restoreError ? (
+            <>
+              <p style={{ color: '#f05a8c', fontSize: 14, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
+                {restoreError}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setRestoreError(null)
+                  void attemptPostAuthRestore()
+                }}
+                style={{
+                  background: '#c8f05a', color: '#0a0a0f', border: 'none',
+                  padding: '14px 28px', borderRadius: 12, fontSize: 15, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                onClick={openSignInToView}
+                style={{
+                  background: '#1a1a26', border: '1px solid rgba(255,255,255,0.07)',
+                  color: '#c8f05a', padding: '12px 24px', borderRadius: 12, fontSize: 14,
+                  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+                }}
+              >
+                Sign in again
+              </button>
             </>
           ) : (
             <>
@@ -654,7 +715,21 @@ export default function HomePageClient({
         }}
         onModeSwitch={() => setAuthMode(m => m === 'login' ? 'signup' : 'login')}
         onAuthSuccess={() => {
-          void revealPendingResults()
+          setRestoringAfterOAuth(true)
+          setRestoreError(null)
+          void (async () => {
+            const session = await waitForRestoreSession()
+            if (session?.user && (await revealPendingResults(session))) {
+              return
+            }
+            if (hasPendingResults()) {
+              setRestoringAfterOAuth(false)
+              setRestoreError(
+                'Could not verify your sign-in. Your results are still saved — try signing in again.',
+              )
+              setAwaitingAuthToView(true)
+            }
+          })()
         }}
       />
     </main>
