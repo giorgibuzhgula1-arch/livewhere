@@ -232,17 +232,15 @@ export default function HomePageClient({
     logQuizAuthDebug('openAuthForResults — authOpen set true')
   }, [])
 
-  const promptSignInToView = useCallback((cities: CityResult[], maxCities: number | null) => {
-    logQuizAuthDebug('promptSignInToView — quiz completed, anonymous user', {
+  const savePendingAnonymousResults = useCallback((cities: CityResult[], maxCities: number | null) => {
+    logQuizAuthDebug('savePendingAnonymousResults — analyze done, anonymous user', {
       cityCount: cities.length,
       maxCities,
       isPostOAuthRestore: isPostOAuthRestore(),
     })
     savePendingResults(cities, maxCities)
     setMatches(null)
-    setAwaitingAuthToView(true)
-    openAuthForResults()
-  }, [openAuthForResults])
+  }, [])
 
   const runAnalyze = useCallback(async (
     data: AnalyzeRequest,
@@ -260,9 +258,6 @@ export default function HomePageClient({
     setLoading(true)
     setError(null)
     setRestoreError(null)
-    if (!options?.isRestoreRefetch) {
-      setAwaitingAuthToView(false)
-    }
     setQuizData(data)
     savePendingAnalyze(data)
     if (!options?.isRestoreRefetch) {
@@ -273,8 +268,22 @@ export default function HomePageClient({
 
     let accumulatedAi = ''
     let usedDataEngine = false
+    let anonymousAuthGate = false
     try {
       const { data: { session } } = await supabase.auth.getSession()
+      const startedLoggedIn = Boolean(session?.user)
+
+      if (!options?.isRestoreRefetch) {
+        if (startedLoggedIn) {
+          setAwaitingAuthToView(false)
+        } else {
+          anonymousAuthGate = true
+          setAwaitingAuthToView(true)
+          openAuthForResults()
+          logQuizAuthDebug('runAnalyze — opened auth modal at analyze start (anonymous)')
+        }
+      }
+
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
       if (session?.access_token) {
         headers.Authorization = `Bearer ${session.access_token}`
@@ -289,6 +298,10 @@ export default function HomePageClient({
       if (res.status === 403) {
         const json = await res.json().catch(() => ({}))
         setMatches(null)
+        if (anonymousAuthGate) {
+          setAuthOpen(false)
+          setAwaitingAuthToView(false)
+        }
         setError(json.error || 'Free plan limit reached. Upgrade to Pro for unlimited searches.')
         return
       }
@@ -296,6 +309,10 @@ export default function HomePageClient({
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
         setMatches(null)
+        if (anonymousAuthGate) {
+          setAuthOpen(false)
+          setAwaitingAuthToView(false)
+        }
         setError((json as { error?: string }).error || 'Something went wrong')
         return
       }
@@ -330,11 +347,13 @@ export default function HomePageClient({
         if (loggedInNow) {
           setMatches(capped)
           setAwaitingAuthToView(false)
+          setAuthOpen(false)
+          setAuthVariant('default')
           clearPendingResults()
           clearPendingAnalyze()
           clearPostAuthRestoreState()
         } else {
-          promptSignInToView(capped, streamMaxCities)
+          savePendingAnonymousResults(capped, streamMaxCities)
         }
       }
 
@@ -405,13 +424,15 @@ export default function HomePageClient({
     } catch {
       setMatches(null)
       setError('Network error. Please try again.')
+      setAuthOpen(false)
+      setAwaitingAuthToView(false)
     } finally {
       setLoading(false)
       logQuizAuthDebug('runAnalyze FINALLY — loading=false', {
         isPostOAuthRestore: isPostOAuthRestore(),
       })
     }
-  }, [promptSignInToView])
+  }, [openAuthForResults, savePendingAnonymousResults])
 
   const runAnalyzeRef = useRef(runAnalyze)
   runAnalyzeRef.current = runAnalyze
@@ -868,6 +889,14 @@ export default function HomePageClient({
             })
             if (session?.user && (await revealPendingResults(session))) {
               logQuizAuthDebug('onAuthSuccess — revealPendingResults succeeded (immediate)')
+              return
+            }
+
+            // Signed in while analyze still streaming — finishWithCities will show results.
+            if (session?.user && !hasPendingResults() && loadPendingAnalyze()) {
+              logQuizAuthDebug('onAuthSuccess — analyze in progress, closing modal')
+              setAuthOpen(false)
+              setAwaitingAuthToView(false)
               return
             }
 
