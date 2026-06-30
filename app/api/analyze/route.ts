@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { streamRecommendCities, buildTeaserCities } from '@/lib/recommendation'
-import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT, FREE_SEARCHES_PER_DAY } from '@/lib/plan'
+import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT, FREE_SEARCHES_PER_DAY, FREE_ANONYMOUS_SEARCHES_PER_MONTH } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
 
     const anonCount = anonRow?.count ?? 0
-    if (anonCount >= 3) {
+    if (anonCount >= FREE_ANONYMOUS_SEARCHES_PER_MONTH) {
       return NextResponse.json({ error: FREE_SEARCH_LIMIT_MESSAGE }, { status: 403 })
     }
 

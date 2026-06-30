@@ -15,7 +15,9 @@ export const BLUEPRINT_RESULT_COUNT = 25
 export const FREE_RESULT_COUNT = 12
 export const FREE_UNLOCKED_COUNT = 3
 export const FREE_DETAILED_COUNT = 3
-export const FREE_SEARCHES_PER_DAY = 3
+export const FREE_SEARCHES_PER_DAY = 10
+/** Anonymous (no account) searches allowed per client IP per UTC calendar month. */
+export const FREE_ANONYMOUS_SEARCHES_PER_MONTH = 10
 export const FREE_SAVED_PLANS_LIMIT = 1
 
 export function isProPlan(plan: UserPlan | string | null | undefined): boolean {
