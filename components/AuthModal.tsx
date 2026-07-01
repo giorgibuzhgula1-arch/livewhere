@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { getSiteUrl } from '@/lib/site-url'
 import { markPendingAuthRestore, saveOAuthNext } from '@/lib/wait-for-session'
 import { trackSignUp } from '@/lib/gtag'
+import { trackSignupCompleted, trackSignupStarted } from '@/lib/analytics'
 
 interface Props {
   isOpen: boolean
@@ -65,6 +66,11 @@ export default function AuthModal({
     setLoading(true)
     setError(null)
 
+    trackSignupStarted({
+      method: 'google',
+      location: restoreResults ? 'quiz_results' : 'auth_modal',
+    })
+
     const nextPath = restoreResults ? resultsNextPath() : '/'
     if (restoreResults) {
       prepareResultsRestore()
@@ -101,6 +107,11 @@ export default function AuthModal({
         const trimmedName = fullName.trim()
         if (!trimmedName) throw new Error('Enter your full name')
 
+        trackSignupStarted({
+          method: 'email',
+          location: restoreResults ? 'quiz_results' : 'auth_modal',
+        })
+
         if (restoreResults) prepareResultsRestore()
 
         const nextPath = restoreResults ? resultsNextPath() : '/'
@@ -117,6 +128,7 @@ export default function AuthModal({
         if (signUpError) throw signUpError
 
         trackSignUp('email')
+        trackSignupCompleted('email')
 
         if (data.session) {
           onAuthSuccess?.()

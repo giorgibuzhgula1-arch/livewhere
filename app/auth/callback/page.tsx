@@ -9,6 +9,7 @@ import {
   clearOAuthNext,
 } from '@/lib/wait-for-session'
 import { trackSignUp } from '@/lib/gtag'
+import { trackSignupCompleted } from '@/lib/analytics'
 import type { User } from '@supabase/supabase-js'
 
 function safeNextPath(raw: string | null): string {
@@ -34,6 +35,7 @@ export default function AuthCallbackPage() {
       if (Date.now() - createdAt < 60_000) {
         signUpTracked = true
         trackSignUp('google')
+        trackSignupCompleted('google')
       }
     }
 

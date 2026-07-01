@@ -37,7 +37,7 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import { startProCheckout } from '@/lib/start-pro-checkout'
 import { fetchSavedPlanById } from '@/lib/saved-plans'
-import { trackPremiumButtonClicked, trackPurchaseCompleted, type PremiumPlan } from '@/lib/analytics'
+import { trackPremiumButtonClicked, trackPurchaseCompleted, trackSignupStarted, type PremiumPlan } from '@/lib/analytics'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -229,6 +229,7 @@ export default function HomePageClient({
     setAuthVariant('results')
     setAuthMode('signup')
     setAuthOpen(true)
+    trackSignupStarted({ method: 'modal', location: 'quiz_results' })
     logQuizAuthDebug('openAuthForResults — authOpen set true')
   }, [])
 

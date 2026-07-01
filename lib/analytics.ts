@@ -1,4 +1,5 @@
 import { gaEvent } from '@/lib/gtag'
+import { POSTHOG_EVENTS, capturePostHogEvent } from '@/lib/posthog-events'
 
 const SESSION_KEYS = {
   quizStarted: 'ga_quiz_started',
@@ -44,6 +45,7 @@ export function trackHeroCtaClick(location = 'hero') {
 export function trackQuizStarted() {
   if (!oncePerSession(SESSION_KEYS.quizStarted)) return
   gaEvent('quiz_start')
+  capturePostHogEvent(POSTHOG_EVENTS.QUIZ_START)
 }
 
 export function trackBudgetSelected(budget: number) {
@@ -54,6 +56,11 @@ export function trackBudgetSelected(budget: number) {
     value: budget,
     currency: 'USD',
   })
+  capturePostHogEvent(POSTHOG_EVENTS.QUIZ_STEP_COMPLETED, {
+    step: 1,
+    step_name: 'budget',
+    budget,
+  })
 }
 
 export function trackPrioritiesCompleted() {
@@ -61,6 +68,10 @@ export function trackPrioritiesCompleted() {
   gaEvent('select_item', {
     item_list_name: 'quiz_priorities',
     item_name: 'priorities_completed',
+  })
+  capturePostHogEvent(POSTHOG_EVENTS.QUIZ_STEP_COMPLETED, {
+    step: 2,
+    step_name: 'priorities',
   })
 }
 
@@ -70,6 +81,10 @@ export function trackQuizCompleted(params?: { budget?: number; lifestyleCount?: 
     value: params?.budget,
     lifestyle_count: params?.lifestyleCount,
   })
+  capturePostHogEvent(POSTHOG_EVENTS.QUIZ_COMPLETE, {
+    budget: params?.budget,
+    lifestyle_count: params?.lifestyleCount,
+  })
 }
 
 export function trackResultsViewed(params?: { cityCount?: number }) {
@@ -77,6 +92,9 @@ export function trackResultsViewed(params?: { cityCount?: number }) {
   gaEvent('view_item_list', {
     item_list_name: 'city_results',
     items_shown: params?.cityCount,
+  })
+  capturePostHogEvent(POSTHOG_EVENTS.VIEW_RESULTS, {
+    city_count: params?.cityCount,
   })
 }
 
@@ -113,6 +131,12 @@ export function trackCheckoutStarted(params: {
     value,
     currency: 'USD',
   })
+  capturePostHogEvent(POSTHOG_EVENTS.CHECKOUT_START, {
+    plan: params.plan,
+    location: params.location,
+    value,
+    currency: 'USD',
+  })
 }
 
 export function trackPurchaseCompleted(params: {
@@ -130,4 +154,21 @@ export function trackPurchaseCompleted(params: {
     currency: params.currency ?? 'USD',
     item_name: params.plan,
   })
+  capturePostHogEvent(POSTHOG_EVENTS.PURCHASE_COMPLETE, {
+    transaction_id: params.transactionId,
+    plan: params.plan,
+    value,
+    currency: params.currency ?? 'USD',
+  })
+}
+
+export function trackSignupStarted(params: {
+  method: 'email' | 'google' | 'modal'
+  location?: string
+}) {
+  capturePostHogEvent(POSTHOG_EVENTS.SIGNUP_START, params)
+}
+
+export function trackSignupCompleted(method: 'email' | 'google' = 'email') {
+  capturePostHogEvent(POSTHOG_EVENTS.SIGNUP_COMPLETE, { method })
 }
