@@ -1,6 +1,6 @@
 ---
 title: "What Should I Look for in a Retirement Planner? (2026 Guide)"
-date: "2026-06-22"
+date: "2026-07-01"
 description: "Learn what to look for in a retirement planner, the questions to ask, common mistakes to avoid, and whether your planner should understand retirement abroad."
 cluster: "retirement"
 ---
