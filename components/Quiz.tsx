@@ -148,16 +148,17 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             <label style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, fontWeight: 500, display: 'block' }}>
               Set your priorities
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 20 }}>
+            <div className="quiz-priorities-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 20 }}>
               {PRIORITIES.map(({ key, emoji, label }) => (
-                <div key={key}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontSize: 14, fontWeight: 500 }}>{emoji} {label}</span>
-                    <span style={{ fontSize: 13, color: '#c8f05a', fontWeight: 600 }}>
+                <div key={key} className="quiz-priority-item">
+                  <div className="quiz-priority-row-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <span className="quiz-priority-label" style={{ fontSize: 14, fontWeight: 500 }}>{emoji} {label}</span>
+                    <span className="quiz-priority-value" style={{ fontSize: 13, color: '#c8f05a', fontWeight: 600 }}>
                       {LABELS[priorities[key as keyof UserPriorities]]}
                     </span>
                   </div>
                   <input type="range" min={1} max={5}
+                    className="quiz-priority-slider"
                     value={priorities[key as keyof UserPriorities]}
                     onChange={e => handlePriorityChange(key as keyof UserPriorities, Number(e.target.value))}
                     style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
@@ -165,6 +166,49 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                 </div>
               ))}
             </div>
+            <style>{`
+              @media (max-width: 767px) {
+                .quiz-priorities-grid {
+                  grid-template-columns: minmax(0, 1fr) !important;
+                  gap: 16px !important;
+                  width: 100%;
+                  max-width: 100%;
+                }
+                .quiz-priority-item {
+                  min-width: 0;
+                  max-width: 100%;
+                  overflow: hidden;
+                }
+                .quiz-priority-row-header {
+                  flex-wrap: wrap !important;
+                  align-items: baseline !important;
+                  gap: 4px 10px !important;
+                  margin-bottom: 8px !important;
+                }
+                .quiz-priority-label {
+                  flex: 1 1 auto !important;
+                  min-width: 0 !important;
+                  max-width: 100% !important;
+                  line-height: 1.35 !important;
+                }
+                .quiz-priority-value {
+                  flex: 0 1 auto !important;
+                  min-width: 0 !important;
+                  max-width: 100% !important;
+                  font-size: 12px !important;
+                  line-height: 1.35 !important;
+                  white-space: normal !important;
+                  text-align: right !important;
+                  margin-left: auto !important;
+                }
+                .quiz-priority-slider {
+                  display: block !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  box-sizing: border-box !important;
+                }
+              }
+            `}</style>
           </div>
 
           {/* Lifestyle */}
