@@ -26,6 +26,7 @@ type PricingTier = {
   name: string
   price: string
   period: string
+  tagline: string
   features: PlanFeature[]
   btn: string
   style: 'primary' | 'ghost'
@@ -104,6 +105,7 @@ export default function Pricing({ onUpgrade }: Props) {
       name: 'Free',
       price: '$0',
       period: 'forever',
+      tagline: 'Everything You Need to Get Started',
       features: [
         { text: '3 searches/day' },
         { text: 'Top 3 recommendations' },
@@ -121,6 +123,7 @@ export default function Pricing({ onUpgrade }: Props) {
       name: 'Pro Lifetime',
       price: '$49',
       period: 'one-time',
+      tagline: 'Find Your Best Match',
       popular: true,
       features: [
         { text: 'Unlimited searches' },
@@ -144,6 +147,7 @@ export default function Pricing({ onUpgrade }: Props) {
       name: 'Blueprint Lifetime',
       price: isProUpgrade ? '$100' : '$149',
       period: 'one-time',
+      tagline: 'Your Personalized Blueprint',
       features: [
         {
           text: 'Includes 12 months of Retirement Monitor — $120 value',
@@ -172,6 +176,7 @@ export default function Pricing({ onUpgrade }: Props) {
       name: 'Monitor',
       price: '$9.99',
       period: '/month',
+      tagline: 'Stay Ahead Of Every Change',
       features: [
         { text: 'Weekly city alerts' },
         { text: 'Tax & Visa changes' },
@@ -319,10 +324,20 @@ export default function Pricing({ onUpgrade }: Props) {
                 style={{
                   fontSize: 13,
                   color: 'rgba(240,237,232,0.45)',
-                  marginBottom: 24,
+                  marginBottom: 12,
                 }}
               >
                 {tier.period}
+              </div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: '#f0f0f0',
+                  marginBottom: 24,
+                }}
+              >
+                {tier.tagline}
               </div>
               <ul style={{ listStyle: 'none', marginBottom: tier.valueSummary ? 12 : 24, flex: 1 }}>
                 {tier.features.map((f) => (
