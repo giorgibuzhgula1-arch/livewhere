@@ -146,6 +146,7 @@ export default function HomePageClient({
   const [awaitingAuthToView, setAwaitingAuthToView] = useState(false)
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
   const [restoreError, setRestoreError] = useState<string | null>(null)
+  const [oauthSignInError, setOauthSignInError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!awaitingAuthToView && !authOpen && !restoringAfterOAuth) return
@@ -232,6 +233,44 @@ export default function HomePageClient({
     trackSignupStarted({ method: 'modal', location: 'quiz_results' })
     logQuizAuthDebug('openAuthForResults — authOpen set true')
   }, [])
+
+  const handleOAuthSignInRetry = useCallback(() => {
+    setOauthSignInError(null)
+    if (hasPendingResults() || loadPendingAnalyze()) {
+      setAwaitingAuthToView(true)
+      openAuthForResults()
+    } else {
+      setAuthVariant('default')
+      setAuthMode('login')
+      setAuthOpen(true)
+    }
+  }, [openAuthForResults])
+
+  const oauthErrorHandledRef = useRef(false)
+
+  useEffect(() => {
+    if (oauthErrorHandledRef.current || typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('auth_error') !== 'oauth') return
+
+    oauthErrorHandledRef.current = true
+    setOauthSignInError('Sign-in failed. Please try again.')
+
+    if (hasPendingResults() || loadPendingAnalyze()) {
+      setAwaitingAuthToView(true)
+      openAuthForResults()
+    }
+
+    params.delete('auth_error')
+    const hash = window.location.hash
+    const remaining = params.toString()
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${remaining ? `?${remaining}` : ''}${hash}`,
+    )
+  }, [openAuthForResults])
 
   const savePendingAnonymousResults = useCallback((cities: CityResult[], maxCities: number | null) => {
     logQuizAuthDebug('savePendingAnonymousResults — analyze done, anonymous user', {
@@ -689,6 +728,51 @@ export default function HomePageClient({
         onAuthClick={() => { setAuthVariant('default'); setAuthOpen(true); setAuthMode('login') }}
         onLogoClick={handleResetMatches}
       />
+
+      {oauthSignInError && (
+        <div
+          role="alert"
+          style={{
+            position: 'fixed',
+            top: 72,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 250,
+            width: 'min(520px, calc(100% - 40px))',
+            padding: '14px 18px',
+            background: 'rgba(240,90,140,0.12)',
+            border: '1px solid rgba(240,90,140,0.35)',
+            borderRadius: 12,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <p style={{ margin: 0, color: '#f05a8c', fontSize: 14, lineHeight: 1.5, flex: 1 }}>
+            {oauthSignInError}
+          </p>
+          <button
+            type="button"
+            onClick={handleOAuthSignInRetry}
+            style={{
+              background: '#c8f05a',
+              color: '#0a0a0f',
+              border: 'none',
+              padding: '10px 18px',
+              borderRadius: 10,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: "'DM Sans', sans-serif",
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
       {showHero && (
         <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />

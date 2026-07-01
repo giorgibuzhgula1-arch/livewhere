@@ -39,10 +39,12 @@ export default function AuthCallbackPage() {
       }
     }
 
-    function hardRedirect(path: string) {
+    function redirectHome(path: string, oauthSuccess: boolean) {
       if (redirecting || cancelled) return
       redirecting = true
-      markOAuthReturn()
+      if (oauthSuccess) {
+        markOAuthReturn()
+      }
       clearOAuthNext()
       window.location.replace(path)
     }
@@ -55,7 +57,7 @@ export default function AuthCallbackPage() {
 
       if (oauthError) {
         console.error('OAuth error:', oauthError, params.get('error_description'))
-        hardRedirect('/?auth_error=oauth')
+        redirectHome('/?auth_error=oauth', false)
         return
       }
 
@@ -64,7 +66,7 @@ export default function AuthCallbackPage() {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           console.error('exchangeCodeForSession:', error.message)
-          hardRedirect('/?auth_error=oauth')
+          redirectHome('/?auth_error=oauth', false)
           return
         }
         window.history.replaceState(null, '', window.location.pathname)
@@ -77,7 +79,7 @@ export default function AuthCallbackPage() {
       if (session?.user) {
         trackNewGoogleSignUp(session.user)
         setStatus('Redirecting…')
-        hardRedirect(next)
+        redirectHome(next, true)
         return
       }
 
@@ -92,7 +94,7 @@ export default function AuthCallbackPage() {
             const ready = await confirmAuthSessionReady(8, 100)
             if (ready?.user) {
               trackNewGoogleSignUp(ready.user)
-              hardRedirect(next)
+              redirectHome(next, true)
             }
           })()
         }
@@ -104,9 +106,9 @@ export default function AuthCallbackPage() {
         const retry = await confirmAuthSessionReady(5, 100)
         if (retry?.user) {
           trackNewGoogleSignUp(retry.user)
-          hardRedirect(next)
+          redirectHome(next, true)
         } else {
-          hardRedirect('/?auth_error=session')
+          redirectHome('/?auth_error=session', false)
         }
       }, 1500)
     }
