@@ -4,7 +4,7 @@ const STEPS = [
   { num: '01', title: 'You share your situation', desc: 'Income, lifestyle priorities, family status — takes under 3 minutes.' },
   { num: '02', title: 'AI scores 200+ cities', desc: 'We calculate your real take-home pay, monthly costs, and lifestyle match for every city.' },
   { num: '03', title: 'Drill down by continent', desc: 'Filter by Europe, Americas, Asia. See city-level detail: taxes, rent, safety, pros & cons.' },
-  { num: '04', title: 'Make your move', desc: 'Export a full PDF report. Compare side-by-side. Plan with confidence.' },
+  { num: '04', title: 'Make your move', desc: 'Download your Personalized Retirement Report. Compare side-by-side. Plan with confidence.' },
 ]
 
 export default function HowItWorks() {
