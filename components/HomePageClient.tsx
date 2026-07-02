@@ -182,6 +182,13 @@ export default function HomePageClient({
     if (pendingRequest) setQuizData(pendingRequest)
     setMatches(pending.cities)
     setResultMaxCities(pending.maxCities)
+    if (pendingRequest) {
+      saveCheckoutSnapshot({
+        quizInput: pendingRequest,
+        cities: pending.cities,
+        maxCities: pending.maxCities,
+      })
+    }
     clearPendingResults()
     clearPendingAnalyze()
     clearPostAuthRestoreState()
@@ -384,6 +391,11 @@ export default function HomePageClient({
           cityCount: capped.length,
           loggedIn: loggedInNow,
           isPostOAuthRestore: isPostOAuthRestore(),
+        })
+        saveCheckoutSnapshot({
+          quizInput: data,
+          cities: capped,
+          maxCities: streamMaxCities,
         })
         if (loggedInNow) {
           setMatches(capped)

@@ -228,15 +228,52 @@ export async function ensureSavedPlanForBlueprintCheckout(
   context?: BlueprintCheckoutContext,
 ): Promise<string | null> {
   const snapshot = loadCheckoutSnapshot()
-  const quizInput = context?.quizInput ?? snapshot?.quizInput ?? loadPendingAnalyze()
   const pendingResults = loadPendingResults()
+
+  console.log('[blueprint-checkout-debug] ensureSavedPlanForBlueprintCheckout inputs', {
+    context: context
+      ? {
+          present: true,
+          cityCount: context.cities?.length ?? 0,
+          maxCities: context.maxCities ?? null,
+        }
+      : null,
+    snapshot: snapshot
+      ? {
+          present: true,
+          cityCount: snapshot.cities?.length ?? 0,
+          maxCities: snapshot.maxCities ?? null,
+        }
+      : null,
+    pendingResults: pendingResults
+      ? {
+          present: true,
+          cityCount: pendingResults.cities?.length ?? 0,
+          maxCities: pendingResults.maxCities ?? null,
+        }
+      : null,
+  })
+
+  const quizInput = context?.quizInput ?? snapshot?.quizInput ?? loadPendingAnalyze()
   const cities = context?.cities ?? snapshot?.cities ?? pendingResults?.cities ?? null
   const maxCities = context?.maxCities ?? snapshot?.maxCities ?? pendingResults?.maxCities ?? null
 
-  if (!quizInput || !cities?.length) return null
+  if (!quizInput || !cities?.length) {
+    console.log('[blueprint-checkout-debug] decision: early null (no data)', {
+      hasQuizInput: Boolean(quizInput),
+      cityCount: cities?.length ?? 0,
+    })
+    return null
+  }
 
   const existing = await findMatchingSavedPlan(quizInput, cities)
-  if (existing) return existing.id
+  if (existing) {
+    console.log('[blueprint-checkout-debug] decision: existing match (dedup)', {
+      planId: existing.id,
+      planName: existing.name,
+    })
+    return existing.id
+  }
 
   const count = await countSavedPlans()
   const saved = await saveRetirementPlan({
@@ -244,6 +281,10 @@ export async function ensureSavedPlanForBlueprintCheckout(
     quizInput,
     cityResults: cities,
     maxCities,
+  })
+  console.log('[blueprint-checkout-debug] decision: created new plan', {
+    planId: saved.id,
+    planName: saved.name,
   })
   return saved.id
 }
