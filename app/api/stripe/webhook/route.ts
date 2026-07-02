@@ -99,6 +99,33 @@ export async function POST(req: NextRequest) {
           ...(monitorSubId ? { stripe_monitor_subscription_id: monitorSubId } : {}),
         })
         .eq('id', userId)
+
+      const planId = session.metadata?.plan_id
+      if (planId) {
+        const { data: savedPlan, error: planError } = await supabaseAdmin
+          .from('saved_retirement_plans')
+          .select('id, user_id, name, quiz_input, city_results, max_cities, created_at')
+          .eq('id', planId)
+          .eq('user_id', userId)
+          .maybeSingle()
+
+        if (planError) {
+          console.error('[webhook] Failed to fetch saved plan for Blueprint checkout:', planError)
+        } else if (savedPlan) {
+          console.log('[webhook] Blueprint checkout saved plan retrieved:', {
+            planId: savedPlan.id,
+            userId: savedPlan.user_id,
+            planName: savedPlan.name,
+            cityCount: Array.isArray(savedPlan.city_results) ? savedPlan.city_results.length : 0,
+            monthlyBudget: (savedPlan.quiz_input as { monthlyBudget?: number })?.monthlyBudget,
+            createdAt: savedPlan.created_at,
+          })
+        } else {
+          console.warn('[webhook] Blueprint checkout plan_id not found for user:', { planId, userId })
+        }
+      } else {
+        console.warn('[webhook] Blueprint checkout completed without plan_id metadata:', { userId })
+      }
     } else if (checkoutType === 'pro') {
       await supabaseAdmin
         .from('profiles')

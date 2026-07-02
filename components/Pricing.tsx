@@ -10,9 +10,12 @@ import {
   trackPricingViewed,
   type PremiumPlan,
 } from '@/lib/analytics'
+import { startBlueprintCheckout } from '@/lib/start-blueprint-checkout'
+import type { BlueprintCheckoutContext } from '@/lib/saved-plans'
 
 interface Props {
   onUpgrade: () => void
+  checkoutContext?: BlueprintCheckoutContext
 }
 
 type PlanFeature = {
@@ -37,7 +40,7 @@ type PricingTier = {
   action?: 'signup'
 }
 
-export default function Pricing({ onUpgrade }: Props) {
+export default function Pricing({ onUpgrade, checkoutContext }: Props) {
   const [loadingPlan, setLoadingPlan] = useState<CheckoutType | 'signup' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userPlan, setUserPlan] = useState<UserPlan>('free')
@@ -63,6 +66,22 @@ export default function Pricing({ onUpgrade }: Props) {
       onUpgrade()
       return
     }
+
+    if (checkoutType === 'blueprint' || checkoutType === 'blueprint_upgrade') {
+      setLoadingPlan(checkoutType)
+      try {
+        await startBlueprintCheckout({
+          checkoutType,
+          location: 'pricing_page',
+          checkoutContext,
+        })
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Unable to start Stripe checkout')
+        setLoadingPlan(null)
+      }
+      return
+    }
+
     setLoadingPlan(checkoutType)
     trackCheckoutStarted({ plan: checkoutType, location: 'pricing_page' })
     try {

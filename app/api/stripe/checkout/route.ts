@@ -34,14 +34,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
     }
 
-    let payload: { userId?: string; email?: string; checkoutType?: CheckoutType }
+    let payload: { userId?: string; email?: string; checkoutType?: CheckoutType; planId?: string }
     try {
       payload = JSON.parse(rawBody)
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
 
-    const { userId, email, checkoutType = 'pro' } = payload
+    const { userId, email, checkoutType = 'pro', planId } = payload
 
     if (!userId) {
       return NextResponse.json(
@@ -112,6 +112,22 @@ export async function POST(req: NextRequest) {
     }
     if (refCode) sessionMetadata.ref_code = refCode
 
+    if (
+      planId &&
+      (checkoutType === 'blueprint' || checkoutType === 'blueprint_upgrade')
+    ) {
+      const { data: savedPlan } = await supabaseAdmin
+        .from('saved_retirement_plans')
+        .select('id')
+        .eq('id', planId)
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (savedPlan?.id) {
+        sessionMetadata.plan_id = savedPlan.id
+      }
+    }
+
     let mode: 'subscription' | 'payment' = checkoutType === 'monitor' ? 'subscription' : 'payment'
     let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
     let subscriptionData: { metadata?: Record<string, string>; trial_period_days?: number } | undefined
@@ -160,7 +176,15 @@ export async function POST(req: NextRequest) {
           : {}),
       },
       ...(refCode && mode === 'payment'
-        ? { payment_intent_data: { metadata: { ref_code: refCode, checkoutType } } }
+        ? {
+            payment_intent_data: {
+              metadata: {
+                ref_code: refCode,
+                checkoutType,
+                ...(sessionMetadata.plan_id ? { plan_id: sessionMetadata.plan_id } : {}),
+              },
+            },
+          }
         : {}),
       ...(refCode && mode === 'subscription'
         ? {

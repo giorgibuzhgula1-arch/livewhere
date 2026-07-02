@@ -27,6 +27,7 @@ import {
   loadPendingAnalyze,
   clearPendingAnalyze,
 } from '@/lib/pending-analyze'
+import { saveCheckoutSnapshot } from '@/lib/checkout-snapshot'
 import {
   waitForAuthSession,
   clearPostAuthRestoreState,
@@ -389,6 +390,11 @@ export default function HomePageClient({
           setAwaitingAuthToView(false)
           setAuthOpen(false)
           setAuthVariant('default')
+          saveCheckoutSnapshot({
+            quizInput: data,
+            cities: capped,
+            maxCities: streamMaxCities,
+          })
           clearPendingResults()
           clearPendingAnalyze()
           clearPostAuthRestoreState()
@@ -787,7 +793,14 @@ export default function HomePageClient({
           </div>
           <RetirementStatsBar />
           <HowItWorks />
-          <Pricing onUpgrade={() => { setAuthVariant('default'); setAuthOpen(true); setAuthMode('signup') }} />
+          <Pricing
+            onUpgrade={() => { setAuthVariant('default'); setAuthOpen(true); setAuthMode('signup') }}
+            checkoutContext={
+              matches && quizData
+                ? { quizInput: quizData, cities: matches, maxCities: resultMaxCities }
+                : undefined
+            }
+          />
         </>
       )}
 

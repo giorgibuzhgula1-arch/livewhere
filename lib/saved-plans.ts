@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/supabase'
 import type { AnalyzeRequest, CityResult } from '@/lib/types'
+import { loadPendingAnalyze } from '@/lib/pending-analyze'
+import { loadPendingResults } from '@/lib/pending-results'
+import { loadCheckoutSnapshot } from '@/lib/checkout-snapshot'
 import { fetchUserPlan, isPaidPlan, FREE_SAVED_PLANS_LIMIT, type UserPlan } from '@/lib/plan'
 
 export { FREE_SAVED_PLANS_LIMIT }
@@ -171,4 +174,76 @@ export function formatPlanDate(iso: string): string {
   } catch {
     return iso
   }
+}
+
+function stableQuizInputKey(input: AnalyzeRequest): string {
+  return JSON.stringify({
+    monthlyBudget: input.monthlyBudget,
+    currency: input.currency,
+    priorities: input.priorities,
+    lifestyle: [...(input.lifestyle ?? [])].sort(),
+  })
+}
+
+function stableCityResultsKey(cities: CityResult[]): string {
+  return JSON.stringify(
+    cities
+      .map((city) => ({ name: city.name, country: city.country, score: city.score }))
+      .sort((a, b) => `${a.name}|${a.country}`.localeCompare(`${b.name}|${b.country}`)),
+  )
+}
+
+export function savedPlansMatch(
+  quizInputA: AnalyzeRequest,
+  cityResultsA: CityResult[],
+  quizInputB: AnalyzeRequest,
+  cityResultsB: CityResult[],
+): boolean {
+  return (
+    stableQuizInputKey(quizInputA) === stableQuizInputKey(quizInputB) &&
+    stableCityResultsKey(cityResultsA) === stableCityResultsKey(cityResultsB)
+  )
+}
+
+export async function findMatchingSavedPlan(
+  quizInput: AnalyzeRequest,
+  cityResults: CityResult[],
+): Promise<SavedRetirementPlan | null> {
+  const plans = await fetchSavedPlans()
+  return (
+    plans.find((plan) =>
+      savedPlansMatch(quizInput, cityResults, plan.quiz_input, plan.city_results),
+    ) ?? null
+  )
+}
+
+export type BlueprintCheckoutContext = {
+  quizInput: AnalyzeRequest
+  cities: CityResult[]
+  maxCities?: number | null
+}
+
+/** Auto-save quiz results before Blueprint checkout; reuse an identical saved plan if one exists. */
+export async function ensureSavedPlanForBlueprintCheckout(
+  context?: BlueprintCheckoutContext,
+): Promise<string | null> {
+  const snapshot = loadCheckoutSnapshot()
+  const quizInput = context?.quizInput ?? snapshot?.quizInput ?? loadPendingAnalyze()
+  const pendingResults = loadPendingResults()
+  const cities = context?.cities ?? snapshot?.cities ?? pendingResults?.cities ?? null
+  const maxCities = context?.maxCities ?? snapshot?.maxCities ?? pendingResults?.maxCities ?? null
+
+  if (!quizInput || !cities?.length) return null
+
+  const existing = await findMatchingSavedPlan(quizInput, cities)
+  if (existing) return existing.id
+
+  const count = await countSavedPlans()
+  const saved = await saveRetirementPlan({
+    name: `Blueprint — ${defaultPlanName(count)}`,
+    quizInput,
+    cityResults: cities,
+    maxCities,
+  })
+  return saved.id
 }
