@@ -137,6 +137,8 @@ export async function POST(req: NextRequest) {
               ? quizInput.monthlyBudget
               : 0
 
+          let downloadUrl: string | null = null
+
           try {
             const pdf = generateRetirementReportPdf(exportCities, budget, { lifetime: true })
             console.log('[webhook] Blueprint retirement PDF generated:', {
@@ -144,6 +146,34 @@ export async function POST(req: NextRequest) {
               byteLength: pdf.byteLength,
               exportCityCount: exportCities.length,
             })
+
+            const filePath = `${savedPlan.user_id}/${savedPlan.id}/blueprint-report.pdf`
+            const { error: uploadError } = await supabaseAdmin.storage
+              .from('blueprint-reports')
+              .upload(filePath, pdf, {
+                contentType: 'application/pdf',
+                upsert: true,
+              })
+
+            if (uploadError) {
+              console.error('[webhook] Blueprint PDF upload failed:', uploadError)
+            } else {
+              console.log('[webhook] Blueprint PDF uploaded:', filePath)
+
+              const { data: signedData, error: signedUrlError } = await supabaseAdmin.storage
+                .from('blueprint-reports')
+                .createSignedUrl(filePath, 60 * 60 * 24 * 7)
+
+              if (signedUrlError) {
+                console.error('[webhook] Signed URL creation failed:', signedUrlError)
+              } else {
+                downloadUrl = signedData.signedUrl
+                console.log('[webhook] Blueprint PDF signed URL created:', {
+                  planId: savedPlan.id,
+                  hasUrl: !!downloadUrl,
+                })
+              }
+            }
           } catch (pdfError) {
             console.error('[webhook] Blueprint retirement PDF generation failed:', pdfError)
           }
