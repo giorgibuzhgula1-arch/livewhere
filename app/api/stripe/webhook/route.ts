@@ -3,6 +3,7 @@ import {
   conversionFromCheckoutSession,
   recordAffiliateConversion,
 } from '@/lib/record-affiliate-conversion'
+import { generateRetirementReportPdf } from '@/lib/retirement-report-core'
 import { stripe } from '@/lib/stripe'
 import {
   BLUEPRINT_MONITOR_TRIAL_DAYS,
@@ -10,7 +11,14 @@ import {
   type CheckoutType,
 } from '@/lib/stripe-prices'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import type { AnalyzeRequest, CityResult } from '@/lib/types'
 import Stripe from 'stripe'
+
+// jsPDF + Stripe require Node.js — do not switch to Edge runtime.
+export const runtime = 'nodejs'
+
+// Larger Blueprint reports may need `export const maxDuration = 60` (or higher on Pro).
+// Default Vercel timeout is often 10s — discuss before raising.
 
 async function grantMonitorSubscription(
   customerId: string,
@@ -120,6 +128,25 @@ export async function POST(req: NextRequest) {
             monthlyBudget: (savedPlan.quiz_input as { monthlyBudget?: number })?.monthlyBudget,
             createdAt: savedPlan.created_at,
           })
+
+          const quizInput = savedPlan.quiz_input as AnalyzeRequest
+          const cityResults = (savedPlan.city_results as CityResult[]) ?? []
+          const exportCities = cityResults.filter((city) => !city.locked)
+          const budget =
+            typeof quizInput?.monthlyBudget === 'number' && quizInput.monthlyBudget > 0
+              ? quizInput.monthlyBudget
+              : 0
+
+          try {
+            const pdf = generateRetirementReportPdf(exportCities, budget, { lifetime: true })
+            console.log('[webhook] Blueprint retirement PDF generated:', {
+              planId: savedPlan.id,
+              byteLength: pdf.byteLength,
+              exportCityCount: exportCities.length,
+            })
+          } catch (pdfError) {
+            console.error('[webhook] Blueprint retirement PDF generation failed:', pdfError)
+          }
         } else {
           console.warn('[webhook] Blueprint checkout plan_id not found for user:', { planId, userId })
         }
