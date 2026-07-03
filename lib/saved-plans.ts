@@ -81,12 +81,14 @@ export async function saveRetirementPlan(params: {
   quizInput: AnalyzeRequest
   cityResults: CityResult[]
   maxCities?: number | null
+  /** Blueprint checkout auto-save only — not for manual "Save Plan" UI. */
+  bypassPlanLimit?: boolean
 }): Promise<SavedRetirementPlan> {
   const user = await requireLoggedInUser()
   const plan = await fetchUserPlan()
   const count = await countSavedPlans()
 
-  if (!canSaveMorePlan(plan, count)) {
+  if (!params.bypassPlanLimit && !canSaveMorePlan(plan, count)) {
     throw new Error(
       `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plan. Upgrade to Pro for unlimited saves.`,
     )
@@ -281,6 +283,7 @@ export async function ensureSavedPlanForBlueprintCheckout(
     quizInput,
     cityResults: cities,
     maxCities,
+    bypassPlanLimit: true,
   })
   console.log('[blueprint-checkout-debug] decision: created new plan', {
     planId: saved.id,
