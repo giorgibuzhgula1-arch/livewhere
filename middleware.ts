@@ -2,8 +2,18 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { REF_COOKIE_MAX_AGE, REF_COOKIE_NAME, normalizeReferralCode } from '@/lib/affiliate'
 
+/** Permanent apex → www before any auth cookie logic (PKCE verifier must land on the canonical host). */
+function redirectApexToWww(request: NextRequest): NextResponse | null {
+  const host = request.headers.get('host')?.split(':')[0]
+  if (host !== 'livewhere.io') return null
+  const url = request.nextUrl.clone()
+  url.hostname = 'www.livewhere.io'
+  return NextResponse.redirect(url, 308)
+}
+
 /** Paths that skip Supabase session refresh (faster TTFB on marketing pages). */
 function shouldSkipAuth(pathname: string): boolean {
+  if (pathname === '/auth/callback') return true
   if (pathname === '/') return true
   if (pathname.startsWith('/blog')) return true
   if (pathname.startsWith('/news')) return true
@@ -37,6 +47,9 @@ function setReferralCookieOnResponse(request: NextRequest, response: NextRespons
 }
 
 export async function middleware(request: NextRequest) {
+  const apexRedirect = redirectApexToWww(request)
+  if (apexRedirect) return apexRedirect
+
   const { pathname } = request.nextUrl
 
   if (shouldSkipAuth(pathname)) {

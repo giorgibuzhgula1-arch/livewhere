@@ -1,1 +1,1 @@
-﻿export { supabase, createClient, isSupabaseConfigured } from '@/lib/supabase/client'
+﻿export { supabase, createClient, isSupabaseConfigured, supabaseAuthStorageKeyName } from '@/lib/supabase/client'

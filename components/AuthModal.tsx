@@ -2,8 +2,12 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
-import { getSiteUrl } from '@/lib/site-url'
+import { supabase, supabaseAuthStorageKeyName } from '@/lib/supabase'
+import {
+  oauthRedirectOrigin,
+  redirectToWwwIfApex,
+  waitForPkceVerifierInDocumentCookie,
+} from '@/lib/ensure-canonical-www'
 import { markPendingAuthRestore, saveOAuthNext } from '@/lib/wait-for-session'
 import { trackSignUp } from '@/lib/gtag'
 import { trackSignupCompleted, trackSignupStarted } from '@/lib/analytics'
@@ -49,10 +53,6 @@ export default function AuthModal({
     }
   }, [isOpen])
 
-  function authRedirectOrigin() {
-    return typeof window !== 'undefined' ? window.location.origin : getSiteUrl()
-  }
-
   function resultsNextPath() {
     return '/?restore=results'
   }
@@ -63,6 +63,8 @@ export default function AuthModal({
   }
 
   async function signInWithGoogle() {
+    if (redirectToWwwIfApex()) return
+
     setLoading(true)
     setError(null)
 
@@ -78,7 +80,7 @@ export default function AuthModal({
       saveOAuthNext(nextPath)
     }
 
-    const redirectTo = `${authRedirectOrigin()}/auth/callback?next=${encodeURIComponent(nextPath)}`
+    const redirectTo = `${oauthRedirectOrigin()}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -88,7 +90,10 @@ export default function AuthModal({
     if (oauthError) {
       setError(oauthError.message)
       setLoading(false)
+      return
     }
+
+    await waitForPkceVerifierInDocumentCookie(supabaseAuthStorageKeyName)
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -115,7 +120,7 @@ export default function AuthModal({
         if (restoreResults) prepareResultsRestore()
 
         const nextPath = restoreResults ? resultsNextPath() : '/'
-        const redirectTo = `${authRedirectOrigin()}/auth/callback?next=${encodeURIComponent(nextPath)}`
+        const redirectTo = `${oauthRedirectOrigin()}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: trimmedEmail,
