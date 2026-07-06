@@ -1,0 +1,60 @@
+name: Regression tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright regression (OAuth + Stripe webhook)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: true
+      ENABLE_WEBHOOK_E2E_ACK: 'true'
+      WEBHOOK_E2E_LITE: 'true'
+      STRIPE_WEBHOOK_SECRET: whsec_e2e_regression_ci_secret
+      STRIPE_SECRET_KEY: sk_test_e2e_ci_placeholder
+      SUPABASE_SERVICE_ROLE_KEY: sb_service_role_e2e_ci_placeholder
+      NEXT_PUBLIC_SUPABASE_URL: https://iwuevhuwnmhunrrqnzqt.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3dWV2aHV3bm1odW5ycnFuenF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MzcxNTIsImV4cCI6MjA5MzQxMzE1Mn0.TGSwy3a2_-i1u_nLMZKjVCRiPZi3At1UB7Z6KrHaqso
+      NEXT_PUBLIC_SITE_URL: https://www.livewhere.io
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Map OAuth production host to localhost
+        run: |
+          echo "127.0.0.1 www.livewhere.io" | sudo tee -a /etc/hosts
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build app
+        run: npm run build
+
+      - name: Run regression suite
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
