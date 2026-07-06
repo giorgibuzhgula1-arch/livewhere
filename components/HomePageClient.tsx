@@ -21,11 +21,13 @@ import {
   loadPendingResults,
   clearPendingResults,
   hasPendingResults,
+  PENDING_RESULTS_KEY,
 } from '@/lib/pending-results'
 import {
   savePendingAnalyze,
   loadPendingAnalyze,
   clearPendingAnalyze,
+  PENDING_ANALYZE_KEY,
 } from '@/lib/pending-analyze'
 import { saveCheckoutSnapshot } from '@/lib/checkout-snapshot'
 import {
@@ -34,6 +36,8 @@ import {
   clearOAuthReturn,
   isOAuthReturnPending,
   saveOAuthNext,
+  OAUTH_RETURN_KEY,
+  PENDING_AUTH_RESTORE_KEY,
 } from '@/lib/wait-for-session'
 import type { Session } from '@supabase/supabase-js'
 import { startProCheckout } from '@/lib/start-pro-checkout'
@@ -111,19 +115,45 @@ function isPostOAuthRestore(): boolean {
   return postOAuthRestoreCached
 }
 
+/** TEMP DIAG: remove after flicker root-cause confirmed. */
+let homePageClientMountSerial = 0
+
+function snapshotAuthStorage() {
+  if (typeof window === 'undefined') return null
+  const pendingResultsRaw = localStorage.getItem(PENDING_RESULTS_KEY)
+  const pendingAnalyzeRaw = localStorage.getItem(PENDING_ANALYZE_KEY)
+  let pendingResultsCityCount: number | null = null
+  if (pendingResultsRaw) {
+    try {
+      const parsed = JSON.parse(pendingResultsRaw) as { cities?: unknown[] }
+      pendingResultsCityCount = Array.isArray(parsed.cities) ? parsed.cities.length : null
+    } catch {
+      pendingResultsCityCount = -1
+    }
+  }
+  return {
+    [OAUTH_RETURN_KEY]: localStorage.getItem(OAUTH_RETURN_KEY),
+    [PENDING_AUTH_RESTORE_KEY]: localStorage.getItem(PENDING_AUTH_RESTORE_KEY),
+    [PENDING_RESULTS_KEY]: pendingResultsRaw ? `present (${pendingResultsCityCount} cities)` : null,
+    [PENDING_ANALYZE_KEY]: pendingAnalyzeRaw ? 'present' : null,
+    sessionStorage_oauth_return: sessionStorage.getItem(OAUTH_RETURN_KEY),
+    sessionStorage_pending_auth_restore: sessionStorage.getItem(PENDING_AUTH_RESTORE_KEY),
+  }
+}
+
 function logQuizAuthDebug(context: string, extra?: Record<string, unknown>) {
   if (typeof window === 'undefined') return
   const params = new URLSearchParams(window.location.search)
   const restoreParam = params.get('restore')
   const oauthReturnPending = isOAuthReturnPending()
   console.log('[quiz-auth-debug]', context, {
+    diagTs: Date.now(),
     href: window.location.href,
     search: window.location.search,
     restoreParam,
     oauthReturnPending,
     isPostOAuthRestore: isPostOAuthRestore(),
-    localStorage_oauth_return: localStorage.getItem('livewhere_oauth_return'),
-    localStorage_pending_auth_restore: localStorage.getItem('livewhere_pending_auth_restore'),
+    authStorage: snapshotAuthStorage(),
     localStorage_oauth_next: localStorage.getItem('livewhere_oauth_next'),
     hasPendingResults: hasPendingResults(),
     hasPendingAnalyze: Boolean(loadPendingAnalyze()),
@@ -149,9 +179,41 @@ export default function HomePageClient({
   const [restoreError, setRestoreError] = useState<string | null>(null)
   const [oauthSignInError, setOauthSignInError] = useState<string | null>(null)
 
+  // TEMP DIAG: per-instance mount id + console.count — remove after flicker RCA.
+  const mountIdRef = useRef<number | null>(null)
+  if (mountIdRef.current === null) {
+    homePageClientMountSerial += 1
+    mountIdRef.current = homePageClientMountSerial
+    if (typeof window !== 'undefined') {
+      console.count('HomePageClient mount')
+      console.log('[quiz-auth-diag] HomePageClient mount', {
+        mountId: mountIdRef.current,
+        diagTs: Date.now(),
+        authStorage: snapshotAuthStorage(),
+      })
+    }
+  }
+  const mountId = mountIdRef.current
+
+  const prevAuthUiRef = useRef({
+    awaitingAuthToView: false,
+    authOpen: false,
+    restoringAfterOAuth: false,
+  })
+
   useEffect(() => {
     if (!awaitingAuthToView && !authOpen && !restoringAfterOAuth) return
+
+    const prev = prevAuthUiRef.current
+    const oscillating =
+      prev.awaitingAuthToView !== awaitingAuthToView ||
+      prev.authOpen !== authOpen ||
+      prev.restoringAfterOAuth !== restoringAfterOAuth
+
     logQuizAuthDebug('auth UI state changed', {
+      mountId,
+      oscillating,
+      prevAuthUi: prev,
       awaitingAuthToView,
       restoringAfterOAuth,
       authOpen,
@@ -159,7 +221,9 @@ export default function HomePageClient({
       matchesIsNull: matches === null,
       authVariant,
     })
-  }, [awaitingAuthToView, restoringAfterOAuth, authOpen, loading, matches, authVariant])
+
+    prevAuthUiRef.current = { awaitingAuthToView, authOpen, restoringAfterOAuth }
+  }, [awaitingAuthToView, restoringAfterOAuth, authOpen, loading, matches, authVariant, mountId])
 
   const showLanding =
     matches === null && !loading && !awaitingAuthToView && !restoringAfterOAuth
@@ -648,7 +712,7 @@ export default function HomePageClient({
 
   // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
-    logQuizAuthDebug('restore useEffect mount')
+    logQuizAuthDebug('restore useEffect mount', { mountId })
     if (restoreAttemptedRef.current) {
       logQuizAuthDebug('restore useEffect SKIP — already attempted')
       return
