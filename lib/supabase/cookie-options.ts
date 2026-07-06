@@ -14,7 +14,11 @@ function isLivewhereHost(hostname: string): boolean {
   return hostname === 'livewhere.io' || hostname === 'www.livewhere.io'
 }
 
-/** Cookie options for browser PKCE/session cookies. Uses `.livewhere.io` in production so apex + www share the verifier. */
+/**
+ * Cookie options for browser PKCE/session cookies.
+ * Uses `.livewhere.io` only when the page is actually served on livewhere.io / www —
+ * not from build-time env (preview builds also embed NEXT_PUBLIC_SITE_URL).
+ */
 export function getBrowserSupabaseCookieOptions(): CookieOptions {
   const isBrowser = typeof window !== 'undefined'
   const hostname = isBrowser ? window.location.hostname : ''
@@ -26,12 +30,7 @@ export function getBrowserSupabaseCookieOptions(): CookieOptions {
     secure,
   }
 
-  const onLivewhere =
-    isLivewhereHost(hostname) ||
-    process.env.NEXT_PUBLIC_SITE_URL?.includes('livewhere.io') ||
-    process.env.NEXT_PUBLIC_APP_URL?.includes('livewhere.io')
-
-  if (onLivewhere) {
+  if (isLivewhereHost(hostname)) {
     options.domain = '.livewhere.io'
   }
 
