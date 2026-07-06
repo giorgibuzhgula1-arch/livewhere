@@ -1,3 +1,4 @@
+import { waitUntil } from '@vercel/functions'
 import { NextRequest, NextResponse } from 'next/server'
 import {
   conversionFromCheckoutSession,
@@ -17,8 +18,8 @@ import Stripe from 'stripe'
 // jsPDF + Stripe require Node.js — do not switch to Edge runtime.
 export const runtime = 'nodejs'
 
-// Larger Blueprint reports may need `export const maxDuration = 60` (or higher on Pro).
-// Default Vercel timeout is often 10s — discuss before raising.
+// Background work (PDF, Supabase, Stripe API) runs via waitUntil after 200 is returned.
+export const maxDuration = 60
 
 async function grantMonitorSubscription(
   customerId: string,
@@ -39,17 +40,7 @@ async function grantMonitorSubscription(
   }
 }
 
-export async function POST(req: NextRequest) {
-  const body = await req.text()
-  const sig = req.headers.get('stripe-signature')!
-
-  let event: Stripe.Event
-  try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
-  } catch {
-    return NextResponse.json({ error: 'Webhook signature failed' }, { status: 400 })
-  }
-
+async function processStripeEvent(event: Stripe.Event): Promise<void> {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
     const userId = session.metadata?.userId
@@ -66,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!userId) {
-      return NextResponse.json({ received: true })
+      return
     }
 
     const customerId =
@@ -230,6 +221,28 @@ export async function POST(req: NextRequest) {
         .eq('stripe_subscription_id', sub.id)
     }
   }
+}
 
-  return NextResponse.json({ received: true })
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const sig = req.headers.get('stripe-signature')
+
+  if (!sig) {
+    return NextResponse.json({ error: 'Missing stripe-signature' }, { status: 400 })
+  }
+
+  let event: Stripe.Event
+  try {
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+  } catch {
+    return NextResponse.json({ error: 'Webhook signature failed' }, { status: 400 })
+  }
+
+  waitUntil(
+    processStripeEvent(event).catch((err) => {
+      console.error('[webhook] Background processing failed:', err)
+    }),
+  )
+
+  return NextResponse.json({ received: true }, { status: 200 })
 }
