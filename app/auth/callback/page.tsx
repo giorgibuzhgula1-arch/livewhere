@@ -65,7 +65,7 @@ export default function AuthCallbackPage() {
         setStatus('Completing sign-in…')
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
-          console.error('exchangeCodeForSession:', error.message)
+          console.error('exchangeCodeForSession:', error)
           redirectHome('/?auth_error=oauth', false)
           return
         }

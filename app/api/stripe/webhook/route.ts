@@ -12,6 +12,7 @@ import {
   type CheckoutType,
 } from '@/lib/stripe-prices'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { markWebhookE2eProcessed } from '@/lib/webhook-e2e-ack'
 import type { AnalyzeRequest, CityResult } from '@/lib/types'
 import Stripe from 'stripe'
 
@@ -40,7 +41,24 @@ async function grantMonitorSubscription(
   }
 }
 
+/** E2E-only: exercise PDF CPU work without Supabase/Stripe network I/O. */
+async function runWebhookE2eLiteBackground(event: Stripe.Event): Promise<void> {
+  if (event.type !== 'checkout.session.completed') return
+  const pdf = generateRetirementReportPdf([], 0, { lifetime: true })
+  if (pdf.byteLength < 1) {
+    throw new Error('E2E lite PDF generation produced empty output')
+  }
+  // Long enough that a synchronous handler would exceed the E2E response-time budget.
+  await new Promise((resolve) => setTimeout(resolve, 900))
+}
+
 async function processStripeEvent(event: Stripe.Event): Promise<void> {
+  try {
+    if (process.env.WEBHOOK_E2E_LITE === 'true') {
+      await runWebhookE2eLiteBackground(event)
+      return
+    }
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
     const userId = session.metadata?.userId
@@ -220,6 +238,9 @@ async function processStripeEvent(event: Stripe.Event): Promise<void> {
         .update({ plan: 'free' })
         .eq('stripe_subscription_id', sub.id)
     }
+  }
+  } finally {
+    markWebhookE2eProcessed(event.id, event.type)
   }
 }
 
