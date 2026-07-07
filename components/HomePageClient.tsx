@@ -82,9 +82,9 @@ async function isLoggedIn(): Promise<boolean> {
   return Boolean(session?.user)
 }
 
-/** Poll up to ~8s for session after OAuth before giving up on restore. */
-const RESTORE_SESSION_MAX_ATTEMPTS = 64
-const RESTORE_SESSION_POLL_MS = 125
+/** Poll up to ~15s for session after OAuth before giving up on restore. */
+const RESTORE_SESSION_MAX_ATTEMPTS = 24
+const RESTORE_SESSION_INITIAL_DELAY_MS = 250
 
 /** Cached after first read so stale `livewhere_oauth_return` cannot leak into a later quiz. */
 let postOAuthRestoreCached: boolean | null = null
@@ -219,10 +219,12 @@ export default function HomePageClient({
     logQuizAuthDebug('waitForRestoreSession polling waitForAuthSession', {
       reason,
       maxAttempts: RESTORE_SESSION_MAX_ATTEMPTS,
-      pollMs: RESTORE_SESSION_POLL_MS,
-      maxWaitMs: RESTORE_SESSION_MAX_ATTEMPTS * RESTORE_SESSION_POLL_MS,
+      initialDelayMs: RESTORE_SESSION_INITIAL_DELAY_MS,
     })
-    const session = await waitForAuthSession(RESTORE_SESSION_MAX_ATTEMPTS, RESTORE_SESSION_POLL_MS)
+    const session = await waitForAuthSession(
+      RESTORE_SESSION_MAX_ATTEMPTS,
+      RESTORE_SESSION_INITIAL_DELAY_MS,
+    )
     logQuizAuthDebug('waitForRestoreSession DONE (after poll)', {
       reason,
       elapsedMs: Date.now() - startedAt,

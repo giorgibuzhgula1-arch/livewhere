@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
+import { isAuthRateLimited, isRefreshCircuitOpen } from '@/lib/auth-refresh-circuit'
 import { hasPendingAnalyze } from '@/lib/pending-analyze'
 import { hasPendingResults } from '@/lib/pending-results'
 
@@ -75,26 +76,56 @@ export function clearOAuthNext(): void {
 
 const SESSION_EVENTS = new Set(['SIGNED_IN', 'INITIAL_SESSION', 'TOKEN_REFRESHED'])
 
+const MAX_POLL_DELAY_MS = 2000
+
+type SessionReadResult = {
+  session: Session | null
+  /** Stop polling — rate limited or refresh circuit is open. */
+  stop: boolean
+}
+
 /**
- * Wait until Supabase has a user session. Polls getSession/getUser and also
- * resolves immediately on auth state events (needed on mobile after OAuth redirect).
+ * Single getSession read with circuit-breaker awareness.
+ * Avoids pairing getSession + getUser on every poll (each can trigger refresh).
+ */
+async function readAuthSessionOnce(): Promise<SessionReadResult> {
+  if (isRefreshCircuitOpen()) {
+    return { session: null, stop: true }
+  }
+
+  const { data: { session }, error } = await supabase.auth.getSession()
+  if (error && isAuthRateLimited(error)) {
+    return { session: null, stop: true }
+  }
+  if (session?.user) {
+    return { session, stop: false }
+  }
+  return { session: null, stop: false }
+}
+
+/**
+ * Wait until Supabase has a user session. Listens for auth events and polls
+ * getSession with exponential backoff (no overlapping interval callbacks).
  */
 export async function waitForAuthSession(
   maxAttempts = 50,
-  delayMs = 100
+  initialDelayMs = 250,
 ): Promise<Session | null> {
-  const { data: { session: initial } } = await supabase.auth.getSession()
-  if (initial?.user) return initial
+  const first = await readAuthSessionOnce()
+  if (first.session?.user) return first.session
+  if (first.stop) return null
 
   return new Promise((resolve) => {
     let attempts = 0
     let settled = false
+    let delayMs = initialDelayMs
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
 
     const finish = (session: Session | null) => {
       if (settled) return
       settled = true
       subscription.unsubscribe()
-      clearInterval(intervalId)
+      if (timeoutId !== undefined) clearTimeout(timeoutId)
       resolve(session)
     }
 
@@ -104,25 +135,28 @@ export async function waitForAuthSession(
       }
     })
 
-    const intervalId = setInterval(async () => {
+    const poll = async () => {
+      if (settled) return
       attempts += 1
 
-      const { data: { session } } = await supabase.auth.getSession()
+      const { session, stop } = await readAuthSessionOnce()
       if (session?.user) {
         finish(session)
         return
       }
-
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (user && !error) {
-        const { data: { session: refreshed } } = await supabase.auth.getSession()
-        finish(refreshed)
+      if (stop || attempts >= maxAttempts) {
+        finish(null)
         return
       }
 
-      if (attempts >= maxAttempts) {
-        finish(null)
-      }
+      delayMs = Math.min(Math.round(delayMs * 1.5), MAX_POLL_DELAY_MS)
+      timeoutId = setTimeout(() => {
+        void poll()
+      }, delayMs)
+    }
+
+    timeoutId = setTimeout(() => {
+      void poll()
     }, delayMs)
   })
 }
@@ -134,20 +168,20 @@ export function clearPostAuthRestoreState(): void {
 }
 
 /**
- * After exchangeCodeForSession, wait until getSession AND getUser both succeed.
- * Required on mobile where cookie writes can lag behind the redirect.
+ * After exchangeCodeForSession, wait until getSession returns a user.
+ * Uses backoff; stops immediately on rate limit / refresh circuit.
  */
 export async function confirmAuthSessionReady(
-  maxAttempts = 80,
-  delayMs = 125
+  maxAttempts = 40,
+  initialDelayMs = 250,
 ): Promise<Session | null> {
+  let delayMs = initialDelayMs
   for (let i = 0; i < maxAttempts; i++) {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (user && !error) return session
-    }
+    const { session, stop } = await readAuthSessionOnce()
+    if (session?.user) return session
+    if (stop) return null
     await new Promise((r) => setTimeout(r, delayMs))
+    delayMs = Math.min(Math.round(delayMs * 1.5), MAX_POLL_DELAY_MS)
   }
-  return waitForAuthSession(40, delayMs)
+  return waitForAuthSession(20, initialDelayMs)
 }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { isRefreshCircuitOpen } from '@/lib/auth-refresh-circuit'
 import { fetchUserProfile, isPaidPlan } from '@/lib/plan'
 import type { User } from '@supabase/supabase-js'
 
@@ -90,6 +91,12 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
   useEffect(() => {
+    if (isRefreshCircuitOpen()) {
+      setUser(null)
+      setPaid(false)
+      return
+    }
+
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
       if (data.user) {
