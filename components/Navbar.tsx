@@ -5,6 +5,10 @@ import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { isRefreshCircuitOpen } from '@/lib/auth-refresh-circuit'
+import {
+  isInvalidSessionAuthError,
+  recoverFromInvalidSession,
+} from '@/lib/auth-session-recovery'
 import { fetchUserProfile, isPaidPlan } from '@/lib/plan'
 import type { User } from '@supabase/supabase-js'
 
@@ -97,7 +101,13 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
       return
     }
 
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data, error }) => {
+      if (error && isInvalidSessionAuthError(error)) {
+        await recoverFromInvalidSession()
+        setUser(null)
+        setPaid(false)
+        return
+      }
       setUser(data.user)
       if (data.user) {
         void fetchUserProfile().then((profile) => {

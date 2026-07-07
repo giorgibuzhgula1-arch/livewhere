@@ -1,9 +1,9 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { createAuthGuardedFetch, resetRefreshCircuit } from '@/lib/auth-refresh-circuit'
 import {
-  createAuthGuardedFetch,
-  registerRefreshCircuitSignOut,
-  resetRefreshCircuit,
-} from '@/lib/auth-refresh-circuit'
+  registerSessionRecoverySignOut,
+  reconcileStaleBrowserSession,
+} from '@/lib/auth-session-recovery'
 import { getBrowserSupabaseCookieOptions, supabaseAuthStorageKey } from '@/lib/supabase/cookie-options'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || 'https://example.invalid'
@@ -28,13 +28,17 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
   },
 })
 
-registerRefreshCircuitSignOut(() => supabase.auth.signOut({ scope: 'local' }))
+registerSessionRecoverySignOut(() => supabase.auth.signOut({ scope: 'local' }))
 
 supabase.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
     resetRefreshCircuit()
   }
 })
+
+if (typeof window !== 'undefined') {
+  void reconcileStaleBrowserSession(() => supabase.auth.getSession())
+}
 
 export function createClient() {
   return supabase
