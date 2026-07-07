@@ -1,10 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import { isAuthRateLimited, isRefreshCircuitOpen } from '@/lib/auth-refresh-circuit'
-import {
-  isInvalidSessionAuthError,
-  recoverFromInvalidSession,
-} from '@/lib/auth-session-recovery'
 import { hasPendingAnalyze } from '@/lib/pending-analyze'
 import { hasPendingResults } from '@/lib/pending-results'
 
@@ -98,14 +94,8 @@ async function readAuthSessionOnce(): Promise<SessionReadResult> {
   }
 
   const { data: { session }, error } = await supabase.auth.getSession()
-  if (error) {
-    if (isInvalidSessionAuthError(error)) {
-      await recoverFromInvalidSession()
-      return { session: null, stop: true }
-    }
-    if (isAuthRateLimited(error)) {
-      return { session: null, stop: true }
-    }
+  if (error && isAuthRateLimited(error)) {
+    return { session: null, stop: true }
   }
   if (session?.user) {
     return { session, stop: false }

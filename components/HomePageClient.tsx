@@ -262,15 +262,15 @@ export default function HomePageClient({
     if (oauthErrorHandledRef.current || typeof window === 'undefined') return
 
     const params = new URLSearchParams(window.location.search)
-    const authError = params.get('auth_error')
-    if (authError !== 'oauth' && authError !== 'session') return
+    if (params.get('auth_error') !== 'oauth') return
 
     oauthErrorHandledRef.current = true
+    setOauthSignInError('Sign-in failed. Please try again.')
 
-    const hasActiveOAuthContext =
-      params.get('restore') === 'results' ||
-      hasPendingResults() ||
-      Boolean(loadPendingAnalyze())
+    if (hasPendingResults() || loadPendingAnalyze()) {
+      setAwaitingAuthToView(true)
+      openAuthForResults()
+    }
 
     params.delete('auth_error')
     const hash = window.location.hash
@@ -280,16 +280,6 @@ export default function HomePageClient({
       '',
       `${window.location.pathname}${remaining ? `?${remaining}` : ''}${hash}`,
     )
-
-    // Stale auth_error from an old visit — silent recovery, no error banner.
-    if (!hasActiveOAuthContext) return
-
-    setOauthSignInError('Sign-in failed. Please try again.')
-
-    if (hasPendingResults() || loadPendingAnalyze()) {
-      setAwaitingAuthToView(true)
-      openAuthForResults()
-    }
   }, [openAuthForResults])
 
   const savePendingAnonymousResults = useCallback((cities: CityResult[], maxCities: number | null) => {
