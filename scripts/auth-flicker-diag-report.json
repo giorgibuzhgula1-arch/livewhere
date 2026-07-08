@@ -1,0 +1,17 @@
+{
+  "site": "https://livewhere-4164-2alwgb1j5-daves-projects-0902255d.vercel.app",
+  "watchMs": 8000,
+  "timestamp": "2026-07-06T23:41:47.538Z",
+  "console": [],
+  "summary": {},
+  "localStorage": {
+    "livewhere_oauth_return": null,
+    "livewhere_pending_auth_restore": null,
+    "livewhere_pending_results": null,
+    "livewhere_pending_analyze": null,
+    "session_oauth_return": null,
+    "session_pending_auth_restore": null
+  },
+  "elapsedMs": 9118,
+  "correlatedBursts": []
+}

@@ -4,135 +4,195 @@ import { motion } from 'framer-motion'
 import { trackHeroCtaClick } from '@/lib/analytics'
 import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
 
-interface Props { onStart: () => void }
+interface Props {
+  onStart: () => void
+}
+
+const STATS = [
+  { num: '200+', label: 'Cities Analyzed' },
+  { num: '50+', label: 'Countries' },
+  { num: 'Millions', label: 'Data Points' },
+  { num: 'Thousands', label: 'Relocation Scenarios' },
+  { num: '27', label: 'Decision Factors' },
+] as const
+
+const MICROCOPY = ['2 Minutes', 'No Credit Card', 'Free Analysis'] as const
 
 export default function Hero({ onStart }: Props) {
   function handleStart() {
     trackHeroCtaClick('hero_find_my_city')
     onStart()
   }
+
   return (
-    <section style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      padding: '120px 20px 60px', textAlign: 'center', position: 'relative', zIndex: 1
-    }}>
+    <section
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '140px 24px 80px',
+        textAlign: 'center',
+        position: 'relative',
+        zIndex: 1,
+      }}
+    >
       <motion.div
         initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
-          padding: '8px 18px', borderRadius: 30, fontSize: 12,
-          color: '#c8f05a', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 32
+          width: '100%',
+          maxWidth: 920,
+          margin: '0 auto',
         }}
       >
-        <span style={{ width: 6, height: 6, background: '#c8f05a', borderRadius: '50%', display: 'inline-block' }} />
-        The World&apos;s Largest Retirement Intelligence Database
-      </motion.div>
-
-      <h1
-        style={{
-          fontFamily: fontFamilySerif,
-          fontSize: 'clamp(42px, 6.48vw, 81px)',
-          fontWeight: 900, lineHeight: 0.95,
-          letterSpacing: -2, marginBottom: 28
-        }}
-      >
-        <motion.span
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          style={{ display: 'block' }}
-        >
-          Find Out Which Country Could Save You $100,000+ During Retirement
-        </motion.span>
-        <motion.span
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
+        <h1
           style={{
-            display: 'block',
-            color: '#999999',
-            fontSize: 28,
-            fontWeight: 400,
-            lineHeight: 1.5,
-            letterSpacing: 0,
-            marginTop: 24,
-            textAlign: 'center',
+            fontFamily: fontFamilySerif,
+            fontSize: 'clamp(38px, 5.5vw, 72px)',
+            fontWeight: 900,
+            lineHeight: 1.05,
+            letterSpacing: '-0.03em',
+            margin: '0 0 28px',
+            color: '#f0ede8',
           }}
         >
-          Discover where your retirement savings could last years longer — and how much money you could save over the next decade.
-        </motion.span>
-        <motion.span
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
+          Don&apos;t Make A Six-Figure Relocation Mistake.
+        </h1>
+
+        <p
           style={{
-            display: 'block',
-            color: '#c8f05a',
-            fontSize: 28,
+            fontFamily: fontFamilySans,
+            fontSize: 'clamp(17px, 2vw, 20px)',
             fontWeight: 400,
-            lineHeight: 1.5,
-            letterSpacing: 0,
-            marginTop: 12,
-            textAlign: 'center',
+            lineHeight: 1.65,
+            letterSpacing: '0.01em',
+            color: 'rgba(240, 237, 232, 0.62)',
+            margin: '0 auto 48px',
+            maxWidth: 640,
           }}
         >
-          
-        </motion.span>
-      </h1>
+          LiveWhere analyzes 200+ cities across taxes, healthcare, cost of living, safety and
+          lifestyle to find the best place for your next chapter.
+        </p>
 
-      <motion.div
-        initial={false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 60 }}
-      >
-        <button onClick={handleStart} style={{
-          background: '#c8f05a', color: '#0a0a0f', border: 'none',
-          padding: '16px 32px', borderRadius: 12, fontSize: 15,
-          fontWeight: 600, cursor: 'pointer', fontFamily: fontFamilySans,
-          transition: 'all 0.2s'
-        }}>
-          Find My Best Retirement Countries
-        </button>
-        <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
+        <div style={{ marginBottom: 72 }}>
+          <button
+            type="button"
+            onClick={handleStart}
+            style={{
+              background: '#c8f05a',
+              color: '#0a0a0f',
+              border: 'none',
+              padding: '18px 40px',
+              borderRadius: 12,
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: fontFamilySans,
+              transition: 'all 0.2s',
+              letterSpacing: '0.01em',
+            }}
+          >
+            Find My Best Place
+          </button>
+
+          <p
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px 0',
+              marginTop: 16,
+              fontFamily: fontFamilySans,
+              fontSize: 13,
+              fontWeight: 400,
+              color: 'rgba(240, 237, 232, 0.4)',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {MICROCOPY.map((item, i) => (
+              <span key={item} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                {i > 0 && (
+                  <span
+                    aria-hidden
+                    style={{ margin: '0 12px', color: 'rgba(240, 237, 232, 0.22)' }}
+                  >
+                    ·
+                  </span>
+                )}
+                {item}
+              </span>
+            ))}
+          </p>
+        </div>
+
+        <div
           style={{
-            background: 'transparent', color: '#f0ede8',
-            border: '1px solid rgba(255,255,255,0.07)',
-            padding: '16px 32px', borderRadius: 12, fontSize: 15,
-            fontWeight: 500, cursor: 'pointer', fontFamily: fontFamilySans
-          }}>
-          See how it works
-        </button>
-      </motion.div>
-
-      {/* Stats bar */}
-      <motion.div
-        initial={false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        style={{
-          display: 'flex', background: '#12121a',
-          border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden'
-        }}
-      >
-        {[
-          { num: '200+', label: 'Cities scored' },
-          { num: '50+', label: 'Countries' },
-        ].map((s, i) => (
-          <div key={i} style={{
-            padding: '20px 36px', textAlign: 'center',
-            borderRight: i < 1 ? '1px solid rgba(255,255,255,0.07)' : 'none'
-          }}>
-            <div style={{ fontFamily: fontFamilySerif, fontSize: 28, fontWeight: 700, color: '#c8f05a' }}>
-              {s.num}
-            </div>
-            <div style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 4 }}>{s.label}</div>
+            width: '100%',
+            maxWidth: 1000,
+            margin: '0 auto',
+            paddingTop: 8,
+            borderTop: '1px solid rgba(255, 255, 255, 0.07)',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '32px 20px',
+              padding: '40px 0 20px',
+            }}
+          >
+            {STATS.map((stat) => (
+              <div key={stat.label} style={{ textAlign: 'center' }}>
+                <div
+                  style={{
+                    fontFamily: fontFamilySerif,
+                    fontSize: 'clamp(22px, 2.8vw, 32px)',
+                    fontWeight: 700,
+                    color: '#f0ede8',
+                    lineHeight: 1.1,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {stat.num}
+                </div>
+                <div
+                  style={{
+                    fontFamily: fontFamilySans,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: 'rgba(240, 237, 232, 0.42)',
+                    marginTop: 8,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+
+          <p
+            style={{
+              fontFamily: fontFamilySans,
+              fontSize: 12,
+              fontWeight: 400,
+              color: 'rgba(240, 237, 232, 0.32)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              margin: '8px 0 0',
+            }}
+          >
+            Updated Weekly
+          </p>
+        </div>
       </motion.div>
     </section>
   )

@@ -1,0 +1,167 @@
+{
+  "timestamp": "2026-07-06T14:33:31.776Z",
+  "site": "https://www.livewhere.io",
+  "steps": [
+    {
+      "step": "quiz",
+      "data": "Starting quiz flow",
+      "at": "2026-07-06T14:33:32.252Z"
+    },
+    {
+      "step": "quiz",
+      "data": {
+        "url": "https://www.livewhere.io/#quiz",
+        "title": "LiveWhere — Find Your Perfect City"
+      },
+      "at": "2026-07-06T14:33:39.929Z"
+    },
+    {
+      "step": "auth-modal",
+      "data": {
+        "visible": false,
+        "url": "https://www.livewhere.io/#quiz"
+      },
+      "at": "2026-07-06T14:33:39.932Z"
+    },
+    {
+      "step": "authorize-response",
+      "data": {
+        "url": "https://iwuevhuwnmhunrrqnzqt.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fwww.livewhere.io%2Fauth%2Fcallback%3Fnext%3D%252F%253Frestore%253Dresults&code_challenge=OfBuwhABnkA-HDjqmlikrUg8Wh5VvTzacL7D6X-y5_Q&code_challenge_method=s256",
+        "status": 302,
+        "location": "https://accounts.google.com/o/oauth2/v2/auth?client_id=379854931191-15oh6kdl92hdj6j8ts6g2ol0t69ta2m6.apps.googleusercontent.com&redirect_to=https%3A%2F%2Fwww.livewhere.io%2Fauth%2Fcallback%3Fnext%3D%252F%253Frestore%253Dresults&redirect_uri=https%3A%2F%2Fiwuevhuwnmhunrrqnzqt.supabase.co%2Fauth%2Fv1%2Fcallback&response_type=code&scope=email+profile&state=ee9a6403-a6f2-4e3d-8228-75775eb8654f"
+      },
+      "at": "2026-07-06T14:33:42.659Z"
+    },
+    {
+      "step": "cookie-after-nav",
+      "data": {
+        "label": "after_navigation",
+        "present": true,
+        "allSupabaseCookieNames": [
+          "sb-iwuevhuwnmhunrrqnzqt-auth-token-code-verifier"
+        ],
+        "verifier": {
+          "name": "sb-iwuevhuwnmhunrrqnzqt-auth-token-code-verifier",
+          "domain": "www.livewhere.io",
+          "path": "/",
+          "sameSite": "Lax",
+          "secure": true,
+          "httpOnly": false,
+          "expires": 1817908422.325807,
+          "valueLength": 118
+        }
+      },
+      "at": "2026-07-06T14:33:43.142Z"
+    }
+  ],
+  "network": [
+    {
+      "phase": "request",
+      "method": "GET",
+      "url": "https://iwuevhuwnmhunrrqnzqt.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fwww.livewhere.io%2Fauth%2Fcallback%3Fnext%3D%252F%253Frestore%253Dresults&code_challenge=OfBuwhABnkA-HDjqmlikrUg8Wh5VvTzacL7D6X-y5_Q&code_challenge_method=s256"
+    },
+    {
+      "phase": "response",
+      "url": "https://iwuevhuwnmhunrrqnzqt.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fwww.livewhere.io%2Fauth%2Fcallback%3Fnext%3D%252F%253Frestore%253Dresults&code_challenge=OfBuwhABnkA-HDjqmlikrUg8Wh5VvTzacL7D6X-y5_Q&code_challenge_method=s256",
+      "status": 302,
+      "statusText": "",
+      "body": "<unreadable>"
+    }
+  ],
+  "cookies": {
+    "after_click_poll": {
+      "label": "after_click_poll",
+      "present": true,
+      "allSupabaseCookieNames": [
+        "sb-iwuevhuwnmhunrrqnzqt-auth-token-code-verifier"
+      ],
+      "verifier": {
+        "name": "sb-iwuevhuwnmhunrrqnzqt-auth-token-code-verifier",
+        "domain": "www.livewhere.io",
+        "path": "/",
+        "sameSite": "Lax",
+        "secure": true,
+        "httpOnly": false,
+        "expires": 1817908422.325807,
+        "valueLength": 118
+      }
+    },
+    "after_navigation": {
+      "label": "after_navigation",
+      "present": true,
+      "allSupabaseCookieNames": [
+        "sb-iwuevhuwnmhunrrqnzqt-auth-token-code-verifier"
+      ],
+      "verifier": {
+        "name": "sb-iwuevhuwnmhunrrqnzqt-auth-token-code-verifier",
+        "domain": "www.livewhere.io",
+        "path": "/",
+        "sameSite": "Lax",
+        "secure": true,
+        "httpOnly": false,
+        "expires": 1817908422.325807,
+        "valueLength": 118
+      }
+    },
+    "callback_without_prior_oauth": {
+      "label": "callback_without_prior_oauth",
+      "present": false,
+      "allSupabaseCookieNames": [],
+      "verifier": null
+    },
+    "callback_with_fake_verifier": {
+      "label": "callback_with_fake_verifier",
+      "present": false,
+      "allSupabaseCookieNames": [],
+      "verifier": null
+    }
+  },
+  "domainCheck": {
+    "apexRequest": "https://livewhere.io/",
+    "apexFinalUrl": "https://www.livewhere.io/",
+    "apexStatus": 200,
+    "authorizeUrl": "https://iwuevhuwnmhunrrqnzqt.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fwww.livewhere.io%2Fauth%2Fcallback%3Fnext%3D%252F%253Frestore%253Dresults&code_challenge=OfBuwhABnkA-HDjqmlikrUg8Wh5VvTzacL7D6X-y5_Q&code_challenge_method=s256",
+    "redirectToParam": "https://www.livewhere.io/auth/callback?next=%2F%3Frestore%3Dresults"
+  },
+  "timing": {
+    "clickToCookiePollMs": 625,
+    "documentCookieCheck": {
+      "documentCookie": "",
+      "hasVerifierInDocumentCookie": false
+    },
+    "clickToNavigationMs": 863,
+    "finalUrlAfterNav": "https://accounts.google.com/v3/signin/identifier?opparams=%253Fredirect_to%253Dhttps%25253A%25252F%25252Fwww.livewhere.io%25252Fauth%25252Fcallback%25253Fnext%25253D%2525252F%2525253Frestore%2525253Dresults&dsh=S-485747155%3A1783348423156661&client_id=379854931191-15oh6kdl92hdj6j8ts6g2ol0t69ta2m6.apps.googleusercontent.com&o2v=2&redirect_uri=https%3A%2F%2Fiwuevhuwnmhunrrqnzqt.supabase.co%2Fauth%2Fv1%2Fcallback&response_type=code&scope=email+profile&service=lso&state=ee9a6403-a6f2-4e3d-8228-75775eb8654f&flowName=GeneralOAuthLite&continue=https%3A%2F%2Faccounts.google.com%2Fsignin%2Foauth%2Flegacy%2Fconsent%3Fauthuser%3Dunknown%26part%3DAJi8hAP0u_Hhq9rZIDreCnJTWFnI0uA80cQSaPjmW8pcHQxyNb7ePBWYQNI_xOL6WlQCN59ik7anV175Ldm4oThN9lRKw8XyyuA9lGdbZVrWbmFppVLStqtN05tV7rNQq1VDEHiuN7AQMEch5JBCV9ciij7b39jBIIQiG_mIRwECWbqvvSbNebyQ66ArGqf1y94OWEyWttBYGUCpk8fUec2CRqiuuqr0DDUmkGhLQJtYGi2MUi8lpQLYE4tiA4arkVeURnRTMJ9cD5A8zBUFR-VBqYiFSVCqryfr1ggUUVH-GGARMiAoD3i3g3mGZm32k1lFX6WsjjffwdR48vGzdKL5ao1FZwsuhzpgxLJ7PFmzD_ncp8yzycROCp6_BNTPkpUzTrUyCH7LEVMkaaaG_aqZ4ZzTbTmRMNrlCmYlaaJCeOcHU7rDeIUQMYCu1-6ipUscx2sdZPto6dFqCjvKCb13woQd2aMAH3jfXsMzoFrqob-QqUms8p0%26flowName%3DGeneralOAuthFlow%26as%3DS-485747155%253A1783348423156661%26client_id%3D379854931191-15oh6kdl92hdj6j8ts6g2ol0t69ta2m6.apps.googleusercontent.com%23&app_domain=https%3A%2F%2Fiwuevhuwnmhunrrqnzqt.supabase.co&rart=ANgoxccEa_LrAe6Tv53Gkk0LF2241Jul4CHwEDrqWP5fqKI6-f_xXOsmQpc916d_NQB6TvXmfI0xDA58LNZWteGbMnLZl502MI0Fvx31dY9OXZ0jglMQuLY"
+  },
+  "tokenExchangeProbe": {
+    "url": "https://iwuevhuwnmhunrrqnzqt.supabase.co/auth/v1/token?grant_type=pkce",
+    "status": 404,
+    "body": "{\"code\":404,\"error_code\":\"flow_state_not_found\",\"msg\":\"invalid flow state, no valid flow state found\"}"
+  },
+  "rootCause": null,
+  "callbackSimulation": {
+    "landedUrl": "https://www.livewhere.io/",
+    "cookiesOnCallback": {
+      "label": "callback_without_prior_oauth",
+      "present": false,
+      "allSupabaseCookieNames": [],
+      "verifier": null
+    },
+    "tokenRequests": []
+  },
+  "callbackWithVerifierCookie": {
+    "landedUrl": "https://www.livewhere.io/",
+    "cookies": {
+      "label": "callback_with_fake_verifier",
+      "present": false,
+      "allSupabaseCookieNames": [],
+      "verifier": null
+    },
+    "tokenRequests": [
+      {
+        "url": "https://iwuevhuwnmhunrrqnzqt.supabase.co/auth/v1/token?grant_type=pkce",
+        "status": 404,
+        "body": "{\"code\":\"flow_state_not_found\",\"message\":\"invalid flow state, no valid flow state found\"}"
+      }
+    ]
+  }
+}

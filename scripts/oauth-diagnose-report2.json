@@ -1,0 +1,91 @@
+{
+  "tests": [
+    {
+      "label": "www_start",
+      "startUrl": "https://www.livewhere.io",
+      "pageOriginAfterClick": "https://accounts.google.com",
+      "redirectToFromAuthorize": null,
+      "verifierCookie": {
+        "domain": "www.livewhere.io",
+        "path": "/",
+        "sameSite": "Lax",
+        "secure": true,
+        "httpOnly": false,
+        "valueLength": 118
+      },
+      "tokenResponses": []
+    },
+    {
+      "label": "apex_start_redirects_to_www",
+      "startUrl": "https://livewhere.io",
+      "pageOriginAfterClick": "https://accounts.google.com",
+      "redirectToFromAuthorize": null,
+      "verifierCookie": {
+        "domain": "www.livewhere.io",
+        "path": "/",
+        "sameSite": "Lax",
+        "secure": true,
+        "httpOnly": false,
+        "valueLength": 118
+      },
+      "tokenResponses": []
+    },
+    {
+      "label": "callback_no_verifier",
+      "site": "https://www.livewhere.io",
+      "withVerifier": false,
+      "finalUrl": "https://www.livewhere.io/",
+      "cookieSnapshots": [
+        {
+          "when": "before_callback",
+          "cookies": []
+        },
+        {
+          "when": "after_callback",
+          "cookies": []
+        }
+      ],
+      "tokenResponses": []
+    },
+    {
+      "label": "callback_with_verifier_cookie",
+      "site": "https://www.livewhere.io",
+      "withVerifier": true,
+      "finalUrl": "https://www.livewhere.io/",
+      "cookieSnapshots": [
+        {
+          "when": "before_callback",
+          "cookies": [
+            {
+              "name": "sb-iwuevhuwnmhunrrqnzqt-auth-token-code-verifier",
+              "value": "base64-eyJhbGciOiJIUzI1NiJ9.eyJ0ZXN0IjoidmVyaWZpZXIifQ.test",
+              "domain": "www.livewhere.io",
+              "path": "/",
+              "expires": -1,
+              "httpOnly": false,
+              "secure": true,
+              "sameSite": "Lax"
+            }
+          ]
+        },
+        {
+          "when": "after_callback",
+          "cookies": []
+        }
+      ],
+      "tokenResponses": [
+        {
+          "url": "https://iwuevhuwnmhunrrqnzqt.supabase.co/auth/v1/token?grant_type=pkce",
+          "status": 404,
+          "statusText": "",
+          "body": "{\"code\":\"flow_state_not_found\",\"message\":\"invalid flow state, no valid flow state found\"}"
+        }
+      ]
+    }
+  ],
+  "middlewareProbe": {
+    "status": 200,
+    "location": null,
+    "setCookieHeaders": []
+  }
+}
