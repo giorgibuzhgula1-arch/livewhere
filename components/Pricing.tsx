@@ -20,17 +20,17 @@ interface Props {
 
 type PlanFeature = {
   text: string
-  included?: boolean
-  highlighted?: boolean
 }
 
 type PricingTier = {
   id: string
-  name: string
+  tierLabel: string
+  headline: string
   price: string
   period: string
-  tagline: string
+  subheadline?: string
   features: PlanFeature[]
+  whoIsThisFor?: string
   btn: string
   style: 'primary' | 'ghost'
   popular?: boolean
@@ -116,71 +116,70 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       ? 'Loading…'
       : isProUpgrade
         ? 'Upgrade to Blueprint — $100'
-        : 'Get Retirement Blueprint'
+        : 'Build My Relocation Strategy'
 
   const tiers: PricingTier[] = [
     {
       id: 'free',
-      name: 'Free',
+      tierLabel: 'FREE',
+      headline: 'Start Exploring',
       price: '$0',
       period: 'forever',
-      tagline: 'Everything You Need to Get Started',
+      subheadline: "Perfect if you're just beginning your relocation research.",
       features: [
-        { text: '3 searches/day' },
-        { text: 'Top 3 recommendations' },
-        { text: 'Basic country scores' },
-        { text: 'Basic city pages' },
-        { text: 'Save 1 plan' },
-        { text: 'Newsletter' },
+        { text: 'Discover your Top 3 matches' },
+        { text: 'See your relocation score' },
+        { text: 'Preview estimated monthly costs' },
+        { text: 'Explore one relocation scenario' },
       ],
-      btn: 'Get started free',
+      whoIsThisFor: "I'm exploring.",
+      btn: 'Start Free Analysis',
       style: 'ghost',
       action: 'signup',
     },
     {
       id: 'pro',
-      name: 'Pro Lifetime',
+      tierLabel: 'PRO',
+      headline: 'Make Your Decision With Confidence',
       price: '$49',
       period: 'one-time',
-      tagline: 'Find Your Best Match',
+      subheadline: 'One-time payment. Lifetime access.',
       popular: true,
       features: [
-        { text: 'Unlimited searches' },
-        { text: 'All 200+ cities' },
-        { text: 'Compare Cities' },
-        { text: 'AI Retirement Insights' },
-        { text: 'Full City Details' },
-        { text: 'Save Unlimited Plans' },
-        { text: 'AI Plan Summary' },
-        { text: 'Future updates included' },
-        { text: 'Retirement Monitor', included: false },
-        { text: 'Personalized Retirement Report', included: false },
+        { text: 'See every city that matches you' },
+        { text: 'Compare every destination side by side' },
+        { text: 'Discover hidden financial risks' },
+        { text: 'See your complete cost breakdown' },
+        { text: 'Calculate long-term purchasing power' },
+        { text: 'Save unlimited relocation plans' },
+        { text: 'AI explains WHY each city fits you' },
+        { text: 'Free future updates' },
       ],
-      btn: loadingPlan === 'pro' ? 'Loading…' : 'Get My Retirement Plan',
+      whoIsThisFor: "I already know I'm moving.",
+      btn: loadingPlan === 'pro' ? 'Loading…' : 'Unlock My Full Analysis',
       style: 'primary',
       checkoutType: 'pro',
       note: 'Already have Pro? Upgrade to Blueprint — pay only $100 more.',
     },
     {
       id: 'blueprint',
-      name: 'Blueprint Lifetime',
+      tierLabel: 'BLUEPRINT',
+      headline: 'Your Personal Relocation Strategy',
       price: isProUpgrade ? '$100' : '$149',
       period: 'one-time',
-      tagline: 'Your Personalized Blueprint',
       features: [
-        {
-          text: 'Includes 12 months of Retirement Monitor — $120 value',
-          highlighted: true,
-        },
-        { text: 'Everything in Pro +' },
-        { text: 'Personalized Retirement Report' },
-        { text: 'Match scores, monthly cost/savings breakdown & tax rate comparison per city' },
-        { text: '10-year financial projection, risk assessment (political stability, healthcare, currency risk) & visa scoring per city' },
-        { text: 'AI Retirement Twin (coming soon)' },
-        { text: 'Priority Support' },
-        { text: '12 months Retirement Monitor included free' },
-        { text: 'Future Blueprint updates' },
+        { text: 'Personalized relocation blueprint' },
+        { text: 'Ten-year financial projection' },
+        { text: 'Country-by-country tax comparison' },
+        { text: 'Healthcare analysis' },
+        { text: 'Safety analysis' },
+        { text: 'Visa strategy' },
+        { text: 'Risk assessment' },
+        { text: 'AI decision report' },
+        { text: 'Relocation action plan' },
+        { text: '12 months of monitoring included' },
       ],
+      whoIsThisFor: "I'm making a life-changing decision.",
       btn: blueprintBtn,
       style: 'ghost',
       checkoutType: blueprintCheckout,
@@ -191,20 +190,20 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
     },
     {
       id: 'monitor',
-      name: 'Monitor',
+      tierLabel: 'MONITOR',
+      headline: 'Stay Ahead Of Every Change',
       price: '$9.99',
       period: '/month',
-      tagline: 'Stay Ahead Of Every Change',
+      subheadline: 'Never be surprised by',
       features: [
-        { text: 'Weekly city alerts' },
-        { text: 'Tax & Visa changes' },
-        { text: 'Healthcare changes' },
-        { text: 'Cost of living changes' },
-        { text: 'New retirement programs' },
-        { text: 'Better city recommendations' },
-        { text: 'AI notifications' },
+        { text: 'Tax changes' },
+        { text: 'Cost of living' },
+        { text: 'Visa rules' },
+        { text: 'Healthcare' },
+        { text: 'Better relocation opportunities' },
+        { text: 'New countries matching your profile' },
       ],
-      btn: loadingPlan === 'monitor' ? 'Loading…' : 'Start Monitoring',
+      btn: loadingPlan === 'monitor' ? 'Loading…' : 'Protect My Plan',
       style: 'ghost',
       checkoutType: 'monitor',
       note: 'Add-on for Pro users. Included free for 12 months with Blueprint.',
@@ -253,10 +252,15 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
           fontFamily: "'Playfair Display', serif",
           fontSize: 'clamp(32px,4vw,52px)',
           fontWeight: 700,
-          marginBottom: 48,
+          lineHeight: 1.15,
+          letterSpacing: '-0.02em',
+          marginBottom: 56,
+          maxWidth: 820,
+          marginLeft: 'auto',
+          marginRight: 'auto',
         }}
       >
-        Simple, honest pricing
+        Choose How Confident You Want To Be Before You Move.
       </h2>
       {error && (
         <div
@@ -277,8 +281,8 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: 20,
+          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gap: 24,
         }}
       >
         {tiers.map((tier) => {
@@ -292,7 +296,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
                   ? '1px solid rgba(200,240,90,0.3)'
                   : '1px solid rgba(255,255,255,0.07)',
                 borderRadius: 20,
-                padding: 28,
+                padding: 32,
                 textAlign: 'left',
                 position: 'relative',
                 display: 'flex',
@@ -320,20 +324,36 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
               )}
               <div
                 style={{
-                  fontSize: 14,
-                  color: 'rgba(240,237,232,0.45)',
-                  marginBottom: 8,
-                  fontWeight: 500,
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  color: '#c8f05a',
+                  marginBottom: 12,
+                  fontWeight: 600,
                 }}
               >
-                {tier.name}
+                {tier.tierLabel}
               </div>
+              <h3
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: 'clamp(20px, 2.2vw, 24px)',
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.01em',
+                  color: '#f0ede8',
+                  margin: '0 0 20px',
+                }}
+              >
+                {tier.headline}
+              </h3>
               <div
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontSize: 42,
                   fontWeight: 900,
                   marginBottom: 4,
+                  lineHeight: 1,
                 }}
               >
                 {tier.price}
@@ -342,79 +362,48 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
                 style={{
                   fontSize: 13,
                   color: 'rgba(240,237,232,0.45)',
-                  marginBottom: 12,
+                  marginBottom: tier.subheadline ? 12 : 20,
                 }}
               >
                 {tier.period}
               </div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: '#f0f0f0',
-                  marginBottom: 24,
-                }}
-              >
-                {tier.tagline}
-              </div>
-              <ul style={{ listStyle: 'none', marginBottom: tier.valueSummary ? 12 : 24, flex: 1 }}>
+              {tier.subheadline && (
+                <p
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.55,
+                    color: 'rgba(240,237,232,0.55)',
+                    margin: '0 0 20px',
+                  }}
+                >
+                  {tier.subheadline}
+                </p>
+              )}
+              <ul style={{ listStyle: 'none', margin: '0 0 20px', padding: 0, flex: 1 }}>
                 {tier.features.map((f) => (
                   <li
                     key={f.text}
                     style={{
                       fontSize: 13,
-                      padding: f.highlighted ? '10px 12px' : '8px 0',
-                      marginBottom: f.highlighted ? 10 : 0,
-                      borderBottom: f.highlighted
-                        ? 'none'
-                        : '1px solid rgba(255,255,255,0.07)',
-                      borderRadius: f.highlighted ? 10 : undefined,
-                      background: f.highlighted ? 'rgba(200,240,90,0.1)' : undefined,
-                      border: f.highlighted
-                        ? '1px solid rgba(200,240,90,0.35)'
-                        : undefined,
+                      padding: '8px 0',
+                      borderBottom: '1px solid rgba(255,255,255,0.07)',
                       display: 'flex',
                       gap: 8,
-                      alignItems: f.highlighted ? 'flex-start' : 'center',
-                      color:
-                        f.highlighted
-                          ? '#c8f05a'
-                          : f.included === false
-                            ? 'rgba(240,237,232,0.35)'
-                            : 'rgba(240,237,232,0.6)',
-                      fontWeight: f.highlighted ? 600 : 400,
+                      alignItems: 'center',
+                      color: 'rgba(240,237,232,0.65)',
+                      lineHeight: 1.45,
                     }}
                   >
-                    {f.highlighted ? (
-                      <span
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          letterSpacing: 0.6,
-                          textTransform: 'uppercase',
-                          color: '#0a0a0f',
-                          background: '#c8f05a',
-                          padding: '3px 6px',
-                          borderRadius: 4,
-                          flexShrink: 0,
-                          lineHeight: 1.2,
-                          marginTop: 1,
-                        }}
-                      >
-                        Bonus
-                      </span>
-                    ) : (
-                      <span
-                        style={{
-                          color: f.included === false ? '#f05a8c' : '#c8f05a',
-                          fontWeight: 700,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {f.included === false ? '✕' : '✓'}
-                      </span>
-                    )}
-                    <span style={{ lineHeight: 1.45 }}>{f.text}</span>
+                    <span
+                      style={{
+                        color: '#c8f05a',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ✓
+                    </span>
+                    <span>{f.text}</span>
                   </li>
                 ))}
               </ul>
@@ -435,6 +424,19 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
                   {tier.valueSummary}
                 </p>
               )}
+              {tier.whoIsThisFor && (
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: 'rgba(240,237,232,0.4)',
+                    fontStyle: 'italic',
+                    margin: '0 0 16px',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {tier.whoIsThisFor}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => handleTierClick(tier)}
@@ -451,6 +453,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
                   background: tier.style === 'primary' ? '#c8f05a' : '#1a1a26',
                   color: tier.style === 'primary' ? '#0a0a0f' : '#f0ede8',
                   opacity: isLoading ? 0.7 : 1,
+                  marginTop: 'auto',
                 }}
               >
                 {tier.btn}
