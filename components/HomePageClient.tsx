@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
+import ContrastStatement from '@/components/ContrastStatement'
 import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
 import HowItWorks from '@/components/HowItWorks'
@@ -797,6 +798,8 @@ export default function HomePageClient({
       {showHero && (
         <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
       )}
+
+      {showLanding && <ContrastStatement />}
 
       {showLanding && (
         <>
