@@ -334,7 +334,7 @@ export default function Results({
                 opacity: pdfLoading || ordered.filter(isUnlocked).length === 0 ? 0.7 : 1,
               }}
             >
-              {pdfLoading ? 'Generating PDF…' : 'Download PDF Report'}
+              {pdfLoading ? 'Generating PDF…' : 'Download Your Relocation Blueprint'}
             </button>
           )}
           {top && paid && (

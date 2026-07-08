@@ -175,7 +175,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
         { text: 'Safety analysis' },
         { text: 'Visa strategy' },
         { text: 'Risk assessment' },
-        { text: 'AI decision report' },
+        { text: 'AI Relocation Strategy' },
         { text: 'Relocation action plan' },
         { text: '12 months of monitoring included' },
       ],
@@ -337,12 +337,18 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
               <h3
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: 'clamp(20px, 2.2vw, 24px)',
+                  fontSize:
+                    tier.id === 'blueprint' || tier.id === 'monitor'
+                      ? 'clamp(17px, 1.85vw, 20px)'
+                      : 'clamp(20px, 2.2vw, 24px)',
                   fontWeight: 700,
-                  lineHeight: 1.2,
+                  lineHeight: tier.id === 'blueprint' || tier.id === 'monitor' ? 1.35 : 1.2,
                   letterSpacing: '-0.01em',
                   color: '#f0ede8',
                   margin: '0 0 20px',
+                  flexShrink: 0,
+                  overflow: 'visible',
+                  whiteSpace: 'normal',
                 }}
               >
                 {tier.headline}

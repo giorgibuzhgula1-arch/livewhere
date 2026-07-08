@@ -30,7 +30,7 @@ function reportDateLabel(): string {
 
 export function retirementReportFilename(): string {
   const slug = reportDateLabel().replace(/\s+/g, '-').toLowerCase()
-  return `livewhere-retirement-report-${slug}.pdf`
+  return `livewhere-relocation-blueprint-${slug}.pdf`
 }
 
 export function generateRetirementReportPdf(
@@ -68,7 +68,7 @@ export function generateRetirementReportPdf(
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(20)
   doc.setTextColor(20, 20, 20)
-  doc.text('LiveWhere Retirement Report', MARGIN, y)
+  doc.text('LiveWhere Relocation Blueprint', MARGIN, y)
   y += 28
 
   doc.setFont('helvetica', 'normal')

@@ -250,7 +250,7 @@ export default function MonitorFeed({ userProfile }: Props) {
                 flex: 1,
               }}
             >
-              Includes 12 months Monitor ($120 value) + Personalized Retirement Report + Priority Support
+              Includes 12 months Monitor ($120 value) + Personalized Relocation Blueprint + Priority Support
             </p>
             <button
               type="button"
