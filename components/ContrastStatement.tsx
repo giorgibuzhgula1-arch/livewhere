@@ -21,7 +21,7 @@ export default function ContrastStatement() {
           color: 'rgba(240, 237, 232, 0.55)',
         }}
       >
-        Google Gives You 10 Million Results.
+        Google Gives You Information.
       </p>
       <p
         style={{
@@ -34,7 +34,7 @@ export default function ContrastStatement() {
           color: '#c8f05a',
         }}
       >
-        We Give You One Decision.
+        LiveWhere Helps You Decide.
       </p>
     </section>
   )

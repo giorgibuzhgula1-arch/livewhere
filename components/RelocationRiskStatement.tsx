@@ -1,9 +1,10 @@
 import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
 
 const CONSEQUENCES = [
-  'Higher taxes.',
-  'Unexpected healthcare costs.',
-  'Years of lost savings.',
+  'Higher Taxes',
+  'Higher Healthcare Costs',
+  'More Expensive Housing',
+  'Lower Purchasing Power',
 ] as const
 
 export default function RelocationRiskStatement() {
