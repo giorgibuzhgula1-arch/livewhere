@@ -47,7 +47,7 @@ export default function HowLiveWhereWorks() {
                 fontSize: 'clamp(40px, 5vw, 56px)',
                 fontWeight: 900,
                 lineHeight: 1,
-                color: 'rgba(200, 240, 90, 0.35)',
+                color: '#c8f05a',
                 marginBottom: 20,
               }}
             >
