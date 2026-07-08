@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import ContrastStatement from '@/components/ContrastStatement'
 import RelocationRiskStatement from '@/components/RelocationRiskStatement'
+import HowLiveWhereWorks from '@/components/HowLiveWhereWorks'
 import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
 import HowItWorks from '@/components/HowItWorks'
@@ -803,6 +804,8 @@ export default function HomePageClient({
       {showLanding && <ContrastStatement />}
 
       {showLanding && <RelocationRiskStatement />}
+
+      {showLanding && <HowLiveWhereWorks />}
 
       {showLanding && (
         <>
