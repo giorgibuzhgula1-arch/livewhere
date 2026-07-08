@@ -159,7 +159,7 @@ export default function SavingsCalculator({
           marginBottom: 12,
         }}
       >
-        See How Far Your Retirement Income Could Go
+        What Could Your Next Move Be Worth?
       </h2>
       <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.45)', marginBottom: 40, lineHeight: 1.6 }}>
         Based on average cost of living data. Your actual savings may vary.
@@ -301,7 +301,7 @@ export default function SavingsCalculator({
               color: '#f0ede8',
             }}
           >
-            What Could An Extra ${tenYearSavings.toLocaleString()} Mean For Your Retirement?
+            One Better Decision. ${tenYearSavings.toLocaleString()} Better Outcome.
           </h3>
         </div>
       ) : (
@@ -326,7 +326,7 @@ export default function SavingsCalculator({
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
-        Get My Personalized Retirement Analysis →
+        Start My Free Analysis →
       </a>
     </section>
   )
