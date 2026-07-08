@@ -13,7 +13,7 @@ export default function RelocationRiskStatement() {
         position: 'relative',
         zIndex: 1,
         textAlign: 'center',
-        padding: '100px 24px 120px',
+        padding: '72px 24px 80px',
         maxWidth: 720,
         margin: '0 auto',
       }}
@@ -25,7 +25,7 @@ export default function RelocationRiskStatement() {
           fontWeight: 700,
           lineHeight: 1.15,
           letterSpacing: '-0.02em',
-          margin: '0 0 40px',
+          margin: '0 0 24px',
           color: '#f0ede8',
         }}
       >
@@ -40,7 +40,7 @@ export default function RelocationRiskStatement() {
           padding: 0,
           display: 'flex',
           flexDirection: 'column',
-          gap: 14,
+          gap: 6,
           alignItems: 'center',
         }}
       >
@@ -51,7 +51,7 @@ export default function RelocationRiskStatement() {
               fontFamily: fontFamilySans,
               fontSize: 'clamp(16px, 2vw, 18px)',
               fontWeight: 400,
-              lineHeight: 1.5,
+              lineHeight: 1.4,
               color: 'rgba(240, 237, 232, 0.72)',
               display: 'flex',
               alignItems: 'baseline',
@@ -80,7 +80,7 @@ export default function RelocationRiskStatement() {
           lineHeight: 1.4,
           letterSpacing: '-0.01em',
           color: 'rgba(240, 237, 232, 0.85)',
-          margin: '48px 0 0',
+          margin: '28px 0 0',
         }}
       >
         Know before you relocate.
