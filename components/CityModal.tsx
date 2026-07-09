@@ -164,7 +164,7 @@ function FinancialBreakdown({
         ))}
       </div>
       <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(240,237,232,0.55)', margin: '0 0 16px' }}>
-        Upgrade to see tax rates, take-home pay, and monthly savings for this city.
+        Continue to see tax rates, take-home pay, and monthly savings for this city.
       </p>
       <button
         type="button"

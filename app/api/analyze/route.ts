@@ -36,7 +36,7 @@ function sanitizeLockedCity(city: CityResult): CityResult {
 }
 
 const FREE_SEARCH_LIMIT_MESSAGE =
-  'Free plan limit reached. Upgrade to Pro for unlimited searches.'
+  'Free plan limit reached. Continue to Pro for unlimited exploration.'
 
 function getClientIp(req: NextRequest): string {
   const forwarded = req.headers.get('x-forwarded-for')
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     if (readError) {
       console.error('anonymous_searches read error:', readError)
-      return NextResponse.json({ error: 'Could not verify search limit. Please try again.' }, { status: 500 })
+      return NextResponse.json({ error: 'Could not verify usage limit. Please try again.' }, { status: 500 })
     }
 
     const anonCount = anonRow?.count ?? 0
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
 
     if (upsertError) {
       console.error('anonymous_searches upsert error:', upsertError)
-      return NextResponse.json({ error: 'Could not record search limit. Please try again.' }, { status: 500 })
+      return NextResponse.json({ error: 'Could not record usage limit. Please try again.' }, { status: 500 })
     }
   }
 
@@ -218,7 +218,7 @@ export async function POST(req: NextRequest) {
         send({ type: 'done', cities: clientCities })
       } catch (err) {
         console.error('Recommendation error:', err)
-        send({ type: 'error', error: 'Could not generate recommendations. Please try again.' })
+        send({ type: 'error', error: 'Could not build your matches. Please try again.' })
       } finally {
         controller.close()
       }

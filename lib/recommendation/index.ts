@@ -443,7 +443,7 @@ function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: n
     cons: ["Verify tax and visa rules for your passport."],
     tags: [meta.continent],
     visa: "Check retiree, work, or residency options.",
-    healthcare: "Healthcare details are being generated.",
+    healthcare: "Building healthcare details…",
     scores: {
       tax: sub.taxes,
       housing: sub.housing,

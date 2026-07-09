@@ -87,7 +87,7 @@ export default function SavePlanModal({
     try {
       if (!canSaveMorePlan(plan, savedCount)) {
         throw new Error(
-          `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plan. Upgrade to Pro for unlimited saves.`,
+          `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plan. Continue to Pro for unlimited saves.`,
         )
       }
 
@@ -203,7 +203,7 @@ export default function SavePlanModal({
                   >
                     Plan limit reached.{' '}
                     <Link href="/pricing" style={{ color: '#c8f05a' }}>
-                      Upgrade to Pro
+                      Continue to Pro
                     </Link>{' '}
                     for unlimited saves.
                   </div>

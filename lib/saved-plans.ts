@@ -90,7 +90,7 @@ export async function saveRetirementPlan(params: {
 
   if (!params.bypassPlanLimit && !canSaveMorePlan(plan, count)) {
     throw new Error(
-      `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plan. Upgrade to Pro for unlimited saves.`,
+      `Free accounts can save up to ${FREE_SAVED_PLANS_LIMIT} plan. Continue to Pro for unlimited saves.`,
     )
   }
 

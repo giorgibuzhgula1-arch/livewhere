@@ -3,7 +3,7 @@ import PricingPageClient from './PricingPageClient'
 
 export const metadata: Metadata = {
   title: 'Pricing — LiveWhere',
-  description: 'Upgrade to unlock city comparisons, full relocation blueprints, and unlimited searches.',
+  description: 'Continue to unlock city comparisons, full relocation blueprints, and unlimited exploration.',
   alternates: {
     canonical: '/pricing',
   },

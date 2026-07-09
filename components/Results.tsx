@@ -334,7 +334,7 @@ export default function Results({
                 opacity: pdfLoading || ordered.filter(isUnlocked).length === 0 ? 0.7 : 1,
               }}
             >
-              {pdfLoading ? 'Generating PDF…' : 'Download Your Relocation Blueprint'}
+              {pdfLoading ? 'Building your blueprint…' : 'Download Your Relocation Blueprint'}
             </button>
           )}
           {top && paid && (
@@ -355,7 +355,7 @@ export default function Results({
             color: 'rgba(240,237,232,0.45)', padding: '10px 18px', borderRadius: 10,
             fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif"
           }}>
-            ← New search
+            ← Explore again
           </button>
         </div>
       </div>
@@ -497,7 +497,7 @@ export default function Results({
           lineHeight: 1.6,
           color: 'rgba(240,237,232,0.7)',
         }}>
-          You&apos;re viewing your <strong style={{ color: '#c8f05a' }}>#1 match in full</strong> — take-home pay, costs, climate, safety, pros/cons and visa path. Upgrade to Pro to unlock all 12 matches.
+          You&apos;re viewing your <strong style={{ color: '#c8f05a' }}>#1 match in full</strong> — take-home pay, costs, climate, safety, pros/cons and visa path. Continue to Pro to unlock all 12 matches.
         </div>
       )}
 

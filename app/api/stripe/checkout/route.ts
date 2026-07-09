@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     if (checkoutType === 'blueprint_upgrade' && profile?.plan !== 'pro') {
       return NextResponse.json(
-        { error: 'Blueprint upgrade is only available for Pro Lifetime members.' },
+        { error: 'Blueprint access is only available for Pro Lifetime members.' },
         { status: 400 },
       )
     }
@@ -146,8 +146,8 @@ export async function POST(req: NextRequest) {
               currency: 'usd',
               unit_amount: BLUEPRINT_UPGRADE_CENTS,
               product_data: {
-                name: 'Blueprint Lifetime Upgrade',
-                description: 'Upgrade from Pro Lifetime — pay only the difference.',
+                name: 'Blueprint Lifetime Access',
+                description: 'Continue from Pro Lifetime — pay only the difference.',
               },
             },
             quantity: 1,

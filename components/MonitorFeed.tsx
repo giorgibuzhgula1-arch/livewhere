@@ -239,7 +239,7 @@ export default function MonitorFeed({ userProfile }: Props) {
                 color: '#c8f05a',
               }}
             >
-              Upgrade to Blueprint — $100 one-time
+              Continue to Blueprint — $100 one-time
             </h3>
             <p
               style={{
@@ -264,7 +264,7 @@ export default function MonitorFeed({ userProfile }: Props) {
                 opacity: checkoutLoading !== null && checkoutLoading !== 'blueprint' ? 0.5 : 1,
               }}
             >
-              {checkoutLoading === 'blueprint' ? 'Loading…' : 'Upgrade'}
+              {checkoutLoading === 'blueprint' ? 'Loading…' : 'Continue'}
             </button>
           </div>
         </div>

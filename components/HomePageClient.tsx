@@ -354,7 +354,7 @@ export default function HomePageClient({
           setAuthOpen(false)
           setAwaitingAuthToView(false)
         }
-        setError(json.error || 'Free plan limit reached. Upgrade to Pro for unlimited searches.')
+        setError(json.error || 'Free plan limit reached. Continue to Pro for unlimited exploration.')
         return
       }
 
@@ -931,7 +931,7 @@ export default function HomePageClient({
               cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            ← New search
+            ← Explore again
           </button>
             </>
           )}

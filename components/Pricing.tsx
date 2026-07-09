@@ -115,7 +115,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
     loadingPlan === 'blueprint' || loadingPlan === 'blueprint_upgrade'
       ? 'Loading…'
       : isProUpgrade
-        ? 'Upgrade to Blueprint — $100'
+        ? 'Continue to Blueprint — $100'
         : 'Build My Relocation Strategy'
 
   const tiers: PricingTier[] = [
@@ -159,7 +159,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       btn: loadingPlan === 'pro' ? 'Loading…' : 'Unlock My Full Analysis',
       style: 'primary',
       checkoutType: 'pro',
-      note: 'Already have Pro? Upgrade to Blueprint — pay only $100 more.',
+      note: 'Already have Pro? Continue to Blueprint — pay only $100 more.',
     },
     {
       id: 'blueprint',

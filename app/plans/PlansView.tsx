@@ -475,7 +475,7 @@ export default function PlansView() {
                 </p>
               ) : summaryLoadingIds.has(activePlan.id) ? (
                 <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, fontStyle: 'italic' }}>
-                  Generating plan summary…
+                  Building plan summary…
                 </p>
               ) : null}
 
