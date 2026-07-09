@@ -21,6 +21,7 @@ import MonitorFeed from '@/components/MonitorFeed'
 import RelocationJourney from '@/components/RelocationJourney'
 import PlansClosingCta from '@/components/PlansClosingCta'
 import MyDocuments from '@/components/MyDocuments'
+import DecisionReadinessScore from '@/components/DecisionReadinessScore'
 import styles from '../compare/compare.module.css'
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -593,6 +594,8 @@ export default function PlansView() {
           </div>
         </>
       )}
+
+      <DecisionReadinessScore plans={plans} plan={userProfile.plan} />
         </>
       )}
 
