@@ -160,7 +160,7 @@ function InsightsContent({ insights }: { insights: CompareInsights }) {
         <StatCard icon="💰" label="10-Year Savings" value={insights.savingsOver10Years} />
         <StatCard icon="🏥" label="Healthcare" value={insights.healthcareAdvantage} />
         <StatCard icon="📊" label="Tax Advantage" value={insights.taxAdvantage} />
-        <StatCard icon="🎯" label="Retirement Match" value={insights.matchScore} />
+        <StatCard icon="🎯" label="Relocation Match" value={insights.matchScore} />
       </div>
 
       <div style={textCardStyle}>
@@ -236,7 +236,7 @@ export default function AIRetirementInsights({ cityA, cityB, paid }: Props) {
   return (
     <section style={sectionStyle} aria-labelledby="ai-retirement-analysis">
       <p className={styles.overallKicker} id="ai-retirement-analysis">
-        AI Retirement Analysis
+        AI Relocation Analysis
       </p>
       <p
         style={{

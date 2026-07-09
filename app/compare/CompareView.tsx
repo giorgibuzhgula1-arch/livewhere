@@ -95,7 +95,7 @@ export default function CompareView() {
       <p className={styles.kicker}>Compare</p>
       <h1 className={styles.title}>City comparison</h1>
       <p className={styles.subtitle}>
-        Compare retirement metrics side by side using LiveWhere&apos;s city database — cost of
+        Compare relocation metrics side by side using LiveWhere&apos;s city database — cost of
         living, healthcare, safety, taxes, climate, and overall score.
       </p>
 
@@ -170,7 +170,7 @@ export default function CompareView() {
               )}
 
               <p className={styles.note}>
-                Scores are on a 0–100 scale. Overall retirement score uses a $4,000/mo reference
+                Scores are on a 0–100 scale. Overall relocation score uses a $4,000/mo reference
                 budget and default priority weights from LiveWhere&apos;s scoring engine.
                 {priorities
                   ? ' Verdict weighting reflects your saved quiz priorities.'

@@ -137,7 +137,7 @@ export const COMPARE_METRICS: CompareMetricDef[] = [
   },
   {
     key: 'overall',
-    label: 'Overall retirement score',
+    label: 'Overall relocation score',
     shortLabel: 'Overall score',
     getValue: (m) => m.overallRetirementScore,
     formatValue: formatScore,
@@ -362,7 +362,7 @@ export function generateCompareVerdict(
   const loserName = loserMetrics.city.name
   const strengthLabels = analysis.winnerStrengths.map((c) => c.label)
 
-  let verdict = `${winnerName} is the stronger retirement relocation pick overall when measured against ${loserName}.`
+  let verdict = `${winnerName} is the stronger relocation pick overall when measured against ${loserName}.`
 
   if (strengthLabels.length > 0) {
     const driverPhrase = analysis.usedPriorities
