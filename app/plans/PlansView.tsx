@@ -18,6 +18,7 @@ import type { CityResult } from '@/lib/types'
 import type { User } from '@supabase/supabase-js'
 import SavedPlansCompare from '@/components/SavedPlansCompare'
 import MonitorFeed from '@/components/MonitorFeed'
+import RelocationJourney from '@/components/RelocationJourney'
 import styles from '../compare/compare.module.css'
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -293,6 +294,8 @@ export default function PlansView() {
       >
         {welcomeHeading(user?.firstName ?? null)}
       </h1>
+
+      <RelocationJourney />
 
       <div
         style={{
