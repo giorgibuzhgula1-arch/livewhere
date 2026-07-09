@@ -15,6 +15,7 @@ import {
 } from '@/lib/saved-plans'
 import { fetchUserProfile, isPaidPlan, type UserProfile } from '@/lib/plan'
 import type { CityResult } from '@/lib/types'
+import type { User } from '@supabase/supabase-js'
 import SavedPlansCompare from '@/components/SavedPlansCompare'
 import MonitorFeed from '@/components/MonitorFeed'
 import styles from '../compare/compare.module.css'
@@ -28,12 +29,29 @@ type ModalContext = {
   lifestyle?: string[]
 }
 
+function firstNameFromUser(u: User): string | null {
+  const meta = u.user_metadata
+  if (meta && typeof meta === 'object' && typeof meta.full_name === 'string') {
+    const first = meta.full_name.trim().split(/\s+/)[0]
+    if (first) return first
+  }
+  const fromEmail = u.email?.split('@')[0]?.trim()
+  return fromEmail || null
+}
+
+function welcomeHeading(firstName: string | null): string {
+  if (firstName) {
+    return `Welcome back, ${firstName}. Your relocation plan is ready.`
+  }
+  return 'Welcome back.'
+}
+
 export default function PlansView() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const activeTab = searchParams.get('tab') === 'monitor' ? 'monitor' : 'plans'
 
-  const [user, setUser] = useState<{ id: string } | null>(null)
+  const [user, setUser] = useState<{ id: string; firstName: string | null } | null>(null)
   const [authReady, setAuthReady] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [plans, setPlans] = useState<SavedRetirementPlan[]>([])
@@ -101,7 +119,7 @@ export default function PlansView() {
     async function init() {
       const { data: { user: u } } = await supabase.auth.getUser()
       if (cancelled) return
-      setUser(u ? { id: u.id } : null)
+      setUser(u ? { id: u.id, firstName: firstNameFromUser(u) } : null)
       setAuthReady(true)
 
       if (u) {
@@ -121,7 +139,7 @@ export default function PlansView() {
     void init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ? { id: session.user.id } : null)
+      setUser(session?.user ? { id: session.user.id, firstName: firstNameFromUser(session.user) } : null)
       if (session?.user) {
         void loadPlans()
         void fetchUserProfile().then((profile) => {
@@ -259,9 +277,21 @@ export default function PlansView() {
         ← Back to LiveWhere
       </Link>
 
-      <p className={styles.kicker}>Dashboard</p>
-      <h1 className={styles.title}>
-        {activeTab === 'monitor' ? 'Retirement Monitor' : 'Saved retirement plans'}
+      <p className={styles.kicker} style={{ marginBottom: 16 }}>
+        My Relocation HQ
+      </p>
+      <h1
+        className={styles.title}
+        style={{
+          maxWidth: 720,
+          lineHeight: 1.25,
+          letterSpacing: '-0.02em',
+          marginBottom: 28,
+          color: '#f0ede8',
+          fontWeight: 700,
+        }}
+      >
+        {welcomeHeading(user?.firstName ?? null)}
       </h1>
 
       <div
