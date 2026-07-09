@@ -13,13 +13,14 @@ import {
   FREE_SAVED_PLANS_LIMIT,
   type SavedRetirementPlan,
 } from '@/lib/saved-plans'
-import { fetchUserProfile, isPaidPlan, type UserProfile } from '@/lib/plan'
+import { fetchUserProfile, isBlueprintPlan, isPaidPlan, type UserProfile } from '@/lib/plan'
 import type { CityResult } from '@/lib/types'
 import type { User } from '@supabase/supabase-js'
 import SavedPlansCompare from '@/components/SavedPlansCompare'
 import MonitorFeed from '@/components/MonitorFeed'
 import RelocationJourney from '@/components/RelocationJourney'
 import PlansClosingCta from '@/components/PlansClosingCta'
+import MyDocuments from '@/components/MyDocuments'
 import styles from '../compare/compare.module.css'
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -51,7 +52,9 @@ function welcomeHeading(firstName: string | null): string {
 export default function PlansView() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const activeTab = searchParams.get('tab') === 'monitor' ? 'monitor' : 'plans'
+  const tabParam = searchParams.get('tab')
+  const activeTab =
+    tabParam === 'monitor' ? 'monitor' : tabParam === 'documents' ? 'documents' : 'plans'
 
   const [user, setUser] = useState<{ id: string; firstName: string | null } | null>(null)
   const [authReady, setAuthReady] = useState(false)
@@ -209,12 +212,14 @@ export default function PlansView() {
       ? Math.round(modalContext.monthlyBudget)
       : undefined
 
-  function setTab(tab: 'plans' | 'monitor') {
+  function setTab(tab: 'plans' | 'monitor' | 'documents') {
     if (tab === 'monitor' && profileReady && user && userProfile.plan === 'free') {
       router.push('/pricing')
       return
     }
-    router.replace(tab === 'monitor' ? '/plans?tab=monitor' : '/plans')
+    const href =
+      tab === 'monitor' ? '/plans?tab=monitor' : tab === 'documents' ? '/plans?tab=documents' : '/plans'
+    router.replace(href)
   }
 
   useEffect(() => {
@@ -322,6 +327,13 @@ export default function PlansView() {
         >
           Monitor
         </button>
+        <button
+          type="button"
+          onClick={() => setTab('documents')}
+          style={tabBtn(activeTab === 'documents')}
+        >
+          My Documents
+        </button>
       </div>
 
       {activeTab === 'monitor' ? (
@@ -330,6 +342,12 @@ export default function PlansView() {
         ) : (
           <p className={styles.subtitle}>Loading…</p>
         )
+      ) : activeTab === 'documents' ? (
+        <MyDocuments
+          plans={plans}
+          loading={loading}
+          isBlueprint={isBlueprintPlan(userProfile.plan)}
+        />
       ) : (
         <>
       <p className={styles.subtitle}>
