@@ -9,7 +9,6 @@ import RelocationRiskStatement from '@/components/RelocationRiskStatement'
 import HowLiveWhereWorks from '@/components/HowLiveWhereWorks'
 import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
-import HowItWorks from '@/components/HowItWorks'
 import RetirementStatsBar from '@/components/RetirementStatsBar'
 import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
@@ -805,17 +804,15 @@ export default function HomePageClient({
 
       {showLanding && <RelocationRiskStatement />}
 
-      {showLanding && <HowLiveWhereWorks />}
-
       {showLanding && (
         <>
           <CorePromise />
           <SavingsCalculator defaultLocation={defaultSavingsLocation} />
+          <HowLiveWhereWorks />
           <div id="quiz">
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
           <RetirementStatsBar />
-          <HowItWorks />
           <Pricing
             onUpgrade={() => { setAuthVariant('default'); setAuthOpen(true); setAuthMode('signup') }}
             checkoutContext={
