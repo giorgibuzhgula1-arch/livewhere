@@ -19,6 +19,7 @@ import type { User } from '@supabase/supabase-js'
 import SavedPlansCompare from '@/components/SavedPlansCompare'
 import MonitorFeed from '@/components/MonitorFeed'
 import RelocationJourney from '@/components/RelocationJourney'
+import PlansClosingCta from '@/components/PlansClosingCta'
 import styles from '../compare/compare.module.css'
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -174,6 +175,8 @@ export default function PlansView() {
     () => plans.find((p) => p.id === compareB) ?? null,
     [plans, compareB],
   )
+
+  const closingCtaHref = activePlan ? `/?savedPlan=${activePlan.id}` : '/pricing'
 
   function handleCityClick(city: CityResult, plan: SavedRetirementPlan) {
     setModalContext({
@@ -574,6 +577,8 @@ export default function PlansView() {
       )}
         </>
       )}
+
+      <PlansClosingCta href={closingCtaHref} />
 
       {selectedCity && (
         <CityModal
