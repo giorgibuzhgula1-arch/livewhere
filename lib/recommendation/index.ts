@@ -614,20 +614,119 @@ function formatVisaDataForCountry(country: string): string {
   return [`Country summary: ${info.summary}`, 'Verified visa options:', ...optionLines].join('\n')
 }
 
+function narrativeFmtUsd(n: number): string {
+  return `$${Math.round(n).toLocaleString('en-US')}`
+}
+
+type NarrativePeerAverages = {
+  score: number
+  monthlyCost: number
+  monthlySavings: number
+  tax: number
+  housing: number
+  climate: number
+  health: number
+  stability: number
+  expat: number
+  safety: number
+}
+
+function computeNarrativePeerAverages(cities: CityResult[]): NarrativePeerAverages {
+  const n = cities.length || 1
+  const avg = (fn: (c: CityResult) => number) =>
+    cities.reduce((sum, c) => sum + fn(c), 0) / n
+
+  return {
+    score: avg((c) => c.score),
+    monthlyCost: avg((c) => c.monthlyCost),
+    monthlySavings: avg((c) => c.monthlySavings),
+    tax: avg((c) => c.scores.tax),
+    housing: avg((c) => c.scores.housing),
+    climate: avg((c) => c.scores.climate),
+    health: avg((c) => c.scores.health),
+    stability: avg((c) => c.scores.stability),
+    expat: avg((c) => c.scores.expat ?? 0),
+    safety: avg((c) => c.scores.safety),
+  }
+}
+
+function formatTopUserPriorities(priorities: UserPriorities): string {
+  const entries: Array<[string, number]> = [
+    ['Low taxes', priorities.tax],
+    ['Affordable housing', priorities.housing],
+    ['Healthcare', priorities.health],
+    ['Long-term stability', priorities.stability],
+    ['Safety', priorities.safety],
+    ['Expat community', priorities.expat_community],
+    ['Visa and residency ease', priorities.visa_residency],
+  ]
+  const top = entries
+    .filter(([, value]) => value >= 4)
+    .sort((a, b) => b[1] - a[1])
+
+  if (top.length === 0) {
+    return 'No priority rated 4–5; most factors left at default importance.'
+  }
+
+  return top.map(([name, value]) => `${name} (${value}/5)`).join(', ')
+}
+
+function narrativeScoreDeltaLine(
+  label: string,
+  value: number,
+  peerAvg: number,
+  cityCount: number,
+): string {
+  const diff = Math.round(value - peerAvg)
+  const sign = diff >= 0 ? '+' : ''
+  return `  ${label}: ${Math.round(value)}/100 (${sign}${diff} vs ${Math.round(peerAvg)} avg across these ${cityCount} matches)`
+}
+
+function formatCityNarrativeBlock(
+  city: CityResult,
+  rank: number,
+  body: AnalyzeRequest,
+  priorities: UserPriorities,
+  peers: NarrativePeerAverages,
+  cityCount: number,
+): string[] {
+  const visaDataForCity = formatVisaDataForCountry(city.country)
+  const savingsWord = city.monthlySavings >= 0 ? 'savings' : 'deficit'
+  const savingsSign = city.monthlySavings >= 0 ? '+' : '-'
+  const scoreDiff = Math.round(city.score - peers.score)
+  const scoreSign = scoreDiff >= 0 ? '+' : ''
+
+  return [
+    `${rank}. ${city.name}, ${city.country} — rank #${rank} of ${cityCount} (overall match score ${city.score}/100, ${scoreSign}${scoreDiff} vs ${Math.round(peers.score)} avg across this list)`,
+    `User budget: ${narrativeFmtUsd(body.monthlyBudget)} ${body.currency}/month`,
+    `This city's estimated monthly cost: ${narrativeFmtUsd(city.monthlyCost)} (${narrativeFmtUsd(city.monthlyCost - peers.monthlyCost)} vs ${narrativeFmtUsd(peers.monthlyCost)} avg cost across this list)`,
+    `Monthly rent component: ${narrativeFmtUsd(city.monthlyRent)}`,
+    `Monthly ${savingsWord} vs this user's budget: ${savingsSign}${narrativeFmtUsd(Math.abs(city.monthlySavings))} (${narrativeFmtUsd(city.monthlySavings - peers.monthlySavings)} vs ${narrativeFmtUsd(peers.monthlySavings)} avg across this list)`,
+    `Tax rate: ${city.taxRate}%`,
+    'Priority-weighted sub-scores for THIS user (0–100, higher is better):',
+    narrativeScoreDeltaLine('Taxes', city.scores.tax, peers.tax, cityCount),
+    narrativeScoreDeltaLine('Housing affordability', city.scores.housing, peers.housing, cityCount),
+    narrativeScoreDeltaLine('Climate fit', city.scores.climate, peers.climate, cityCount),
+    narrativeScoreDeltaLine('Healthcare', city.scores.health, peers.health, cityCount),
+    narrativeScoreDeltaLine('Political stability', city.scores.stability, peers.stability, cityCount),
+    narrativeScoreDeltaLine('Expat community', city.scores.expat ?? 0, peers.expat, cityCount),
+    narrativeScoreDeltaLine('Safety', city.scores.safety, peers.safety, cityCount),
+    `User's highest-stated priorities: ${formatTopUserPriorities(priorities)}`,
+    `Use ONLY these verified visa facts: ${visaDataForCity}`,
+    'Do not invent income requirements. If minimum income exists, state the exact USD figure.',
+    '',
+  ]
+}
+
 function formatNarrativePrompt(
   body: AnalyzeRequest,
   priorities: UserPriorities,
   cities: CityResult[]
 ): string {
-  const cityBlocks = cities.flatMap((c, i) => {
-    const visaDataForCity = formatVisaDataForCountry(c.country)
-    return [
-      `${i + 1}. ${c.name}, ${c.country} (match score ${c.score})`,
-      `Use ONLY these verified visa facts: ${visaDataForCity}`,
-      'Do not invent income requirements. If minimum income exists, state the exact USD figure.',
-      '',
-    ]
-  })
+  const peers = computeNarrativePeerAverages(cities)
+  const cityBlocks = cities.flatMap((c, i) =>
+    formatCityNarrativeBlock(c, i + 1, body, priorities, peers, cities.length)
+  )
 
   return [
     `Write personalized retirement relocation narratives for exactly these ${cities.length} cities.`,
@@ -641,11 +740,16 @@ function formatNarrativePrompt(
     "- tags (1-4 lifestyle tags)",
     "- index: set to the exact 1-based list number shown next to that city in Cities (fixed order) below",
     "For each city in your response, set the `index` field to the exact number (1-based) shown next to that city in the list above.",
-    "Focus on retirement-relevant reasoning tied to the user's priorities below.",
+    "",
+    "PROS AND CONS RULES (strict):",
+    "- Every pro and con bullet MUST cite at least one SPECIFIC number or fact from that city's block below (monthly cost, savings/deficit vs budget, tax rate, match score, rank, or a named sub-score with its /100 value and delta vs the list average).",
+    "- Explain WHY this city ranks at its position (#1, #2, etc.) relative to the user's stated priorities — reference the user's top priorities (4–5/5) and this city's sub-scores vs the average across these matches.",
+    "- Do NOT write generic travel-brochure filler (e.g. \"vibrant city life\", \"endless entertainment\", \"high standard of healthcare\", \"rich culture\", \"welcoming locals\") unless you immediately tie it to a specific stat from that city's block.",
+    "- Cons should flag real tradeoffs for THIS user: e.g. below-average sub-scores on their top priorities, tight budget margin, high tax rate, or visa income thresholds vs their budget.",
     "",
     formatUserContext(body, priorities),
     "",
-    "Cities (fixed order):",
+    "Cities (fixed order, with per-user numbers):",
     ...cityBlocks,
   ].join("\n")
 }
@@ -713,7 +817,7 @@ function buildNarrativeRequestBody(
       {
         role: "system",
         content:
-          "You are LiveWhere's retirement relocation writer. Return only narrative fields for the pre-selected cities — including detailed visa and healthcare summaries. Never change rankings or invent numeric scores. For visa fields, use ONLY the verified visa facts provided per country — never invent income requirements.",
+          "You are LiveWhere's retirement relocation writer. Return only narrative fields for the pre-selected cities — including detailed visa and healthcare summaries. Never change rankings or invent numeric scores. For visa fields, use ONLY the verified visa facts provided per country — never invent income requirements. For pros and cons: every bullet must cite a specific number or fact from that city's provided data block (cost, savings, tax rate, match score, rank, or sub-score). Never use generic travel-brochure language unless tied to a specific stat. Explain why each city ranks where it does relative to the user's top priorities.",
       },
       { role: "user", content: formatNarrativePrompt(body, priorities, cities) },
     ],

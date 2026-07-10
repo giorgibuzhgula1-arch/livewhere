@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { exportRetirementReport } from '@/lib/export-pdf'
 import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
+import { fetchUserProfile, isBlueprintPlan } from '@/lib/plan'
 import { formatPlanDate, type SavedRetirementPlan } from '@/lib/saved-plans'
 
 type Props = {
@@ -21,8 +22,24 @@ const OUTCOME_BULLETS = [
 
 export default function MyDocuments({ plans, loading, isBlueprint }: Props) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [hasBlueprintAccess, setHasBlueprintAccess] = useState(isBlueprint)
 
-  const documentPlans = isBlueprint ? plans : []
+  useEffect(() => {
+    let cancelled = false
+
+    void fetchUserProfile().then((profile) => {
+      if (cancelled) return
+      setHasBlueprintAccess(isBlueprintPlan(profile.plan))
+      setProfileLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const documentPlans = hasBlueprintAccess ? plans : []
 
   async function handleDownloadBlueprint(plan: SavedRetirementPlan) {
     if (downloadingId) return
@@ -44,11 +61,11 @@ export default function MyDocuments({ plans, loading, isBlueprint }: Props) {
     }
   }
 
-  if (loading) {
+  if (loading || profileLoading) {
     return <p style={{ color: 'rgba(240,237,232,0.45)' }}>Loading your documents…</p>
   }
 
-  if (!isBlueprint) {
+  if (!hasBlueprintAccess) {
     return (
       <div
         style={{
