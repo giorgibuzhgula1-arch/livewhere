@@ -13,6 +13,7 @@ import RetirementStatsBar from '@/components/RetirementStatsBar'
 import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
 import LandingFaq from '@/components/LandingFaq'
+import LandingFooter from '@/components/LandingFooter'
 
 const Results = dynamic(() => import('@/components/Results'), { ssr: false })
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -823,6 +824,7 @@ export default function HomePageClient({
             }
           />
           <LandingFaq />
+          <LandingFooter />
         </>
       )}
 
