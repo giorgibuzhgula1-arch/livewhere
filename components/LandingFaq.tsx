@@ -31,6 +31,16 @@ const FAQ_ITEMS = [
     answer:
       'Pro unlocks every city, unlimited comparisons and advanced AI insights. Blueprint adds a personalized relocation report, long-term financial projections, risk analysis and ongoing monitoring—giving you everything you need to plan your move with confidence.',
   },
+  {
+    question: 'Where does LiveWhere get its data?',
+    answer:
+      'We combine data from trusted global sources, including government agencies, international organizations and continuously updated cost-of-living datasets. Every recommendation is built using multiple data points—not opinions.',
+  },
+  {
+    question: 'How often is the data updated?',
+    answer:
+      'We continuously monitor changes in cost of living, taxes, healthcare, visas and other relocation factors to keep recommendations as accurate and up to date as possible.',
+  },
 ] as const
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -90,7 +100,15 @@ export default function LandingFaq() {
         Frequently Asked Questions
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div
+        className="landing-faq-scroll"
+        style={{
+          maxHeight: 520,
+          overflowY: 'auto',
+          paddingRight: 6,
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {FAQ_ITEMS.map((item, index) => {
           const isOpen = openIndex === index
           const panelId = `faq-panel-${index}`
@@ -167,7 +185,26 @@ export default function LandingFaq() {
             </div>
           )
         })}
+        </div>
       </div>
+
+      <style>{`
+        .landing-faq-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.18) rgba(255, 255, 255, 0.04);
+        }
+        .landing-faq-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .landing-faq-scroll::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 3px;
+        }
+        .landing-faq-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.18);
+          border-radius: 3px;
+        }
+      `}</style>
     </section>
   )
 }
