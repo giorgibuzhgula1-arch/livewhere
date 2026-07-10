@@ -13,6 +13,13 @@ import {
   FREE_SAVED_PLANS_LIMIT,
   type SavedRetirementPlan,
 } from '@/lib/saved-plans'
+import {
+  addFavoriteCity,
+  cityFavoriteKey,
+  fetchFavoriteCities,
+  removeFavoriteCity,
+  type FavoriteCity,
+} from '@/lib/favorite-cities'
 import { fetchUserProfile, isBlueprintPlan, isPaidPlan, type UserProfile } from '@/lib/plan'
 import type { CityResult } from '@/lib/types'
 import type { User } from '@supabase/supabase-js'
@@ -22,6 +29,8 @@ import RelocationJourney from '@/components/RelocationJourney'
 import PlansClosingCta from '@/components/PlansClosingCta'
 import MyDocuments from '@/components/MyDocuments'
 import DecisionReadinessScore from '@/components/DecisionReadinessScore'
+import CityFavoriteButton from '@/components/CityFavoriteButton'
+import FavoriteCitiesStrip from '@/components/FavoriteCitiesStrip'
 import styles from '../compare/compare.module.css'
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -79,6 +88,9 @@ export default function PlansView() {
   const [modalContext, setModalContext] = useState<ModalContext>({})
   const [summaryLoadingIds, setSummaryLoadingIds] = useState<Set<string>>(new Set())
   const summaryRequestedRef = useRef<Set<string>>(new Set())
+  const [favorites, setFavorites] = useState<FavoriteCity[]>([])
+  const [favoriteKeys, setFavoriteKeys] = useState<Set<string>>(new Set())
+  const [togglingFavoriteKey, setTogglingFavoriteKey] = useState<string | null>(null)
 
   const backfillSummaries = useCallback((rows: SavedRetirementPlan[]) => {
     for (const plan of rows) {
@@ -98,6 +110,20 @@ export default function PlansView() {
           )
         }
       })
+    }
+  }, [])
+
+  const loadFavorites = useCallback(async () => {
+    console.log('[plans] loadFavorites called')
+    try {
+      const rows = await fetchFavoriteCities()
+      console.log('[plans] loadFavorites success', rows.length)
+      setFavorites(rows)
+      setFavoriteKeys(new Set(rows.map((r) => cityFavoriteKey(r.city_name, r.city_country))))
+    } catch (err) {
+      console.error('[plans] loadFavorites failed', err)
+      setFavorites([])
+      setFavoriteKeys(new Set())
     }
   }, [])
 
@@ -136,6 +162,7 @@ export default function PlansView() {
           setProfileReady(true)
         }
         await loadPlans()
+        await loadFavorites()
       } else {
         setProfileReady(true)
         setLoading(false)
@@ -148,6 +175,7 @@ export default function PlansView() {
       setUser(session?.user ? { id: session.user.id, firstName: firstNameFromUser(session.user) } : null)
       if (session?.user) {
         void loadPlans()
+        void loadFavorites()
         void fetchUserProfile().then((profile) => {
           setUserProfile(profile)
           setPaid(isPaidPlan(profile.plan))
@@ -156,6 +184,8 @@ export default function PlansView() {
       } else {
         setPlans([])
         setActiveId(null)
+        setFavorites([])
+        setFavoriteKeys(new Set())
         setProfileReady(true)
       }
     })
@@ -164,7 +194,7 @@ export default function PlansView() {
       cancelled = true
       subscription.unsubscribe()
     }
-  }, [loadPlans])
+  }, [loadPlans, loadFavorites])
 
   const activePlan = useMemo(
     () => plans.find((p) => p.id === activeId) ?? null,
@@ -181,6 +211,61 @@ export default function PlansView() {
   )
 
   const closingCtaHref = activePlan ? `/?savedPlan=${activePlan.id}` : '/pricing'
+
+  const flagByKey = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const plan of plans) {
+      for (const city of plan.city_results) {
+        map.set(cityFavoriteKey(city.name, city.country), city.flag)
+      }
+    }
+    return map
+  }, [plans])
+
+  const isCityFavorited = useCallback(
+    (cityName: string, cityCountry: string) =>
+      favoriteKeys.has(cityFavoriteKey(cityName, cityCountry)),
+    [favoriteKeys],
+  )
+
+  const toggleFavorite = useCallback(
+    async (cityName: string, cityCountry: string) => {
+      const key = cityFavoriteKey(cityName, cityCountry)
+      if (togglingFavoriteKey) return
+
+      const wasFavorited = favoriteKeys.has(key)
+      setTogglingFavoriteKey(key)
+      setFavoriteKeys((prev) => {
+        const next = new Set(prev)
+        if (wasFavorited) next.delete(key)
+        else next.add(key)
+        return next
+      })
+
+      try {
+        if (wasFavorited) {
+          await removeFavoriteCity(cityName, cityCountry)
+          setFavorites((prev) =>
+            prev.filter((f) => cityFavoriteKey(f.city_name, f.city_country) !== key),
+          )
+        } else {
+          const row = await addFavoriteCity(cityName, cityCountry)
+          setFavorites((prev) => [row, ...prev.filter((f) => f.id !== row.id)])
+        }
+      } catch {
+        setFavoriteKeys((prev) => {
+          const next = new Set(prev)
+          if (wasFavorited) next.add(key)
+          else next.delete(key)
+          return next
+        })
+        void loadFavorites()
+      } finally {
+        setTogglingFavoriteKey(null)
+      }
+    },
+    [favoriteKeys, togglingFavoriteKey, loadFavorites],
+  )
 
   function handleCityClick(city: CityResult, plan: SavedRetirementPlan) {
     setModalContext({
@@ -374,6 +459,16 @@ export default function PlansView() {
         </div>
       )}
 
+      {!loading && (
+        <FavoriteCitiesStrip
+          favorites={favorites}
+          flagByKey={flagByKey}
+          isFavorited={isCityFavorited}
+          onToggle={toggleFavorite}
+          togglingKey={togglingFavoriteKey}
+        />
+      )}
+
       {loading ? (
         <p style={{ color: 'rgba(240,237,232,0.45)' }}>Loading your plans…</p>
       ) : plans.length === 0 ? (
@@ -417,6 +512,7 @@ export default function PlansView() {
           >
             {plans.map((plan) => {
               const isActive = plan.id === activeId
+              const topCity = plan.city_results[0]
               return (
                 <div
                   key={plan.id}
@@ -431,8 +527,30 @@ export default function PlansView() {
                   <div style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)', marginBottom: 10 }}>
                     {formatPlanDate(plan.created_at)} · {plan.city_results.length} cities
                   </div>
-                  <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.7)', marginBottom: 14 }}>
-                    Top: {plan.city_results[0]?.flag} {plan.city_results[0]?.name} ({plan.city_results[0]?.score})
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      fontSize: 13,
+                      color: 'rgba(240,237,232,0.7)',
+                      marginBottom: 14,
+                    }}
+                  >
+                    <span>
+                      Top: {topCity?.flag} {topCity?.name} ({topCity?.score})
+                    </span>
+                    {topCity && (
+                      <CityFavoriteButton
+                        favorited={isCityFavorited(topCity.name, topCity.country)}
+                        onToggle={() => toggleFavorite(topCity.name, topCity.country)}
+                        disabled={
+                          togglingFavoriteKey === cityFavoriteKey(topCity.name, topCity.country)
+                        }
+                        cityLabel={`${topCity.name}, ${topCity.country}`}
+                      />
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     <button
@@ -506,39 +624,56 @@ export default function PlansView() {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {activePlan.city_results.slice(0, 12).map((city, i) => (
-                  <button
+                  <div
                     key={`${city.name}|${city.country}`}
-                    type="button"
-                    onClick={() => handleCityClick(city, activePlan)}
                     style={{
                       display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      padding: '10px 12px',
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.06)',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '4px 4px 4px 0',
                       borderRadius: 10,
-                      fontSize: 14,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      color: 'inherit',
-                      fontFamily: "'DM Sans', sans-serif",
-                      transition: 'border-color 0.15s, background 0.15s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(200,240,90,0.35)'
-                      e.currentTarget.style.background = 'rgba(200,240,90,0.04)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
                     }}
                   >
-                    <span>
-                      {i + 1}. {city.flag} {city.name}, {city.country}
-                    </span>
-                    <span style={{ color: '#c8f05a', fontWeight: 600 }}>{city.score}</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCityClick(city, activePlan)}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        padding: '10px 12px',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        borderRadius: 10,
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        color: 'inherit',
+                        fontFamily: "'DM Sans', sans-serif",
+                        transition: 'border-color 0.15s, background 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(200,240,90,0.35)'
+                        e.currentTarget.style.background = 'rgba(200,240,90,0.04)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                      }}
+                    >
+                      <span>
+                        {i + 1}. {city.flag} {city.name}, {city.country}
+                      </span>
+                      <span style={{ color: '#c8f05a', fontWeight: 600 }}>{city.score}</span>
+                    </button>
+                    <CityFavoriteButton
+                      favorited={isCityFavorited(city.name, city.country)}
+                      onToggle={() => toggleFavorite(city.name, city.country)}
+                      disabled={togglingFavoriteKey === cityFavoriteKey(city.name, city.country)}
+                      cityLabel={`${city.name}, ${city.country}`}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
