@@ -10,6 +10,7 @@ import BlueprintDecisionSection from '@/components/BlueprintDecisionSection'
 import RelocationRisksSection from '@/components/RelocationRisksSection'
 import LifeScoreSection from '@/components/LifeScoreSection'
 import NextStepsSection from '@/components/NextStepsSection'
+import TopCitiesComparisonSection from '@/components/TopCitiesComparisonSection'
 
 type Props = {
   plans: SavedRetirementPlan[]
@@ -169,6 +170,8 @@ export default function MyDocuments({ plans, loading, isBlueprint }: Props) {
       {documentPlans.length > 0 && <LifeScoreSection plans={documentPlans} />}
 
       {documentPlans.length > 0 && <NextStepsSection plans={documentPlans} />}
+
+      {documentPlans.length > 0 && <TopCitiesComparisonSection plans={documentPlans} />}
 
       {documentPlans.length === 0 ? (
         <div
