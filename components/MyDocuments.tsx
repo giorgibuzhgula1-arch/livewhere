@@ -7,6 +7,7 @@ import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
 import { fetchUserProfile, isBlueprintPlan } from '@/lib/plan'
 import { formatPlanDate, type SavedRetirementPlan } from '@/lib/saved-plans'
 import BlueprintDecisionSection from '@/components/BlueprintDecisionSection'
+import RelocationRisksSection from '@/components/RelocationRisksSection'
 
 type Props = {
   plans: SavedRetirementPlan[]
@@ -160,6 +161,8 @@ export default function MyDocuments({ plans, loading, isBlueprint }: Props) {
       </header>
 
       {documentPlans.length > 0 && <BlueprintDecisionSection plans={documentPlans} />}
+
+      {documentPlans.length > 0 && <RelocationRisksSection plans={documentPlans} />}
 
       {documentPlans.length === 0 ? (
         <div
