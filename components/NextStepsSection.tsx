@@ -80,7 +80,7 @@ function buildNextSteps(city: CityResult, plan: SavedRetirementPlan): NextStep[]
     {
       month: 5,
       title: `Move to ${city.name}`,
-      description: `Relocate to ${city.flag} ${city.name}, ${city.country}. With estimated monthly costs around $${city.monthlyCost.toLocaleString()} and take-home savings of $${Math.max(0, city.monthlySavings).toLocaleString()}/mo on your budget, finalize housing and local setup.`,
+      description: `Relocate to ${city.flag} ${city.name}, ${city.country}. With estimated monthly costs around $${city.monthlyCost.toLocaleString()} and estimated monthly savings of $${Math.max(0, city.monthlySavings).toLocaleString()}/mo on your budget, finalize housing and local setup.`,
     },
   ]
 }

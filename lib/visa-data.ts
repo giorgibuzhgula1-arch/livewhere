@@ -1922,12 +1922,52 @@ export interface VisaRecommendation {
   option: VisaOption
   qualifies: boolean
   reason: string
+  /** True when the only viable paths require a spouse/family sponsor the user did not indicate. */
+  requiresFamilySponsor?: boolean
+}
+
+/**
+ * Explicit quiz signals for a qualifying spouse/family sponsor in the destination.
+ * The general `family` lifestyle tag (relocating with household) does NOT count.
+ */
+const FAMILY_SPONSOR_SIGNAL_TAGS = ['family_sponsor_in_destination', 'spouse_in_destination'] as const
+
+function hasFamilySponsorSignal(lifestyle?: string[]): boolean {
+  if (!lifestyle?.length) return false
+  return FAMILY_SPONSOR_SIGNAL_TAGS.some((tag) => lifestyle.includes(tag))
+}
+
+function isFamilyContingentVisa(option: VisaOption): boolean {
+  const name = option.name.toLowerCase()
+  if (/\bspouse\b/.test(name)) return true
+  if (/\bfamily\b/.test(name) && /\bsponsor|stay|reunion|\//.test(name)) return true
+
+  return option.requirements.some((req) =>
+    /spouse of|dependent of eligible|qualifying spouse|family sponsor|citizen or pr sponsor/i.test(
+      req,
+    ),
+  )
+}
+
+function sortVisaOptions(options: VisaOption[]): VisaOption[] {
+  return [...options].sort((a, b) => {
+    const typeDiff = TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type]
+    if (typeDiff !== 0) return typeDiff
+    return DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty]
+  })
+}
+
+function filterAffordable(options: VisaOption[], monthlyBudget?: number): VisaOption[] {
+  if (typeof monthlyBudget !== 'number') return []
+  return options.filter((o) => o.minIncomeMonthly == null || monthlyBudget >= o.minIncomeMonthly)
 }
 
 /**
  * Rule-based recommendation: pick the best long-stay option the user
- * qualifies for given their monthly budget (vs minIncomeMonthly threshold),
- * falling back to the easiest path.
+ * qualifies for given their monthly budget (vs minIncomeMonthly threshold).
+ * Family/spouse-contingent visas are excluded unless the quiz includes an
+ * explicit sponsor-tie signal; when only family paths exist, the reason
+ * states the eligibility requirement prominently.
  */
 export function recommendVisa(
   info: CountryVisaInfo,
@@ -1939,17 +1979,13 @@ export function recommendVisa(
   const longStay = info.options.filter((o) => o.type !== 'Tourist Visa')
   const pool = longStay.length ? longStay : info.options
 
-  const sorted = [...pool].sort((a, b) => {
-    const typeDiff = TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type]
-    if (typeDiff !== 0) return typeDiff
-    return DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty]
-  })
+  const familySignal = hasFamilySponsorSignal(lifestyle)
+  const nonFamilyPool = pool.filter((o) => !isFamilyContingentVisa(o))
+  const familyOnlyFallback = !familySignal && nonFamilyPool.length === 0
+  const candidatePool = familySignal ? pool : nonFamilyPool.length > 0 ? nonFamilyPool : pool
 
-  const affordable =
-    typeof monthlyBudget === 'number'
-      ? sorted.filter((o) => o.minIncomeMonthly == null || monthlyBudget >= o.minIncomeMonthly)
-      : []
-
+  const sorted = sortVisaOptions(candidatePool)
+  const affordable = filterAffordable(sorted, monthlyBudget)
   const chosen = affordable[0] ?? sorted[0]
   const qualifies =
     typeof monthlyBudget !== 'number' ||
@@ -1964,17 +2000,26 @@ export function recommendVisa(
       ? ` Your interest in ${lifestyle.slice(0, 2).join(' and ').toLowerCase()} fits ${info.country} well.`
       : ''
 
+  const familyEligibilityPrefix = familyOnlyFallback
+    ? `Requires a qualifying spouse or family sponsor in ${info.country}. `
+    : ''
+
   let reason: string
   if (qualifies && chosen.minIncomeMonthly != null) {
-    reason = `Based on ${budgetText}, you comfortably meet the ${chosen.name}'s ~$${chosen.minIncomeMonthly.toLocaleString()}/mo requirement. It's a ${chosen.difficulty.toLowerCase()} application valid for ${chosen.duration.toLowerCase()}.${lifestyleHint}`
+    reason = `${familyEligibilityPrefix}Based on ${budgetText}, you comfortably meet the ${chosen.name}'s ~$${chosen.minIncomeMonthly.toLocaleString()}/mo requirement. It's a ${chosen.difficulty.toLowerCase()} application valid for ${chosen.duration.toLowerCase()}.${lifestyleHint}`
   } else if (qualifies) {
-    reason = `The ${chosen.name} has no fixed income floor and is a ${chosen.difficulty.toLowerCase()} path valid for ${chosen.duration.toLowerCase()} — a strong starting point for ${budgetText}.${lifestyleHint}`
+    reason = `${familyEligibilityPrefix}The ${chosen.name} has no fixed income floor and is a ${chosen.difficulty.toLowerCase()} path valid for ${chosen.duration.toLowerCase()} — a strong starting point for ${budgetText}.${lifestyleHint}`
   } else {
     const gap = chosen.minIncomeMonthly!
-    reason = `The ${chosen.name} typically expects ~$${gap.toLocaleString()}/mo, which is above ${budgetText}. Consider a tourist-visa stay first, or boost documented income before applying.${lifestyleHint}`
+    reason = `${familyEligibilityPrefix}The ${chosen.name} typically expects ~$${gap.toLocaleString()}/mo, which is above ${budgetText}. Consider a tourist-visa stay first, or boost documented income before applying.${lifestyleHint}`
   }
 
-  return { option: chosen, qualifies, reason }
+  return {
+    option: chosen,
+    qualifies,
+    reason,
+    requiresFamilySponsor: familyOnlyFallback,
+  }
 }
 
 export { VISA_DATA }
