@@ -6,6 +6,7 @@ import { exportRetirementReport } from '@/lib/export-pdf'
 import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
 import { fetchUserProfile, isBlueprintPlan } from '@/lib/plan'
 import { formatPlanDate, type SavedRetirementPlan } from '@/lib/saved-plans'
+import BlueprintDecisionSection from '@/components/BlueprintDecisionSection'
 
 type Props = {
   plans: SavedRetirementPlan[]
@@ -157,6 +158,8 @@ export default function MyDocuments({ plans, loading, isBlueprint }: Props) {
           ))}
         </ul>
       </header>
+
+      {documentPlans.length > 0 && <BlueprintDecisionSection plans={documentPlans} />}
 
       {documentPlans.length === 0 ? (
         <div
