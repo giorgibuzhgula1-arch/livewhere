@@ -150,6 +150,123 @@ function citiesToAvoid(ranked: CityResult[]): CityResult[] {
   return ranked.slice(-avoidCount).reverse()
 }
 
+/**
+ * Confidence from #1 match score plus separation from #2 in the same plan.
+ * gap = score(#1) - score(#2); if only one city, gap = 0.
+ * Formula: min(100, round(score + gap * 0.75))
+ */
+function calculateDecisionConfidence(recommended: CityResult, ranked: CityResult[]): number {
+  const gap = ranked.length >= 2 ? recommended.score - ranked[1].score : 0
+  return Math.min(100, Math.round(recommended.score + gap * 0.75))
+}
+
+function DecisionConfidenceBlock({
+  confidence,
+}: {
+  confidence: number
+}) {
+  return (
+    <div
+      style={{
+        ...cardStyle,
+        marginBottom: 16,
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, rgba(200,240,90,0.06) 0%, var(--surface) 55%)',
+        borderColor: 'rgba(200,240,90,0.18)',
+      }}
+    >
+      <p
+        style={{
+          fontFamily: fontFamilySans,
+          fontSize: 11,
+          letterSpacing: 1.5,
+          textTransform: 'uppercase',
+          color: '#c8f05a',
+          fontWeight: 600,
+          margin: '0 0 16px',
+        }}
+      >
+        Decision Confidence
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'center',
+          gap: 4,
+          marginBottom: 18,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: fontFamilySerif,
+            fontSize: 'clamp(48px, 8vw, 64px)',
+            fontWeight: 700,
+            lineHeight: 1,
+            letterSpacing: '-0.04em',
+            color: '#c8f05a',
+          }}
+        >
+          {confidence}
+        </span>
+        <span
+          style={{
+            fontFamily: fontFamilySans,
+            fontSize: 'clamp(24px, 4vw, 32px)',
+            fontWeight: 600,
+            color: 'rgba(240,237,232,0.45)',
+          }}
+        >
+          %
+        </span>
+      </div>
+
+      <div
+        role="progressbar"
+        aria-valuenow={confidence}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Decision confidence"
+        style={{
+          width: '100%',
+          maxWidth: 360,
+          height: 8,
+          borderRadius: 999,
+          background: 'rgba(255,255,255,0.1)',
+          overflow: 'hidden',
+          margin: '0 auto 18px',
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${confidence}%`,
+            borderRadius: 999,
+            background: '#c8f05a',
+          }}
+        />
+      </div>
+
+      <p
+        style={{
+          fontFamily: fontFamilySans,
+          fontSize: 14,
+          lineHeight: 1.65,
+          color: 'rgba(240,237,232,0.65)',
+          margin: 0,
+          maxWidth: 420,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}
+      >
+        LiveWhere estimates this city is your strongest overall match based on every factor
+        analyzed.
+      </p>
+    </div>
+  )
+}
+
 export default function BlueprintDecisionSection({ plans }: Props) {
   const plan = pickDecisionPlan(plans)
   if (!plan) return null
@@ -161,6 +278,7 @@ export default function BlueprintDecisionSection({ plans }: Props) {
   const avoid = citiesToAvoid(ranked)
   const whyBullets = buildWhyBullets(recommended, plan.quiz_input.priorities)
   const starRating = scoreToStarRating(recommended.score)
+  const decisionConfidence = calculateDecisionConfidence(recommended, ranked)
 
   return (
     <section style={{ marginBottom: 40, maxWidth: 720 }}>
@@ -244,6 +362,8 @@ export default function BlueprintDecisionSection({ plans }: Props) {
           </span>
         </div>
       </div>
+
+      <DecisionConfidenceBlock confidence={decisionConfidence} />
 
       {whyBullets.length > 0 && (
         <div style={{ ...cardStyle, marginBottom: 16 }}>
