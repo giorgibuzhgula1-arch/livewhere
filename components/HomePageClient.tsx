@@ -12,6 +12,7 @@ import Quiz from '@/components/Quiz'
 import RetirementStatsBar from '@/components/RetirementStatsBar'
 import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
+import LandingFaq from '@/components/LandingFaq'
 
 const Results = dynamic(() => import('@/components/Results'), { ssr: false })
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -821,6 +822,7 @@ export default function HomePageClient({
                 : undefined
             }
           />
+          <LandingFaq />
         </>
       )}
 
