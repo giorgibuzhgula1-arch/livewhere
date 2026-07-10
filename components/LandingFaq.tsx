@@ -67,10 +67,18 @@ function ChevronIcon({ open }: { open: boolean }) {
 }
 
 export default function LandingFaq() {
+  const [listExpanded, setListExpanded] = useState(false)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   function toggle(index: number) {
     setOpenIndex((prev) => (prev === index ? null : index))
+  }
+
+  function toggleList() {
+    setListExpanded((prev) => {
+      if (prev) setOpenIndex(null)
+      return !prev
+    })
   }
 
   return (
@@ -100,7 +108,45 @@ export default function LandingFaq() {
         Frequently Asked Questions
       </h2>
 
+      <button
+        type="button"
+        onClick={toggleList}
+        aria-expanded={listExpanded}
+        aria-controls="landing-faq-list"
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          padding: '18px 20px',
+          marginBottom: listExpanded ? 12 : 0,
+          background: listExpanded ? 'rgba(200, 240, 90, 0.04)' : '#12121a',
+          border: `1px solid ${listExpanded ? 'rgba(200, 240, 90, 0.35)' : 'rgba(255, 255, 255, 0.07)'}`,
+          borderRadius: 16,
+          cursor: 'pointer',
+          textAlign: 'left',
+          fontFamily: fontFamilySans,
+          transition: 'border-color 0.2s ease, background 0.2s ease',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 'clamp(15px, 2.5vw, 17px)',
+            fontWeight: 600,
+            lineHeight: 1.45,
+            color: listExpanded ? ACCENT : '#f0ede8',
+            transition: 'color 0.2s ease',
+          }}
+        >
+          {listExpanded ? 'Hide Questions' : 'View Frequently Asked Questions'}
+        </span>
+        <ChevronIcon open={listExpanded} />
+      </button>
+
+      {listExpanded && (
       <div
+        id="landing-faq-list"
         className="landing-faq-scroll"
         style={{
           maxHeight: 520,
@@ -187,6 +233,7 @@ export default function LandingFaq() {
         })}
         </div>
       </div>
+      )}
 
       <style>{`
         .landing-faq-scroll {
