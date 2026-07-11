@@ -910,10 +910,10 @@ export default function HomePageClient({
             textAlign: 'center',
             maxWidth: 480,
           }}>
-            Your top city matches are ready
+            Unlock Your Results.
           </h2>
           <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
-            Create a free account to view your matches — Google or email, no extra forms.
+            Sign in with Google or email to see your full relocation analysis — takes 10 seconds, no extra forms.
           </p>
           <button
             type="button"
