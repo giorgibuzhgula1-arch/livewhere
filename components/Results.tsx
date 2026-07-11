@@ -111,13 +111,11 @@ export default function Results({
     streaming && (maxCities == null || cities.length < maxCities)
   const [filter, setFilter] = useState('all')
   const [selectedCity, setSelectedCity] = useState<CityResult | null>(null)
-  const [linkCopied, setLinkCopied] = useState(false)
   const [plan, setPlan] = useState<UserPlan>('free')
   const [pdfLoading, setPdfLoading] = useState(false)
   const [compareSelection, setCompareSelection] = useState<CityResult[]>([])
   const [showComparison, setShowComparison] = useState(false)
   const [savePlanOpen, setSavePlanOpen] = useState(false)
-  const shareCardRef = useRef<HTMLDivElement>(null)
 
   const resultsTracked = useRef(false)
 
@@ -164,16 +162,6 @@ export default function Results({
   const top = ordered[0]
   const shareLine = top ? buildShareLine(top) : ''
   const siteUrl = getSiteUrl()
-
-  async function copySiteLink() {
-    try {
-      await navigator.clipboard.writeText(siteUrl)
-      setLinkCopied(true)
-      window.setTimeout(() => setLinkCopied(false), 2000)
-    } catch {
-      /* clipboard unavailable */
-    }
-  }
 
   function openShareUrl(url: string) {
     window.open(url, '_blank', 'noopener,noreferrer')
@@ -238,7 +226,9 @@ export default function Results({
             Based on everything you told us, we&apos;ve identified the cities where you&apos;ll thrive.
           </p>
           {top && (
-            <div style={{
+            <div
+              id="share-results"
+              style={{
               width: '100%',
               maxWidth: 640,
               background: 'linear-gradient(135deg, rgba(200,240,90,0.12) 0%, rgba(200,240,90,0.04) 100%)',
@@ -250,12 +240,21 @@ export default function Results({
                 fontSize: 21,
                 fontWeight: 700,
                 color: '#c8f05a',
-                marginBottom: 12,
+                marginBottom: 8,
                 fontFamily: "'DM Sans', sans-serif",
                 letterSpacing: 0.2,
               }}>
                 Share your results - help a friend plan their move
               </div>
+              <p style={{
+                fontSize: 14,
+                lineHeight: 1.6,
+                color: 'rgba(240,237,232,0.75)',
+                fontFamily: "'DM Sans', sans-serif",
+                margin: '0 0 12px',
+              }}>
+                {shareLine}
+              </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 <button
                   type="button"
@@ -373,7 +372,7 @@ export default function Results({
           {top && paid && (
             <button
               type="button"
-              onClick={() => shareCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              onClick={() => document.getElementById('share-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
               style={{
                 background: 'rgba(200,240,90,0.1)', border: '1px solid rgba(200,240,90,0.35)',
                 color: '#c8f05a', padding: '10px 18px', borderRadius: 10,
@@ -510,112 +509,6 @@ export default function Results({
               </div>
             ))}
           </div>
-        </motion.div>
-      )}
-
-      {top && paid && (
-        <motion.div
-          ref={shareCardRef}
-          id="share-match"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0 }}
-          style={{
-            background: '#1a1a26',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 16,
-            padding: 24,
-            marginBottom: 28,
-          }}
-        >
-          <div style={{
-            fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.2,
-            color: 'rgba(240,237,232,0.45)', marginBottom: 12, fontFamily: "'DM Sans', sans-serif"
-          }}>
-            Share your match
-          </div>
-          <p style={{
-            fontSize: 15, lineHeight: 1.65, color: 'rgba(240,237,232,0.92)',
-            fontFamily: "'DM Sans', sans-serif", marginBottom: 20
-          }}>
-            {shareLine}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            <button
-              type="button"
-              aria-label="Share on Facebook"
-              onClick={() =>
-                openShareUrl(
-                  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.livewhere.io')}`
-                )
-              }
-              style={{
-                flex: '1 1 120px',
-                minHeight: 44,
-                background: 'rgba(24,119,242,0.12)',
-                border: '1px solid rgba(24,119,242,0.12)',
-                color: '#7ab3ff',
-                padding: '10px 14px',
-                borderRadius: 10,
-                fontSize: 13,
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              Facebook
-            </button>
-            <button
-              type="button"
-              aria-label="Share on WhatsApp"
-              onClick={() =>
-                openShareUrl(`https://wa.me/?text=${encodeURIComponent(shareLine)}`)
-              }
-              style={{
-                flex: '1 1 120px',
-                minHeight: 44,
-                background: 'rgba(37,211,102,0.12)',
-                border: '1px solid rgba(37,211,102,0.35)',
-                color: '#afffc1',
-                padding: '10px 14px',
-                borderRadius: 10,
-                fontSize: 13,
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              WhatsApp
-            </button>
-            <button
-              type="button"
-              aria-label="Copy site link"
-              onClick={copySiteLink}
-              style={{
-                flex: '1 1 120px',
-                minHeight: 44,
-                background: linkCopied ? 'rgba(200,240,90,0.15)' : 'rgba(200,240,90,0.08)',
-                border: `1px solid ${linkCopied ? 'rgba(200,240,90,0.45)' : 'rgba(200,240,90,0.25)'}`,
-                color: '#c8f05a',
-                padding: '10px 14px',
-                borderRadius: 10,
-                fontSize: 13,
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              {linkCopied ? 'Copied!' : 'Copy link'}
-            </button>
-          </div>
-          <p style={{
-            fontSize: 12,
-            color: 'rgba(240,237,232,0.38)',
-            marginTop: 12,
-            fontFamily: "'DM Sans', sans-serif",
-          }}>
-            Let your friends find theirs too →
-          </p>
         </motion.div>
       )}
 
