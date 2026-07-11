@@ -41,6 +41,23 @@ function topMatchMetrics(city: CityResult) {
   ]
 }
 
+const EMOTIONAL_UNLOCK_ITEMS = [
+  '10-Year Savings',
+  'Tax Comparison',
+  'Healthcare Analysis',
+  'Best City Breakdown',
+  'Hidden Risks',
+  'Personalized Relocation Strategy',
+] as const
+
+/** Matches CityCard WhyThisMatchesYou / locked-card blur treatment. */
+const lockedPreviewBlur: React.CSSProperties = {
+  filter: 'blur(7px)',
+  userSelect: 'none',
+  pointerEvents: 'none',
+  opacity: 0.85,
+}
+
 interface Props {
   cities: CityResult[]
   onReset: () => void
@@ -665,6 +682,120 @@ export default function Results({
 
       {paid && showComparison && compareSelection.length >= 2 && (
         <CityComparison cities={compareSelection} currency={currency} />
+      )}
+
+      {locked && (
+        <div
+          style={{
+            marginTop: 40,
+            padding: '32px 28px',
+            background: 'linear-gradient(135deg, rgba(200,240,90,0.08) 0%, rgba(200,240,90,0.02) 100%)',
+            border: '1px solid rgba(200,240,90,0.25)',
+            borderRadius: 18,
+            textAlign: 'center',
+          }}
+        >
+          <h3
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 'clamp(22px, 3vw, 30px)',
+              fontWeight: 700,
+              lineHeight: 1.25,
+              letterSpacing: '-0.02em',
+              color: '#f0ede8',
+              margin: '0 0 16px',
+              maxWidth: 640,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            This Could Be One Of The Best Financial Decisions Of Your Life.
+          </h3>
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 15,
+              lineHeight: 1.65,
+              color: 'rgba(240,237,232,0.65)',
+              margin: '0 0 6px',
+              maxWidth: 520,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            You now know where you could save more, live better and enjoy a higher quality of life.
+          </p>
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 15,
+              lineHeight: 1.65,
+              color: 'rgba(240,237,232,0.65)',
+              margin: '0 0 28px',
+              maxWidth: 520,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            Don&apos;t make this decision with incomplete information.
+          </p>
+
+          <div
+            style={{
+              maxWidth: 480,
+              margin: '0 auto 28px',
+              textAlign: 'left',
+              background: '#12121a',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 14,
+              padding: '8px 0',
+            }}
+          >
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {EMOTIONAL_UNLOCK_ITEMS.map((label) => (
+                <li
+                  key={label}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    padding: '12px 18px',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 14,
+                  }}
+                >
+                  <span style={{ color: 'rgba(240,237,232,0.85)', fontWeight: 500 }}>
+                    {label}{' '}
+                    <span aria-hidden style={{ opacity: 0.7 }}>🔒</span>
+                  </span>
+                  <span aria-hidden style={lockedPreviewBlur}>
+                    Preview data
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onUnlockPro?.()}
+            style={{
+              background: '#c8f05a',
+              color: '#0a0a0f',
+              border: 'none',
+              padding: '14px 28px',
+              borderRadius: 12,
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Unlock My Complete Relocation Blueprint
+          </button>
+        </div>
       )}
 
       {isBlueprint && (
