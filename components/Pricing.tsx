@@ -27,6 +27,7 @@ type PricingTier = {
   tierLabel: string
   headline: string
   price: string
+  originalPrice?: string
   period: string
   subheadline?: string
   features: PlanFeature[]
@@ -142,6 +143,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       tierLabel: 'PRO',
       headline: 'Make Your Decision With Confidence',
       price: '$79',
+      originalPrice: '$149',
       period: 'one-time',
       subheadline: 'One-time payment. Lifetime access.',
       popular: true,
@@ -166,6 +168,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       tierLabel: 'BLUEPRINT',
       headline: 'Your Personal Relocation Strategy',
       price: isProUpgrade ? '$120' : '$199',
+      originalPrice: isProUpgrade ? undefined : '$399',
       period: 'one-time',
       features: [
         { text: 'Personalized relocation blueprint' },
@@ -193,6 +196,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       tierLabel: 'MONITOR',
       headline: 'Stay Ahead Of Every Change',
       price: '$14.99',
+      originalPrice: '$24.99',
       period: '/month',
       subheadline: 'Never be surprised by',
       features: [
@@ -360,9 +364,24 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
                   fontWeight: 900,
                   marginBottom: 4,
                   lineHeight: 1,
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 10,
                 }}
               >
-                {tier.price}
+                {tier.originalPrice && (
+                  <span
+                    style={{
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: 'rgba(240,237,232,0.35)',
+                      textDecoration: 'line-through',
+                    }}
+                  >
+                    {tier.originalPrice}
+                  </span>
+                )}
+                <span>{tier.price}</span>
               </div>
               <div
                 style={{
