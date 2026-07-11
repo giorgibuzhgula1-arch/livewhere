@@ -58,6 +58,35 @@ const lockedPreviewBlur: React.CSSProperties = {
   opacity: 0.85,
 }
 
+/**
+ * Split aiInsight for paywall teaser: first sentence clear, remainder blurred.
+ * Falls back to first ~40% when there is only one sentence (no period with trailing text).
+ */
+function splitAiInsightPreview(text: string): { clear: string; blurred: string } | null {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+
+  const dotIndex = trimmed.indexOf('.')
+  if (dotIndex > 0 && dotIndex < trimmed.length - 1) {
+    const afterDot = trimmed.slice(dotIndex + 1).trim()
+    if (afterDot.length > 0) {
+      return {
+        clear: trimmed.slice(0, dotIndex + 1),
+        blurred: afterDot,
+      }
+    }
+  }
+
+  const splitAt = Math.max(1, Math.ceil(trimmed.length * 0.4))
+  const blurred = trimmed.slice(splitAt)
+  if (!blurred) return null
+
+  return {
+    clear: trimmed.slice(0, splitAt),
+    blurred,
+  }
+}
+
 interface Props {
   cities: CityResult[]
   onReset: () => void
@@ -526,6 +555,63 @@ export default function Results({
               </div>
             ))}
           </div>
+
+          {locked && top.aiInsight && (() => {
+            const insightParts = splitAiInsightPreview(top.aiInsight)
+            if (!insightParts) return null
+            return (
+              <div
+                style={{
+                  marginTop: 20,
+                  paddingTop: 20,
+                  borderTop: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: 'uppercase',
+                    color: '#c8f05a',
+                    fontWeight: 600,
+                    marginBottom: 12,
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  AI Summary
+                </div>
+                <p
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.7,
+                    color: 'rgba(240,237,232,0.88)',
+                    fontFamily: "'DM Sans', sans-serif",
+                    margin: '0 0 16px',
+                  }}
+                >
+                  {insightParts.clear}{' '}
+                  <span style={lockedPreviewBlur}>{insightParts.blurred}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onUnlockPro?.()}
+                  style={{
+                    background: '#c8f05a',
+                    color: '#0a0a0f',
+                    border: 'none',
+                    padding: '10px 18px',
+                    borderRadius: 10,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  Unlock My Complete Relocation Blueprint
+                </button>
+              </div>
+            )
+          })()}
         </motion.div>
       )}
 
