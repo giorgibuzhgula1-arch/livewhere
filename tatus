@@ -1,0 +1,26 @@
+[1mdiff --git a/components/Results.tsx b/components/Results.tsx[m
+[1mindex 077947c..b01afc1 100644[m
+[1m--- a/components/Results.tsx[m
+[1m+++ b/components/Results.tsx[m
+[36m@@ -202,8 +202,20 @@[m [mexport default function Results({[m
+       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>[m
+         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>[m
+           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700 }}>[m
+[31m-            Top matches <span style={{ color: '#c8f05a' }}>for you</span>[m
+[32m+[m[32m            Congratulations. We Found Your Best Relocation Matches.[m
+           </h2>[m
+[32m+[m[32m          <p[m
+[32m+[m[32m            style={{[m
+[32m+[m[32m              fontFamily: "'DM Sans', sans-serif",[m
+[32m+[m[32m              fontSize: 15,[m
+[32m+[m[32m              lineHeight: 1.6,[m
+[32m+[m[32m              color: 'rgba(240,237,232,0.55)',[m
+[32m+[m[32m              margin: 0,[m
+[32m+[m[32m              maxWidth: 640,[m
+[32m+[m[32m            }}[m
+[32m+[m[32m          >[m
+[32m+[m[32m            Based on everything you told us, we&apos;ve identified the cities where you&apos;ll thrive.[m
+[32m+[m[32m          </p>[m
+           {top && ([m
+             <div style={{[m
+               width: '100%',[m

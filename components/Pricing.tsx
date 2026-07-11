@@ -115,7 +115,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
     loadingPlan === 'blueprint' || loadingPlan === 'blueprint_upgrade'
       ? 'Loading…'
       : isProUpgrade
-        ? 'Continue to Blueprint — $100'
+        ? 'Continue to Blueprint — $70'
         : 'Build My Relocation Strategy'
 
   const tiers: PricingTier[] = [
@@ -141,7 +141,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       id: 'pro',
       tierLabel: 'PRO',
       headline: 'Make Your Decision With Confidence',
-      price: '$49',
+      price: '$79',
       period: 'one-time',
       subheadline: 'One-time payment. Lifetime access.',
       popular: true,
@@ -159,13 +159,13 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       btn: loadingPlan === 'pro' ? 'Loading…' : 'Unlock My Full Analysis',
       style: 'primary',
       checkoutType: 'pro',
-      note: 'Already have Pro? Continue to Blueprint — pay only $100 more.',
+      note: 'Already have Pro? Continue to Blueprint — pay only $70 more.',
     },
     {
       id: 'blueprint',
       tierLabel: 'BLUEPRINT',
       headline: 'Your Personal Relocation Strategy',
-      price: isProUpgrade ? '$100' : '$149',
+      price: isProUpgrade ? '$70' : '$149',
       period: 'one-time',
       features: [
         { text: 'Personalized relocation blueprint' },
@@ -185,7 +185,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
       checkoutType: blueprintCheckout,
       valueSummary: isProUpgrade ? undefined : 'Total value: $269 — yours for $149',
       note: isProUpgrade
-        ? "Pro member price — you've already paid $49. Total value: $269"
+        ? "Pro member price — you've already paid $79. Total value: $269"
         : undefined,
     },
     {

@@ -395,7 +395,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
           onClick={(e) => { e.stopPropagation(); onUnlock?.() }}
           style={{ width: '100%', background: '#c8f05a', color: '#0a0a0f', border: 'none', padding: '12px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
         >
-          Get My Retirement Plan — $49
+          Get My Retirement Plan — $79
         </button>
       </div>
     )

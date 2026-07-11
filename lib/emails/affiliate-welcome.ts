@@ -1,4 +1,4 @@
-const PRO_PRICE = 49
+const PRO_PRICE = 79
 const LIFETIME_PRICE = 149
 const DEFAULT_COMMISSION_RATE = 0.4
 

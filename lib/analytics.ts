@@ -29,7 +29,7 @@ function oncePerTransaction(transactionId: string): boolean {
 export type PremiumPlan = 'pro' | 'blueprint' | 'blueprint_upgrade' | 'monitor'
 
 const PLAN_VALUES: Record<PremiumPlan, number> = {
-  pro: 49,
+  pro: 79,
   blueprint: 149,
   blueprint_upgrade: 100,
   monitor: 9.99,
