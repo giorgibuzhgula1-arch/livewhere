@@ -626,7 +626,7 @@ export default function Results({
           lineHeight: 1.6,
           color: 'rgba(240,237,232,0.7)',
         }}>
-          You&apos;re viewing your <strong style={{ color: '#c8f05a' }}>#1 match in full</strong> — take-home pay, costs, climate, safety, pros/cons and visa path. Continue to Pro to unlock all 12 matches.
+          You&apos;re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. Unlock your full AI analysis and all 12 matches with Pro.
         </div>
       )}
 
