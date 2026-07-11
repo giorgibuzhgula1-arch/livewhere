@@ -20,6 +20,27 @@ function buildShareLine(city: CityResult): string {
   return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
 }
 
+function getScoreColor(score: number) {
+  if (score >= 80) return '#c8f05a'
+  if (score >= 65) return '#f0c85a'
+  return '#f05a8c'
+}
+
+/** Average of tax + housing sub-scores (both 0–100 on CityResult). */
+function financialFitScore(city: CityResult): number {
+  return Math.round((city.scores.tax + city.scores.housing) / 2)
+}
+
+function topMatchMetrics(city: CityResult) {
+  return [
+    { label: 'Financial Fit', score: financialFitScore(city) },
+    { label: 'Safety', score: city.scores.safety },
+    { label: 'Health', score: city.scores.health },
+    { label: 'Stability', score: city.scores.stability },
+    { label: 'Climate', score: city.scores.climate },
+  ]
+}
+
 interface Props {
   cities: CityResult[]
   onReset: () => void
@@ -372,23 +393,123 @@ export default function Results({
         </div>
       </div>
 
-      {/* AI Insight — shown for the fully-unlocked #1 match (free + paid) */}
-      {top && isUnlocked(top) && top.aiInsight && (
+      {/* #1 match score + key metrics (free + paid) */}
+      {top && isUnlocked(top) && (
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           style={{
             background: 'rgba(200,240,90,0.04)', border: '1px solid rgba(200,240,90,0.15)',
-            borderRadius: 16, padding: 24, marginBottom: 28, display: 'flex', gap: 16
+            borderRadius: 16, padding: 24, marginBottom: 28,
           }}
         >
           <div style={{
-            width: 36, height: 36, background: 'rgba(200,240,90,0.15)', borderRadius: 10,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0
-          }}>✦</div>
-          <p style={{ fontSize: 14, lineHeight: 1.7 }}>
-            <strong style={{ color: '#c8f05a' }}>{top.flag} {top.name}</strong> is your #1 match.{' '}
-            {top.aiInsight}
-          </p>
+            fontSize: 11,
+            letterSpacing: 1.5,
+            textTransform: 'uppercase',
+            color: '#c8f05a',
+            fontWeight: 600,
+            marginBottom: 16,
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
+            Your #1 match
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            marginBottom: 20,
+            flexWrap: 'wrap',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 36 }}>{top.flag}</span>
+              <div>
+                <div style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: '#f0ede8',
+                  lineHeight: 1.2,
+                }}>
+                  {top.name}
+                </div>
+                <div style={{
+                  fontSize: 13,
+                  color: 'rgba(240,237,232,0.45)',
+                  fontFamily: "'DM Sans', sans-serif",
+                  marginTop: 2,
+                }}>
+                  {top.country}
+                </div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 48,
+                fontWeight: 900,
+                color: getScoreColor(top.score),
+                lineHeight: 1,
+              }}>
+                {top.score}
+              </div>
+              <div style={{
+                fontSize: 11,
+                color: 'rgba(240,237,232,0.45)',
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                fontFamily: "'DM Sans', sans-serif",
+                marginTop: 4,
+              }}>
+                match score
+              </div>
+            </div>
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+            gap: 10,
+          }}>
+            {topMatchMetrics(top).map(({ label, score }) => (
+              <div
+                key={label}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 12,
+                  padding: '12px 14px',
+                }}
+              >
+                <div style={{
+                  fontSize: 10,
+                  color: 'rgba(240,237,232,0.45)',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  marginBottom: 6,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  {label}
+                </div>
+                <div style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: getScoreColor(score),
+                  lineHeight: 1,
+                }}>
+                  {score}
+                  <span style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: 'rgba(240,237,232,0.35)',
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}>
+                    /100
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </motion.div>
       )}
 
