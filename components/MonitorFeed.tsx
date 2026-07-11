@@ -177,7 +177,7 @@ export default function MonitorFeed({ userProfile }: Props) {
                 lineHeight: 1.35,
               }}
             >
-              Add Monitor only — $9.99/month
+              Add Monitor only — $14.99/month
             </h3>
             <div style={{ flex: 1 }} />
             <button
@@ -239,7 +239,7 @@ export default function MonitorFeed({ userProfile }: Props) {
                 color: '#c8f05a',
               }}
             >
-              Continue to Blueprint — $100 one-time
+              Continue to Blueprint — $120 one-time
             </h3>
             <p
               style={{
@@ -313,8 +313,8 @@ export default function MonitorFeed({ userProfile }: Props) {
           }}
         >
           {isPro
-            ? 'Get weekly alerts when taxes, visa rules, healthcare scores, or cost of living change for your top saved cities. Add Monitor to your Pro plan for $9.99/month.'
-            : 'Your included 12 months of Monitor has ended. Continue weekly city alerts for $9.99/month.'}
+            ? 'Get weekly alerts when taxes, visa rules, healthcare scores, or cost of living change for your top saved cities. Add Monitor to your Pro plan for $14.99/month.'
+            : 'Your included 12 months of Monitor has ended. Continue weekly city alerts for $14.99/month.'}
         </p>
         {error && (
           <p
@@ -344,7 +344,7 @@ export default function MonitorFeed({ userProfile }: Props) {
             opacity: checkoutLoading !== null ? 0.7 : 1,
           }}
         >
-          {checkoutLoading === 'monitor' ? 'Loading…' : 'Add Monitor — $9.99/month'}
+          {checkoutLoading === 'monitor' ? 'Loading…' : 'Add Monitor — $14.99/month'}
         </button>
       </div>
     )

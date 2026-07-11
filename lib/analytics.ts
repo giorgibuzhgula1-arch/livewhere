@@ -30,9 +30,9 @@ export type PremiumPlan = 'pro' | 'blueprint' | 'blueprint_upgrade' | 'monitor'
 
 const PLAN_VALUES: Record<PremiumPlan, number> = {
   pro: 79,
-  blueprint: 149,
-  blueprint_upgrade: 100,
-  monitor: 9.99,
+  blueprint: 199,
+  blueprint_upgrade: 120,
+  monitor: 14.99,
 }
 
 export function trackHeroCtaClick(location = 'hero') {

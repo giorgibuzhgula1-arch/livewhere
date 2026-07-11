@@ -1,5 +1,5 @@
 const PRO_PRICE = 79
-const LIFETIME_PRICE = 149
+const LIFETIME_PRICE = 199
 const DEFAULT_COMMISSION_RATE = 0.4
 
 function formatUsd(amount: number): string {
