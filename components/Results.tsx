@@ -202,8 +202,20 @@ export default function Results({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700 }}>
-            Top matches <span style={{ color: '#c8f05a' }}>for you</span>
+            Congratulations. We Found Your Best Relocation Matches.
           </h2>
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 15,
+              lineHeight: 1.6,
+              color: 'rgba(240,237,232,0.55)',
+              margin: 0,
+              maxWidth: 640,
+            }}
+          >
+            Based on everything you told us, we&apos;ve identified the cities where you&apos;ll thrive.
+          </p>
           {top && (
             <div style={{
               width: '100%',
