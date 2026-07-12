@@ -28,16 +28,19 @@ function getScoreColor(score: number) {
 
 /** Average of tax + housing sub-scores (both 0–100 on CityResult). */
 function financialFitScore(city: CityResult): number {
-  return Math.round((city.scores.tax + city.scores.housing) / 2)
+  const tax = city.scores?.tax ?? 0
+  const housing = city.scores?.housing ?? 0
+  return Math.round((tax + housing) / 2)
 }
 
 function topMatchMetrics(city: CityResult) {
+  const scores = city.scores
   return [
     { label: 'Financial Fit', score: financialFitScore(city) },
-    { label: 'Safety', score: city.scores.safety },
-    { label: 'Health', score: city.scores.health },
-    { label: 'Stability', score: city.scores.stability },
-    { label: 'Climate', score: city.scores.climate },
+    { label: 'Safety', score: scores?.safety ?? 0 },
+    { label: 'Health', score: scores?.health ?? 0 },
+    { label: 'Stability', score: scores?.stability ?? 0 },
+    { label: 'Climate', score: scores?.climate ?? 0 },
   ]
 }
 
@@ -70,7 +73,8 @@ const lockedPreviewBlur: React.CSSProperties = {
  * Split aiInsight for paywall teaser: first sentence clear, remainder blurred.
  * Falls back to first ~40% when there is only one sentence (no period with trailing text).
  */
-function splitAiInsightPreview(text: string): { clear: string; blurred: string } | null {
+function splitAiInsightPreview(text: unknown): { clear: string; blurred: string } | null {
+  if (typeof text !== 'string') return null
   const trimmed = text.trim()
   if (!trimmed) return null
 
@@ -564,7 +568,7 @@ export default function Results({
             ))}
           </div>
 
-          {locked && top.aiInsight && (() => {
+          {locked && (() => {
             const insightParts = splitAiInsightPreview(top.aiInsight)
             if (!insightParts) return null
             return (
