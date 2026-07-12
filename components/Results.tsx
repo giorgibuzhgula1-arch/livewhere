@@ -578,7 +578,7 @@ export default function Results({
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
-                  AI Summary
+                  Why This City
                 </div>
                 <p
                   style={{
@@ -626,7 +626,7 @@ export default function Results({
           lineHeight: 1.6,
           color: 'rgba(240,237,232,0.7)',
         }}>
-          You&apos;re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. Unlock your full AI analysis and all 12 matches with Pro.
+          You&apos;re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. Unlock the full breakdown we prepared and all 12 matches with Pro.
         </div>
       )}
 
