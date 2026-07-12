@@ -30,6 +30,7 @@ type PricingTier = {
   originalPrice?: string
   period: string
   subheadline?: string
+  progressionLine?: string
   features: PlanFeature[]
   whoIsThisFor?: string
   btn: string
@@ -141,14 +142,15 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
     {
       id: 'pro',
       tierLabel: 'PRO',
-      headline: 'Make Your Decision With Confidence',
+      headline: 'See Every Match — Decide With Confidence',
       price: '$79',
       originalPrice: '$149',
       period: 'one-time',
       subheadline: 'One-time payment. Lifetime access.',
+      progressionLine: 'Everything in Free, plus:',
       popular: true,
       features: [
-        { text: 'See every city that matches you' },
+        { text: 'All 12 matched cities unlocked' },
         { text: 'Compare every destination side by side' },
         { text: 'Discover hidden financial risks' },
         { text: 'See your complete cost breakdown' },
@@ -166,10 +168,12 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
     {
       id: 'blueprint',
       tierLabel: 'BLUEPRINT',
-      headline: 'Your Personal Relocation Strategy',
+      headline: 'Your Full Relocation Strategy — Built For You',
       price: isProUpgrade ? '$120' : '$199',
       originalPrice: isProUpgrade ? undefined : '$399',
       period: 'one-time',
+      subheadline: 'One-time payment. Your complete relocation playbook.',
+      progressionLine: 'Everything in Pro, plus:',
       features: [
         { text: 'Personalized relocation blueprint' },
         { text: 'Ten-year financial projection' },
@@ -180,7 +184,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
         { text: 'Risk assessment' },
         { text: 'AI Relocation Strategy' },
         { text: 'Relocation action plan' },
-        { text: '12 months of monitoring included' },
+        { text: '12 months of change monitoring included' },
       ],
       whoIsThisFor: "I'm making a life-changing decision.",
       btn: blueprintBtn,
@@ -402,6 +406,19 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
                   }}
                 >
                   {tier.subheadline}
+                </p>
+              )}
+              {tier.progressionLine && (
+                <p
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#c8f05a',
+                    marginBottom: 12,
+                    marginTop: 0,
+                  }}
+                >
+                  {tier.progressionLine}
                 </p>
               )}
               <ul style={{ listStyle: 'none', margin: '0 0 20px', padding: 0, flex: 1 }}>
