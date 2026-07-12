@@ -948,6 +948,17 @@ export default function Results({
           >
             Unlock My Complete Relocation Blueprint
           </button>
+          <p
+            style={{
+              margin: '12px 0 0',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: 'rgba(240,237,232,0.5)',
+            }}
+          >
+            Make your relocation decision with confidence — or get your money back.
+          </p>
         </div>
       )}
 
