@@ -845,6 +845,9 @@ export default function HomePageClient({
           <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, textAlign: 'center' }}>
             Starting your personalized analysis…
           </p>
+          <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, textAlign: 'center' }}>
+            Calculating what most people never compare.
+          </p>
         </div>
       )}
 

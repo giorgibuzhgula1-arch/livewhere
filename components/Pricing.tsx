@@ -408,6 +408,19 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
                   {tier.subheadline}
                 </p>
               )}
+              {tier.id === 'pro' && (
+                <p
+                  style={{
+                    fontSize: 13,
+                    fontStyle: 'italic',
+                    lineHeight: 1.5,
+                    color: 'rgba(240,237,232,0.5)',
+                    margin: '-8px 0 16px',
+                  }}
+                >
+                  You&apos;re not buying data. You&apos;re buying confidence.
+                </p>
+              )}
               {tier.progressionLine && (
                 <p
                   style={{

@@ -522,6 +522,17 @@ export default function Results({
               </div>
             </div>
           </div>
+          <p
+            style={{
+              fontSize: 13,
+              color: 'rgba(240,237,232,0.45)',
+              fontFamily: "'DM Sans', sans-serif",
+              margin: '0 0 16px',
+              lineHeight: 1.5,
+            }}
+          >
+            We eliminate bad options before recommending good ones.
+          </p>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
@@ -864,6 +875,20 @@ export default function Results({
           >
             This Could Be One Of The Best Financial Decisions Of Your Life.
           </h3>
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: 'rgba(240,237,232,0.5)',
+              margin: '0 0 16px',
+              maxWidth: 520,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            Moving is expensive. Guessing is even more expensive.
+          </p>
           <p
             style={{
               fontFamily: "'DM Sans', sans-serif",
