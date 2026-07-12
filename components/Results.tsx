@@ -50,6 +50,14 @@ const EMOTIONAL_UNLOCK_ITEMS = [
   'Personalized Relocation Strategy',
 ] as const
 
+const WHAT_YOU_LL_GET_ITEMS = [
+  'Know exactly where you\'ll save the most money',
+  'Know which cities keep you safe and healthy',
+  'Know the tax rules before you move, not after',
+  'Know your real monthly budget abroad',
+  'Know your best-fit city before making a decision this big',
+] as const
+
 /** Matches CityCard WhyThisMatchesYou / locked-card blur treatment. */
 const lockedPreviewBlur: React.CSSProperties = {
   filter: 'blur(7px)',
@@ -768,6 +776,61 @@ export default function Results({
 
       {paid && showComparison && compareSelection.length >= 2 && (
         <CityComparison cities={compareSelection} currency={currency} />
+      )}
+
+      {locked && (
+        <div
+          style={{
+            marginTop: 40,
+            maxWidth: 640,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}
+        >
+          <h3
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 'clamp(22px, 3vw, 30px)',
+              fontWeight: 700,
+              lineHeight: 1.25,
+              letterSpacing: '-0.02em',
+              color: '#f0ede8',
+              margin: '0 0 20px',
+              textAlign: 'center',
+            }}
+          >
+            What You&apos;ll Get
+          </h3>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {WHAT_YOU_LL_GET_ITEMS.map((item) => (
+              <li
+                key={item}
+                style={{
+                  fontSize: 13,
+                  padding: '8px 0',
+                  borderBottom: '1px solid rgba(255,255,255,0.07)',
+                  display: 'flex',
+                  gap: 8,
+                  alignItems: 'center',
+                  color: 'rgba(240,237,232,0.65)',
+                  lineHeight: 1.45,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                <span
+                  style={{
+                    color: '#c8f05a',
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}
+                >
+                  ✓
+                </span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {locked && (
