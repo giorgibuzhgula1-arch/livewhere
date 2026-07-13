@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CityResult } from '@/lib/types'
 import { isPaidPlan, type UserPlan } from '@/lib/plan'
 import VisaAnalysis from './VisaAnalysis'
+import { scoreMetricExplanationLine, type ScoreMetricKind } from './Results'
 
 interface Props {
   city: CityResult
@@ -234,14 +235,26 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
             {/* Scores */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
               {[
-                { num: city.score, label: 'Match', color: getColor(city.score) },
-                { num: city.scores.climate, label: 'Climate', color: getColor(city.scores.climate) },
-                { num: city.scores.safety, label: 'Safety', color: getColor(city.scores.safety) },
-                { num: city.scores.stability, label: 'Stability', color: getColor(city.scores.stability) },
-              ].map(({ num, label, color }) => (
+                { num: city.score, label: 'Match', color: getColor(city.score), kind: 'match' as ScoreMetricKind },
+                { num: city.scores.climate, label: 'Climate', color: getColor(city.scores.climate), kind: 'climate' as ScoreMetricKind },
+                { num: city.scores.safety, label: 'Safety', color: getColor(city.scores.safety), kind: 'safety' as ScoreMetricKind },
+                { num: city.scores.stability, label: 'Stability', color: getColor(city.scores.stability), kind: 'stability' as ScoreMetricKind },
+              ].map(({ num, label, color, kind }) => (
                 <div key={label} style={{ background: '#1a1a26', borderRadius: 14, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color }}>{num}</div>
                   <div style={{ fontSize: 11, color: 'rgba(240,237,232,0.45)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 }}>{label}</div>
+                  <p
+                    style={{
+                      fontSize: 10,
+                      lineHeight: 1.45,
+                      color: 'rgba(240,237,232,0.4)',
+                      margin: '8px 0 0',
+                      fontFamily: "'DM Sans', sans-serif",
+                      textAlign: 'center',
+                    }}
+                  >
+                    {scoreMetricExplanationLine(label, num, kind)}
+                  </p>
                 </div>
               ))}
             </div>

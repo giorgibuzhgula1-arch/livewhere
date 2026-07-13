@@ -37,12 +37,96 @@ function financialFitScore(city: CityResult): number {
 function topMatchMetrics(city: CityResult) {
   const scores = city.scores
   return [
-    { label: 'Financial Fit', score: financialFitScore(city) },
-    { label: 'Safety', score: scores?.safety ?? 0 },
-    { label: 'Health', score: scores?.health ?? 0 },
-    { label: 'Stability', score: scores?.stability ?? 0 },
-    { label: 'Climate', score: scores?.climate ?? 0 },
+    { label: 'Financial Fit', score: financialFitScore(city), kind: 'financial_fit' as const },
+    { label: 'Safety', score: scores?.safety ?? 0, kind: 'safety' as const },
+    { label: 'Health', score: scores?.health ?? 0, kind: 'health' as const },
+    { label: 'Stability', score: scores?.stability ?? 0, kind: 'stability' as const },
+    { label: 'Climate', score: scores?.climate ?? 0, kind: 'climate' as const },
   ]
+}
+
+export type ScoreMetricKind =
+  | 'safety'
+  | 'health'
+  | 'healthcare'
+  | 'stability'
+  | 'climate'
+  | 'financial_fit'
+  | 'match'
+  | 'overall'
+
+type ScoreTier = 'excellent' | 'strong' | 'moderate' | 'weak'
+
+function scoreTier(score: number): ScoreTier {
+  if (score >= 85) return 'excellent'
+  if (score >= 70) return 'strong'
+  if (score >= 55) return 'moderate'
+  return 'weak'
+}
+
+/** Qualitative labels aligned with compare-verdict COMPARE_METRICS terminology (0–100 scale). */
+function qualitativePhrase(kind: ScoreMetricKind, score: number): string {
+  const tier = scoreTier(score)
+  const phrases: Record<ScoreMetricKind, Record<ScoreTier, string>> = {
+    safety: {
+      excellent: 'Very Low Violent Crime',
+      strong: 'Low Crime Risk',
+      moderate: 'Moderate Safety Level',
+      weak: 'Higher Crime Concerns',
+    },
+    health: {
+      excellent: 'Excellent Healthcare Access',
+      strong: 'Strong Healthcare Quality',
+      moderate: 'Adequate Healthcare',
+      weak: 'Limited Healthcare Access',
+    },
+    healthcare: {
+      excellent: 'Excellent Healthcare Access',
+      strong: 'Strong Healthcare Quality',
+      moderate: 'Adequate Healthcare',
+      weak: 'Limited Healthcare Access',
+    },
+    stability: {
+      excellent: 'Very Stable Political Environment',
+      strong: 'Stable Political Environment',
+      moderate: 'Moderate Political Stability',
+      weak: 'Elevated Political Risk',
+    },
+    climate: {
+      excellent: 'Ideal Climate Fit',
+      strong: 'Strong Climate Fit',
+      moderate: 'Moderate Climate Fit',
+      weak: 'Poor Climate Fit',
+    },
+    financial_fit: {
+      excellent: 'Strong Financial Fit',
+      strong: 'Good Financial Fit',
+      moderate: 'Moderate Financial Fit',
+      weak: 'Weak Financial Fit',
+    },
+    match: {
+      excellent: 'Excellent Overall Match',
+      strong: 'Strong Overall Match',
+      moderate: 'Moderate Overall Match',
+      weak: 'Weak Overall Match',
+    },
+    overall: {
+      excellent: 'Excellent Overall Score',
+      strong: 'Strong Overall Score',
+      moderate: 'Moderate Overall Score',
+      weak: 'Weak Overall Score',
+    },
+  }
+  return phrases[kind][tier]
+}
+
+export function scoreMetricExplanationLine(
+  label: string,
+  score: number,
+  kind: ScoreMetricKind,
+): string {
+  const scoreText = Number.isInteger(score) ? String(score) : score.toFixed(1)
+  return `${label}: ${scoreText} — ${qualitativePhrase(kind, score)}`
 }
 
 const EMOTIONAL_UNLOCK_ITEMS = [
@@ -578,7 +662,7 @@ export default function Results({
             gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
             gap: 10,
           }}>
-            {topMatchMetrics(top).map(({ label, score }) => (
+            {topMatchMetrics(top).map(({ label, score, kind }) => (
               <div
                 key={label}
                 style={{
@@ -615,6 +699,17 @@ export default function Results({
                     /100
                   </span>
                 </div>
+                <p
+                  style={{
+                    fontSize: 10,
+                    lineHeight: 1.45,
+                    color: 'rgba(240,237,232,0.45)',
+                    margin: '8px 0 0',
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  {scoreMetricExplanationLine(label, score, kind)}
+                </p>
               </div>
             ))}
           </div>
