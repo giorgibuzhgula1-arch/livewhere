@@ -14,6 +14,7 @@ import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
 import LandingFaq from '@/components/LandingFaq'
 import LandingFooter from '@/components/LandingFooter'
+import { fontFamilySerif } from '@/lib/fonts'
 
 const Results = dynamic(() => import('@/components/Results'), { ssr: false })
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false })
@@ -149,12 +150,10 @@ function DataSourcesAttribution() {
   return (
     <aside
       style={{
-        maxWidth: 520,
+        maxWidth: 1000,
         margin: '0 auto',
-        padding: '0 20px 32px',
+        padding: '48px 24px 56px',
         textAlign: 'center',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        paddingTop: 28,
       }}
     >
       <p
@@ -164,36 +163,50 @@ function DataSourcesAttribution() {
           textTransform: 'uppercase',
           color: 'rgba(240,237,232,0.4)',
           fontWeight: 600,
-          margin: '0 0 14px',
+          margin: '0 0 20px',
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
         Built using data from
       </p>
-      <ul
+      <div
         style={{
-          listStyle: 'none',
-          margin: 0,
-          padding: 0,
           display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          alignItems: 'baseline',
+          rowGap: 14,
+          fontFamily: fontFamilySerif,
+          fontSize: 'clamp(15px, 1.55vw, 18px)',
+          fontWeight: 500,
+          lineHeight: 1.75,
+          letterSpacing: '0.015em',
+          color: 'rgba(240,237,232,0.82)',
+          maxWidth: 960,
+          margin: '0 auto',
         }}
       >
-        {DATA_SOURCES.map((source) => (
-          <li
+        {DATA_SOURCES.map((source, index) => (
+          <span
             key={source}
-            style={{
-              fontSize: 12,
-              lineHeight: 1.5,
-              color: 'rgba(240,237,232,0.45)',
-              fontFamily: "'DM Sans', sans-serif",
-            }}
+            style={{ display: 'inline-flex', alignItems: 'baseline', whiteSpace: 'nowrap' }}
           >
+            {index > 0 && (
+              <span
+                aria-hidden="true"
+                style={{
+                  color: 'rgba(240,237,232,0.28)',
+                  margin: '0 0.7em',
+                  fontWeight: 400,
+                }}
+              >
+                ·
+              </span>
+            )}
             {source}
-          </li>
+          </span>
         ))}
-      </ul>
+      </div>
     </aside>
   )
 }
