@@ -117,7 +117,7 @@ function buildWhyBullets(city: CityResult, priorities: UserPriorities): string[]
   return bullets.slice(0, 5)
 }
 
-function buildAvoidReason(city: CityResult, priorities: UserPriorities): string {
+export function buildAvoidReason(city: CityResult, priorities: UserPriorities): string {
   if (city.cons.length > 0 && city.cons[0]?.trim()) {
     return city.cons[0].trim()
   }
