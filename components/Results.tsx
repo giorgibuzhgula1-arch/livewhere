@@ -146,70 +146,6 @@ const WHAT_YOU_LL_GET_ITEMS = [
   'Know your best-fit city before making a decision this big',
 ] as const
 
-const DATA_SOURCES = [
-  'world bank',
-  'oecd',
-  'world health organization (who)',
-  'international monetary fund (imf)',
-  'numbeo',
-  'world happiness report',
-  'transparency international',
-] as const
-
-function DataSourcesAttribution() {
-  return (
-    <aside
-      style={{
-        marginTop: 56,
-        paddingTop: 28,
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        maxWidth: 520,
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        textAlign: 'center',
-      }}
-    >
-      <p
-        style={{
-          fontSize: 11,
-          letterSpacing: 1.2,
-          textTransform: 'uppercase',
-          color: 'rgba(240,237,232,0.4)',
-          fontWeight: 600,
-          margin: '0 0 14px',
-          fontFamily: "'DM Sans', sans-serif",
-        }}
-      >
-        Built using data from
-      </p>
-      <ul
-        style={{
-          listStyle: 'none',
-          margin: 0,
-          padding: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-        }}
-      >
-        {DATA_SOURCES.map((source) => (
-          <li
-            key={source}
-            style={{
-              fontSize: 12,
-              lineHeight: 1.5,
-              color: 'rgba(240,237,232,0.45)',
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            {source}
-          </li>
-        ))}
-      </ul>
-    </aside>
-  )
-}
-
 /** Matches CityCard WhyThisMatchesYou / locked-card blur treatment. */
 const lockedPreviewBlur: React.CSSProperties = {
   filter: 'blur(7px)',
@@ -1272,8 +1208,6 @@ export default function Results({
           </button>
         </div>
       )}
-
-      <DataSourcesAttribution />
 
       {canSavePlan && (
         <div
