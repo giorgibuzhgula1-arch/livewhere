@@ -156,7 +156,7 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
         { text: 'See your complete cost breakdown' },
         { text: 'Calculate long-term purchasing power' },
         { text: 'Save unlimited relocation plans' },
-        { text: 'AI explains WHY each city fits you' },
+        { text: 'We explain WHY each city fits you' },
         { text: 'Free future updates' },
       ],
       whoIsThisFor: "I already know I'm moving.",
