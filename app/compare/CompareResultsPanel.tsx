@@ -63,7 +63,7 @@ export default function CompareResultsPanel({ metricsA, metricsB, priorities }: 
       )}
 
       <section className={styles.verdictSection} aria-label="AI Verdict">
-        <p className={styles.verdictKicker}>AI Verdict</p>
+        <p className={styles.verdictKicker}>Verdict</p>
         <h2 className={styles.sectionHeading}>
           {analysis.isTie
             ? 'A close call'
