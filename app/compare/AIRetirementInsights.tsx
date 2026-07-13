@@ -236,7 +236,7 @@ export default function AIRetirementInsights({ cityA, cityB, paid }: Props) {
   return (
     <section style={sectionStyle} aria-labelledby="ai-retirement-analysis">
       <p className={styles.overallKicker} id="ai-retirement-analysis">
-        AI Relocation Analysis
+        Relocation Analysis
       </p>
       <p
         style={{
