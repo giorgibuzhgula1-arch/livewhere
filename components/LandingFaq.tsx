@@ -29,7 +29,7 @@ const FAQ_ITEMS = [
   {
     question: 'What do I get if I upgrade?',
     answer:
-      'Pro unlocks every city, unlimited comparisons and advanced AI insights. Blueprint adds a personalized relocation report, long-term financial projections, risk analysis and ongoing monitoring—giving you everything you need to plan your move with confidence.',
+      'Pro unlocks every city, unlimited comparisons and advanced insights. Blueprint adds a personalized relocation report, long-term financial projections, risk analysis and ongoing monitoring—giving you everything you need to plan your move with confidence.',
   },
   {
     question: 'Where does LiveWhere get its data?',
