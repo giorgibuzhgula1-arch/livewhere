@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import CityCard from './CityCard'
 import CityComparison from './CityComparison'
 import LifetimeInsights from './LifetimeInsights'
+import { buildAvoidReason } from './BlueprintDecisionSection'
 
 const CityModal = dynamic(() => import('./CityModal'), { ssr: false })
 const SavePlanModal = dynamic(() => import('./SavePlanModal'), { ssr: false })
@@ -97,6 +98,45 @@ function splitAiInsightPreview(text: unknown): { clear: string; blurred: string 
     clear: trimmed.slice(0, splitAt),
     blurred,
   }
+}
+
+function WhyNotFitBlock({ reason }: { reason: string }) {
+  return (
+    <div
+      style={{
+        marginTop: 20,
+        padding: '14px 16px',
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 12,
+      }}
+    >
+      <p
+        style={{
+          fontSize: 11,
+          letterSpacing: 1.5,
+          textTransform: 'uppercase',
+          color: 'rgba(240,237,232,0.45)',
+          fontWeight: 600,
+          margin: '0 0 8px',
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        Why this might not be the right fit
+      </p>
+      <p
+        style={{
+          fontSize: 13,
+          lineHeight: 1.6,
+          color: 'rgba(240,237,232,0.65)',
+          margin: 0,
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        {reason}
+      </p>
+    </div>
+  )
 }
 
 interface Props {
@@ -579,6 +619,12 @@ export default function Results({
             ))}
           </div>
 
+          {effectiveQuizInput && (
+            <WhyNotFitBlock
+              reason={buildAvoidReason(top, effectiveQuizInput.priorities)}
+            />
+          )}
+
           {locked && (() => {
             const insightParts = splitAiInsightPreview(top.aiInsight)
             if (!insightParts) return null
@@ -784,6 +830,14 @@ export default function Results({
                 if (isUnlocked(city)) setSelectedCity(city)
               }}
             />
+            {effectiveQuizInput &&
+              isUnlocked(city) &&
+              top &&
+              cityKey(city) !== cityKey(top) && (
+                <WhyNotFitBlock
+                  reason={buildAvoidReason(city, effectiveQuizInput.priorities)}
+                />
+              )}
           </motion.div>
           )
         })}
