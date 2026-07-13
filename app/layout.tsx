@@ -12,7 +12,7 @@ const CLARITY_PROJECT_ID = 'x4vqdz3sfo'
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: 'LiveWhere — Find Your Perfect City',
-  description: 'AI-powered city recommendation. Enter your salary, set priorities, discover the best cities for your lifestyle.',
+  description: 'Personalized city recommendation. Enter your salary, set priorities, discover the best cities for your lifestyle.',
   alternates: {
     canonical: 'https://www.livewhere.io',
   },
