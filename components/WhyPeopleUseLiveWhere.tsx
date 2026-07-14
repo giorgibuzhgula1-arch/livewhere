@@ -12,10 +12,9 @@ const TEXT_MUTED = 'rgba(240,237,232,0.75)'
 
 type Props = {
   embedded?: boolean
-  plansExplored?: number
 }
 
-export default function WhyPeopleUseLiveWhere({ embedded = false, plansExplored }: Props) {
+export default function WhyPeopleUseLiveWhere({ embedded = false }: Props) {
   return (
     <section
       style={{
@@ -74,41 +73,39 @@ export default function WhyPeopleUseLiveWhere({ embedded = false, plansExplored 
           </div>
         ))}
 
-        {plansExplored !== undefined && (
+        <div
+          style={{
+            background: '#12121a',
+            border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: 16,
+            padding: '32px 36px',
+            textAlign: 'center',
+          }}
+        >
           <div
             style={{
-              background: '#12121a',
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 16,
-              padding: '32px 36px',
-              textAlign: 'center',
+              fontFamily: fontFamilySerif,
+              fontSize: 'clamp(32px, 4vw, 40px)',
+              fontWeight: 700,
+              color: ACCENT,
+              lineHeight: 1.1,
+              marginBottom: 10,
             }}
           >
-            <div
-              style={{
-                fontFamily: fontFamilySerif,
-                fontSize: 'clamp(32px, 4vw, 40px)',
-                fontWeight: 700,
-                color: ACCENT,
-                lineHeight: 1.1,
-                marginBottom: 10,
-              }}
-            >
-              {plansExplored.toLocaleString()}
-            </div>
-            <div
-              style={{
-                fontFamily: fontFamilySans,
-                fontSize: 'clamp(15px, 2vw, 18px)',
-                fontWeight: 600,
-                color: TEXT_MUTED,
-                lineHeight: 1.4,
-              }}
-            >
-              Plans Explored So Far
-            </div>
+            15K+
           </div>
-        )}
+          <div
+            style={{
+              fontFamily: fontFamilySans,
+              fontSize: 'clamp(15px, 2vw, 18px)',
+              fontWeight: 600,
+              color: TEXT_MUTED,
+              lineHeight: 1.4,
+            }}
+          >
+            Relocation Decisions Made
+          </div>
+        </div>
 
         <div
           style={{
