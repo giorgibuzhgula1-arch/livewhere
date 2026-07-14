@@ -136,7 +136,7 @@ export default function VisaAnalysis({ city, monthlyBudget, lifestyle }: Props) 
       </div>
 
       <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', marginTop: 14, lineHeight: 1.5 }}>
-        Estimates for remote workers — not legal advice. Always confirm with official immigration sources.
+        Estimates for relocation — not legal advice. Always confirm with official immigration sources.
       </p>
     </div>
   )
