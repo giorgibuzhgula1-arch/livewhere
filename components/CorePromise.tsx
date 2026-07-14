@@ -2,13 +2,6 @@
 
 import { motion } from 'framer-motion'
 
-const BULLETS = [
-  'Compare 200+ cities',
-  'Estimate long-term retirement costs',
-  'Calculate real purchasing power',
-  'Identify hidden retirement risks',
-]
-
 export default function CorePromise() {
   return (
     <section style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px 80px', position: 'relative', zIndex: 1 }}>
@@ -45,40 +38,8 @@ export default function CorePromise() {
             maxWidth: 640,
           }}
         >
-          A country that looks affordable today can quietly drain tens of thousands of dollars from your retirement through taxes, healthcare costs, inflation, housing expenses, and hidden long-term costs. Before making one of the biggest financial decisions of your life, see the numbers.
+          LiveWhere analyzes 200+ cities across taxes, healthcare, cost of living, safety and lifestyle to find the best place for your next chapter.
         </motion.p>
-        <motion.ul
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.16 }}
-          style={{
-            listStyle: 'none',
-            padding: 0,
-            margin: '8px auto 0',
-            maxWidth: 420,
-            textAlign: 'left',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          {BULLETS.map((item) => (
-            <li
-              key={item}
-              style={{
-                fontSize: 17,
-                color: 'rgba(240,237,232,0.75)',
-                display: 'flex',
-                gap: 10,
-                lineHeight: 1.5,
-              }}
-            >
-              <span style={{ color: '#c8f05a', fontWeight: 700, flexShrink: 0 }}>✓</span>
-              {item}
-            </li>
-          ))}
-        </motion.ul>
       </div>
     </section>
   )

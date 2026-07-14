@@ -62,22 +62,6 @@ export default function Hero({ onStart }: Props) {
           Don&apos;t Make A Six-Figure Relocation Mistake.
         </h1>
 
-        <p
-          style={{
-            fontFamily: fontFamilySans,
-            fontSize: 'clamp(17px, 2vw, 20px)',
-            fontWeight: 400,
-            lineHeight: 1.65,
-            letterSpacing: '0.01em',
-            color: 'rgba(240, 237, 232, 0.62)',
-            margin: '0 auto 48px',
-            maxWidth: 640,
-          }}
-        >
-          LiveWhere analyzes 200+ cities across taxes, healthcare, cost of living, safety and
-          lifestyle to find the best place for your next chapter.
-        </p>
-
         <div style={{ marginBottom: 72 }}>
           <button
             type="button"
