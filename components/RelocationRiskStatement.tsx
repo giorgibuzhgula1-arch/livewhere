@@ -14,7 +14,7 @@ export default function RelocationRiskStatement() {
         position: 'relative',
         zIndex: 1,
         textAlign: 'center',
-        padding: '72px 24px 80px',
+        padding: '32px 24px 36px',
         maxWidth: 720,
         margin: '0 auto',
       }}
