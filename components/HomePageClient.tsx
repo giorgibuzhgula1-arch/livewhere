@@ -878,9 +878,9 @@ export default function HomePageClient({
         <Hero onStart={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })} />
       )}
 
-      {showLanding && <ContrastStatement />}
-
       {showLanding && <RelocationRiskStatement />}
+
+      {showLanding && <ContrastStatement />}
 
       {showLanding && (
         <>
