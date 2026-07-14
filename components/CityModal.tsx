@@ -5,7 +5,89 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CityResult } from '@/lib/types'
 import { isPaidPlan, type UserPlan } from '@/lib/plan'
 import VisaAnalysis from './VisaAnalysis'
-import { scoreMetricExplanationLine, type ScoreMetricKind } from './Results'
+
+type ScoreMetricKind =
+  | 'safety'
+  | 'health'
+  | 'healthcare'
+  | 'stability'
+  | 'climate'
+  | 'financial_fit'
+  | 'match'
+  | 'overall'
+
+type ScoreTier = 'excellent' | 'strong' | 'moderate' | 'weak'
+
+function scoreTier(score: number): ScoreTier {
+  if (score >= 85) return 'excellent'
+  if (score >= 70) return 'strong'
+  if (score >= 55) return 'moderate'
+  return 'weak'
+}
+
+function qualitativePhrase(kind: ScoreMetricKind, score: number): string {
+  const tier = scoreTier(score)
+  const phrases: Record<ScoreMetricKind, Record<ScoreTier, string>> = {
+    safety: {
+      excellent: 'Very Low Violent Crime',
+      strong: 'Low Crime Risk',
+      moderate: 'Moderate Safety Level',
+      weak: 'Higher Crime Concerns',
+    },
+    health: {
+      excellent: 'Excellent Healthcare Access',
+      strong: 'Strong Healthcare Quality',
+      moderate: 'Adequate Healthcare',
+      weak: 'Limited Healthcare Access',
+    },
+    healthcare: {
+      excellent: 'Excellent Healthcare Access',
+      strong: 'Strong Healthcare Quality',
+      moderate: 'Adequate Healthcare',
+      weak: 'Limited Healthcare Access',
+    },
+    stability: {
+      excellent: 'Very Stable Political Environment',
+      strong: 'Stable Political Environment',
+      moderate: 'Moderate Political Stability',
+      weak: 'Elevated Political Risk',
+    },
+    climate: {
+      excellent: 'Ideal Climate Fit',
+      strong: 'Strong Climate Fit',
+      moderate: 'Moderate Climate Fit',
+      weak: 'Poor Climate Fit',
+    },
+    financial_fit: {
+      excellent: 'Strong Financial Fit',
+      strong: 'Good Financial Fit',
+      moderate: 'Moderate Financial Fit',
+      weak: 'Weak Financial Fit',
+    },
+    match: {
+      excellent: 'Excellent Overall Match',
+      strong: 'Strong Overall Match',
+      moderate: 'Moderate Overall Match',
+      weak: 'Weak Overall Match',
+    },
+    overall: {
+      excellent: 'Excellent Overall Score',
+      strong: 'Strong Overall Score',
+      moderate: 'Moderate Overall Score',
+      weak: 'Weak Overall Score',
+    },
+  }
+  return phrases[kind][tier]
+}
+
+function scoreMetricExplanationLine(
+  label: string,
+  score: number,
+  kind: ScoreMetricKind,
+): string {
+  const scoreText = Number.isInteger(score) ? String(score) : score.toFixed(1)
+  return `${label}: ${scoreText} — ${qualitativePhrase(kind, score)}`
+}
 
 interface Props {
   city: CityResult
@@ -190,6 +272,10 @@ function FinancialBreakdown({
 }
 
 export default function CityModal({ city, onClose, monthlyBudget, lifestyle, plan = 'free', onUnlock }: Props) {
+  const pros = city.pros ?? []
+  const cons = city.cons ?? []
+  const scores = city.scores
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
@@ -236,9 +322,9 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
               {[
                 { num: city.score, label: 'Match', color: getColor(city.score), kind: 'match' as ScoreMetricKind },
-                { num: city.scores.climate, label: 'Climate', color: getColor(city.scores.climate), kind: 'climate' as ScoreMetricKind },
-                { num: city.scores.safety, label: 'Safety', color: getColor(city.scores.safety), kind: 'safety' as ScoreMetricKind },
-                { num: city.scores.stability, label: 'Stability', color: getColor(city.scores.stability), kind: 'stability' as ScoreMetricKind },
+                { num: scores?.climate ?? 0, label: 'Climate', color: getColor(scores?.climate ?? 0), kind: 'climate' as ScoreMetricKind },
+                { num: scores?.safety ?? 0, label: 'Safety', color: getColor(scores?.safety ?? 0), kind: 'safety' as ScoreMetricKind },
+                { num: scores?.stability ?? 0, label: 'Stability', color: getColor(scores?.stability ?? 0), kind: 'stability' as ScoreMetricKind },
               ].map(({ num, label, color, kind }) => (
                 <div key={label} style={{ background: '#1a1a26', borderRadius: 14, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color }}>{num}</div>
@@ -296,7 +382,7 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
             >
               <div style={{ background: '#1a1a26', borderRadius: 14, padding: 18, borderTop: '2px solid #c8f05a' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#c8f05a', marginBottom: 12 }}>✓ Pros</div>
-                {city.pros.map(p => (
+                {pros.map(p => (
                   <div key={p} style={{ fontSize: 13, color: 'rgba(240,237,232,0.6)', padding: '5px 0', display: 'flex', gap: 8, lineHeight: 1.4 }}>
                     <span style={{ color: '#c8f05a', fontWeight: 700, flexShrink: 0 }}>✓</span> {p}
                   </div>
@@ -305,7 +391,7 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
               {!isPaidPlan(plan) && (
                 <div style={{ background: '#1a1a26', borderRadius: 14, padding: 18, borderTop: '2px solid #f05a8c' }}>
                   <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#f05a8c', marginBottom: 12 }}>✗ Cons</div>
-                  {city.cons.map(c => (
+                  {cons.map(c => (
                     <div key={c} style={{ fontSize: 13, color: 'rgba(240,237,232,0.6)', padding: '5px 0', display: 'flex', gap: 8, lineHeight: 1.4 }}>
                       <span style={{ color: '#f05a8c', fontWeight: 700, flexShrink: 0 }}>✗</span> {c}
                     </div>
@@ -314,10 +400,10 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
               )}
             </div>
 
-            {isPaidPlan(plan) && city.cons.length > 0 && (
+            {isPaidPlan(plan) && cons.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <NarrativeSection icon="⚠️" title="Hidden Financial Risks">
-                  {city.cons.map(c => (
+                  {cons.map(c => (
                     <div
                       key={c}
                       style={{
