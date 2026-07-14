@@ -67,7 +67,7 @@ function buildPrompt(city: ReturnType<typeof normalizeCity>): string {
       ? formatUsd(tenYearSavings)
       : `-${formatUsd(tenYearSavings)}`
 
-  return `Analyze this specific retirement city match. Use ONLY the numbers below — do not invent or reuse placeholder figures.
+  return `Analyze this specific relocation city match. Use ONLY the numbers below — do not invent or reuse placeholder figures.
 
 CITY DATA (use these exact values):
 - City: ${city.name}, ${city.country}
@@ -83,8 +83,8 @@ Return ONLY valid JSON with these keys (no markdown):
 {
   "savingsOver10Years": "<formatted dollar amount derived from the 10-year savings figure above>",
   "healthcareNote": "<short phrase referencing ${city.name}'s healthcare score of ${city.healthcareScore}/100>",
-  "taxNote": "<short phrase referencing ${city.name}'s ${city.taxRate}% tax rate and how it compares for retirees>",
-  "matchSummary": "<one sentence naming ${city.name} and why its ${city.score}/100 match score fits this retiree>"
+  "taxNote": "<short phrase referencing ${city.name}'s ${city.taxRate}% tax rate and what it means for someone relocating there>",
+  "matchSummary": "<one sentence naming ${city.name} and why its ${city.score}/100 match score fits this person's relocation goals>"
 }
 
 Rules:
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
           {
             role: 'system',
             content:
-              'You write city-specific retirement insights. Always use the exact numbers provided in the user message. Never return generic or identical text across different cities. Respond with valid JSON only.',
+              'You write city-specific relocation insights. Always use the exact numbers provided in the user message. Never return generic or identical text across different cities. Respond with valid JSON only.',
           },
           {
             role: 'user',
