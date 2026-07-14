@@ -286,8 +286,14 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
               </NarrativeSection>
             )}
 
-            {/* Pros & Cons */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {/* Pros & Cons — cons branded as Hidden Financial Risks for Pro+ */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: isPaidPlan(plan) ? '1fr' : '1fr 1fr',
+                gap: 16,
+              }}
+            >
               <div style={{ background: '#1a1a26', borderRadius: 14, padding: 18, borderTop: '2px solid #c8f05a' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#c8f05a', marginBottom: 12 }}>✓ Pros</div>
                 {city.pros.map(p => (
@@ -296,15 +302,40 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
                   </div>
                 ))}
               </div>
-              <div style={{ background: '#1a1a26', borderRadius: 14, padding: 18, borderTop: '2px solid #f05a8c' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#f05a8c', marginBottom: 12 }}>✗ Cons</div>
-                {city.cons.map(c => (
-                  <div key={c} style={{ fontSize: 13, color: 'rgba(240,237,232,0.6)', padding: '5px 0', display: 'flex', gap: 8, lineHeight: 1.4 }}>
-                    <span style={{ color: '#f05a8c', fontWeight: 700, flexShrink: 0 }}>✗</span> {c}
-                  </div>
-                ))}
-              </div>
+              {!isPaidPlan(plan) && (
+                <div style={{ background: '#1a1a26', borderRadius: 14, padding: 18, borderTop: '2px solid #f05a8c' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#f05a8c', marginBottom: 12 }}>✗ Cons</div>
+                  {city.cons.map(c => (
+                    <div key={c} style={{ fontSize: 13, color: 'rgba(240,237,232,0.6)', padding: '5px 0', display: 'flex', gap: 8, lineHeight: 1.4 }}>
+                      <span style={{ color: '#f05a8c', fontWeight: 700, flexShrink: 0 }}>✗</span> {c}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
+            {isPaidPlan(plan) && city.cons.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <NarrativeSection icon="⚠️" title="Hidden Financial Risks">
+                  {city.cons.map(c => (
+                    <div
+                      key={c}
+                      style={{
+                        fontSize: 13,
+                        color: BODY_TEXT_COLOR,
+                        padding: '5px 0',
+                        display: 'flex',
+                        gap: 8,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      <span style={{ color: '#f05a8c', fontWeight: 700, flexShrink: 0 }}>✗</span>
+                      {c}
+                    </div>
+                  ))}
+                </NarrativeSection>
+              </div>
+            )}
 
             {/* Visa Analysis */}
             <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
