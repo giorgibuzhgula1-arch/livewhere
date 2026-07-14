@@ -9,7 +9,7 @@ interface Props {
 }
 
 const STATS = [
-  { num: '200+', label: 'Cities Analyzed' },
+  { num: '200+', label: 'Cities Compared' },
   { num: '50+', label: 'Countries' },
   { num: 'Millions', label: 'Data Points' },
   { num: 'Thousands', label: 'Relocation Scenarios' },
