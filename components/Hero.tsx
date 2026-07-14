@@ -168,7 +168,7 @@ export default function Hero({ onStart }: Props) {
               fontFamily: fontFamilySans,
               fontSize: 12,
               fontWeight: 400,
-              color: 'rgba(240, 237, 232, 0.32)',
+              color: '#c8f05a',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               margin: '8px 0 0',
