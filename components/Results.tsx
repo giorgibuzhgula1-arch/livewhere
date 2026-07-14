@@ -239,7 +239,7 @@ interface Props {
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
-const MAX_COMPARE_CITIES = 3
+const MAX_COMPARE_CITIES = 6
 
 function cityKey(city: CityResult): string {
   return `${city.name}|${city.country}`
