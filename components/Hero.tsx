@@ -48,6 +48,20 @@ export default function Hero({ onStart }: Props) {
           margin: '0 auto',
         }}
       >
+        <p
+          style={{
+            fontFamily: fontFamilySans,
+            fontSize: 14,
+            fontWeight: 500,
+            color: 'rgba(240, 237, 232, 0.4)',
+            letterSpacing: '0.05em',
+            margin: '0 0 14px',
+            lineHeight: 1.4,
+          }}
+        >
+          Relocation Intelligence Platform
+        </p>
+
         <h1
           style={{
             fontFamily: fontFamilySerif,
