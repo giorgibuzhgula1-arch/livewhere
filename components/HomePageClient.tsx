@@ -161,7 +161,7 @@ function DataSourcesAttribution() {
           fontSize: 11,
           letterSpacing: 1.2,
           textTransform: 'uppercase',
-          color: 'rgba(240,237,232,0.4)',
+          color: '#c8f05a',
           fontWeight: 600,
           margin: '0 0 20px',
           fontFamily: "'DM Sans', sans-serif",
