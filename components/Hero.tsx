@@ -53,7 +53,7 @@ export default function Hero({ onStart }: Props) {
             fontFamily: fontFamilySans,
             fontSize: 14,
             fontWeight: 500,
-            color: 'rgba(240, 237, 232, 0.4)',
+            color: '#c8f05a',
             letterSpacing: '0.05em',
             margin: '0 0 14px',
             lineHeight: 1.4,
