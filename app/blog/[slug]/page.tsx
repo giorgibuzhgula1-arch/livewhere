@@ -1,12 +1,22 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { ComponentPropsWithoutRef } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { getPostBySlug, getPostSlugs } from '@/lib/blog'
 import { getSiteUrl } from '@/lib/site-url'
 import styles from '../blog.module.css'
 
 export const dynamic = 'force-static'
+
+const markdownComponents = {
+  table: (props: ComponentPropsWithoutRef<'table'>) => (
+    <div className={styles.bodyTableWrap}>
+      <table {...props} />
+    </div>
+  ),
+}
 
 type Props = {
   params: { slug: string }
@@ -100,7 +110,9 @@ export default function BlogPostPage({ params }: Props) {
 
       <div className={styles.body}>
         {post.content.trim() ? (
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            {post.content}
+          </ReactMarkdown>
         ) : null}
       </div>
     </article>
