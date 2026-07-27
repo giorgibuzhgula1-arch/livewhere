@@ -447,6 +447,13 @@ export default function HomePageClient({
         return
       }
 
+      if (typeof window !== 'undefined') {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'lead_form_submitted'
+        });
+      }
+
       const reader = res.body?.getReader()
       if (!reader) {
         setMatches(null)
