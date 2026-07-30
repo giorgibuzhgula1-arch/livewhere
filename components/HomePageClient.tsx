@@ -90,6 +90,7 @@ async function isLoggedIn(): Promise<boolean> {
 /** Poll up to ~15s for session after OAuth before giving up on restore. */
 const RESTORE_SESSION_MAX_ATTEMPTS = 24
 const RESTORE_SESSION_INITIAL_DELAY_MS = 250
+const ANALYZE_CLIENT_TIMEOUT_MS = 30_000
 
 /** Cached after first read so stale `livewhere_oauth_return` cannot leak into a later quiz. */
 let postOAuthRestoreCached: boolean | null = null
@@ -399,6 +400,8 @@ export default function HomePageClient({
     let accumulatedAi = ''
     let usedDataEngine = false
     let anonymousAuthGate = false
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), ANALYZE_CLIENT_TIMEOUT_MS)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const startedLoggedIn = Boolean(session?.user)
@@ -423,6 +426,7 @@ export default function HomePageClient({
         method: 'POST',
         headers,
         body: JSON.stringify(data),
+        signal: controller.signal,
       })
 
       if (res.status === 403) {
@@ -568,12 +572,21 @@ export default function HomePageClient({
           setError('Analysis ended before results were ready')
         }
       }
-    } catch {
+    } catch (err) {
       setMatches(null)
-      setError('Network error. Please try again.')
+      const timedOut =
+        controller.signal.aborted ||
+        (err instanceof DOMException && err.name === 'AbortError') ||
+        (err instanceof Error && err.name === 'AbortError')
+      setError(
+        timedOut
+          ? 'Analysis is taking too long. Check your connection and try again.'
+          : 'Network error. Please try again.',
+      )
       setAuthOpen(false)
       setAwaitingAuthToView(false)
     } finally {
+      window.clearTimeout(timeoutId)
       setLoading(false)
       logQuizAuthDebug('runAnalyze FINALLY — loading=false', {
         isPostOAuthRestore: isPostOAuthRestore(),
