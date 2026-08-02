@@ -9,6 +9,7 @@ import RelocationRiskStatement from '@/components/RelocationRiskStatement'
 import HowLiveWhereWorks from '@/components/HowLiveWhereWorks'
 import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
+import AnonymousResultsPreview from '@/components/AnonymousResultsPreview'
 import RetirementStatsBar from '@/components/RetirementStatsBar'
 import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
@@ -412,8 +413,9 @@ export default function HomePageClient({
         } else {
           anonymousAuthGate = true
           setAwaitingAuthToView(true)
-          openAuthForResults()
-          logQuizAuthDebug('runAnalyze — opened auth modal at analyze start (anonymous)')
+          // AuthModal deferred until unlock-wall CTA (openSignInToView → openAuthForResults).
+          // Analytics: signup_start (trackSignupStarted) now fires on that CTA, not at analyze start.
+          logQuizAuthDebug('runAnalyze — awaiting auth; AuthModal deferred until preview CTA')
         }
       }
 
@@ -748,6 +750,28 @@ export default function HomePageClient({
     if (pending) setQuizData(pending)
   }, [matches, quizData])
 
+  // Refresh rehydration: anonymous user with pending cities → restore preview wall
+  // (matches stay null; AuthModal still opens only via CTA).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('restore') === 'results') return
+
+    const pending = loadPendingResults()
+    if (!pending?.cities.length) return
+
+    let cancelled = false
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled || session?.user) return
+      setAwaitingAuthToView(true)
+      setResultMaxCities(pending.maxCities)
+      logQuizAuthDebug('anonymous pending rehydrate — preview wall armed')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
     logQuizAuthDebug('restore useEffect mount')
@@ -828,6 +852,8 @@ export default function HomePageClient({
   }
 
   function openSignInToView() {
+    // Analytics note (Ads attribution): trackSignupStarted inside openAuthForResults
+    // fires on this CTA click, not at analyze start. lead_form_submitted timing is unchanged.
     openAuthForResults()
   }
 
@@ -1012,9 +1038,29 @@ export default function HomePageClient({
           }}>
             Unlock Your Results.
           </h2>
-          <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
-            Sign in with Google or email to see your full relocation analysis — takes 10 seconds, no extra forms.
-          </p>
+          {(() => {
+            const pendingCities = loadPendingResults()?.cities ?? []
+            const unlocked = pendingCities.filter((c) => !c.locked).slice(0, 3)
+            const previewSource = unlocked.length > 0 ? unlocked : pendingCities.slice(0, 3)
+            const previewCities = previewSource.map((c) => ({
+              name: c.name,
+              country: c.country,
+              flag: c.flag,
+              score: c.score,
+            }))
+            return previewCities.length > 0 ? (
+              <>
+                <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6, margin: 0 }}>
+                  Your top matches are ready. Sign in to unlock the full relocation analysis.
+                </p>
+                <AnonymousResultsPreview cities={previewCities} />
+              </>
+            ) : (
+              <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
+                Sign in with Google or email to see your full relocation analysis — takes 10 seconds, no extra forms.
+              </p>
+            )
+          })()}
           <button
             type="button"
             onClick={openSignInToView}
@@ -1024,7 +1070,7 @@ export default function HomePageClient({
               cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            View my results
+            Unlock Full Results
           </button>
           <button
             type="button"
