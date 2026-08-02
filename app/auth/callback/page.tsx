@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   confirmAuthSessionReady,
@@ -23,6 +23,8 @@ function safeNextPath(raw: string | null): string {
  */
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('Signing you in…')
+  /** Strict Mode runs this effect twice; PKCE code+verifier are single-use — exchange only once. */
+  const codeExchangeAttemptedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -62,25 +64,18 @@ export default function AuthCallbackPage() {
       }
 
       if (code) {
-        setStatus('Completing sign-in…')
-        let { error } = await supabase.auth.exchangeCodeForSession(code)
-
-        // Dev/prod flake: verifier cookie sometimes not readable on first read.
-        // Retry once only for this specific error — all other errors keep existing UX.
-        const isPkceVerifierMissing =
-          error?.name === 'AuthPKCECodeVerifierMissingError' ||
-          error?.code === 'pkce_code_verifier_not_found'
-        if (isPkceVerifierMissing) {
-          await new Promise((r) => window.setTimeout(r, 250))
-          ;({ error } = await supabase.auth.exchangeCodeForSession(code))
+        if (!codeExchangeAttemptedRef.current) {
+          codeExchangeAttemptedRef.current = true
+          setStatus('Completing sign-in…')
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (error) {
+            console.error('exchangeCodeForSession:', error)
+            redirectHome('/?auth_error=oauth', false)
+            return
+          }
+          window.history.replaceState(null, '', window.location.pathname)
         }
-
-        if (error) {
-          console.error('exchangeCodeForSession:', error)
-          redirectHome('/?auth_error=oauth', false)
-          return
-        }
-        window.history.replaceState(null, '', window.location.pathname)
+        // Second Strict Mode pass: skip exchange; fall through to session wait/redirect.
       }
 
       setStatus('Saving your session…')
