@@ -63,7 +63,18 @@ export default function AuthCallbackPage() {
 
       if (code) {
         setStatus('Completing sign-in…')
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        let { error } = await supabase.auth.exchangeCodeForSession(code)
+
+        // Dev/prod flake: verifier cookie sometimes not readable on first read.
+        // Retry once only for this specific error — all other errors keep existing UX.
+        const isPkceVerifierMissing =
+          error?.name === 'AuthPKCECodeVerifierMissingError' ||
+          error?.code === 'pkce_code_verifier_not_found'
+        if (isPkceVerifierMissing) {
+          await new Promise((r) => window.setTimeout(r, 250))
+          ;({ error } = await supabase.auth.exchangeCodeForSession(code))
+        }
+
         if (error) {
           console.error('exchangeCodeForSession:', error)
           redirectHome('/?auth_error=oauth', false)
