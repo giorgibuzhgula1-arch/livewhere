@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   confirmAuthSessionReady,
@@ -23,8 +23,6 @@ function safeNextPath(raw: string | null): string {
  */
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('Signing you in…')
-  /** Strict Mode runs this effect twice; PKCE code+verifier are single-use — exchange only once. */
-  const codeExchangeAttemptedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -64,18 +62,14 @@ export default function AuthCallbackPage() {
       }
 
       if (code) {
-        if (!codeExchangeAttemptedRef.current) {
-          codeExchangeAttemptedRef.current = true
-          setStatus('Completing sign-in…')
-          const { error } = await supabase.auth.exchangeCodeForSession(code)
-          if (error) {
-            console.error('exchangeCodeForSession:', error)
-            redirectHome('/?auth_error=oauth', false)
-            return
-          }
-          window.history.replaceState(null, '', window.location.pathname)
+        setStatus('Completing sign-in…')
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (error) {
+          console.error('exchangeCodeForSession:', error)
+          redirectHome('/?auth_error=oauth', false)
+          return
         }
-        // Second Strict Mode pass: skip exchange; fall through to session wait/redirect.
+        window.history.replaceState(null, '', window.location.pathname)
       }
 
       setStatus('Saving your session…')
