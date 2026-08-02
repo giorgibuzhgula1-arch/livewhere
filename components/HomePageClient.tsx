@@ -91,7 +91,36 @@ async function isLoggedIn(): Promise<boolean> {
 /** Poll up to ~15s for session after OAuth before giving up on restore. */
 const RESTORE_SESSION_MAX_ATTEMPTS = 24
 const RESTORE_SESSION_INITIAL_DELAY_MS = 250
+/** Wall-clock ceiling for durable post-OAuth restore listener (poll + late-session grace). */
+const RESTORE_GIVE_UP_MS = 90_000
 const ANALYZE_CLIENT_TIMEOUT_MS = 30_000
+
+type RestoreRevealState = 'idle' | 'in_flight' | 'done'
+
+/** Test/dev only — never attach window spies or extra invoke logs in production builds. */
+function isRestoreRevealDebugEnabled(): boolean {
+  if (typeof window === 'undefined') return false
+  if (process.env.NODE_ENV !== 'production') return true
+  try {
+    return window.localStorage.getItem('__lw_stress_supabase') === '1'
+  } catch {
+    return false
+  }
+}
+
+function publishRestoreRevealDebug(payload: {
+  invokeCount: number
+  successCount: number
+  state: RestoreRevealState
+}) {
+  if (!isRestoreRevealDebugEnabled()) return
+  ;(window as unknown as { __lw_restoreReveal?: typeof payload }).__lw_restoreReveal = payload
+}
+
+function logRestoreRevealDebug(context: string, extra?: Record<string, unknown>) {
+  if (!isRestoreRevealDebugEnabled()) return
+  logQuizAuthDebug(context, extra)
+}
 
 /** Cached after first read so stale `livewhere_oauth_return` cannot leak into a later quiz. */
 let postOAuthRestoreCached: boolean | null = null
@@ -286,6 +315,77 @@ export default function HomePageClient({
     resetPostOAuthRestoreCache()
     return true
   }, [])
+
+  /** Serialize restore reveals so kickoff + onAuthStateChange cannot double-invoke revealPendingResults. */
+  const restoreRevealStateRef = useRef<RestoreRevealState>('idle')
+  const restoreRevealInvokeCountRef = useRef(0)
+  const restoreRevealSuccessCountRef = useRef(0)
+
+  const tryRevealPendingResultsForRestore = useCallback(
+    async (existingSession: Session | null | undefined, source: string): Promise<boolean> => {
+      const state = restoreRevealStateRef.current
+      if (state === 'done' || state === 'in_flight') {
+        logRestoreRevealDebug('tryRevealPendingResultsForRestore SKIP', {
+          source,
+          state,
+          invokeCount: restoreRevealInvokeCountRef.current,
+          successCount: restoreRevealSuccessCountRef.current,
+        })
+        publishRestoreRevealDebug({
+          invokeCount: restoreRevealInvokeCountRef.current,
+          successCount: restoreRevealSuccessCountRef.current,
+          state,
+        })
+        return state === 'done'
+      }
+
+      restoreRevealStateRef.current = 'in_flight'
+      restoreRevealInvokeCountRef.current += 1
+      const invokeCount = restoreRevealInvokeCountRef.current
+      publishRestoreRevealDebug({
+        invokeCount,
+        successCount: restoreRevealSuccessCountRef.current,
+        state: 'in_flight',
+      })
+      logRestoreRevealDebug('revealPendingResults INVOKE', { source, invokeCount })
+
+      try {
+        const ok = await revealPendingResults(existingSession)
+        if (ok) {
+          restoreRevealStateRef.current = 'done'
+          restoreRevealSuccessCountRef.current += 1
+          publishRestoreRevealDebug({
+            invokeCount,
+            successCount: restoreRevealSuccessCountRef.current,
+            state: 'done',
+          })
+          logRestoreRevealDebug('revealPendingResults SUCCESS', {
+            source,
+            invokeCount,
+            successCount: restoreRevealSuccessCountRef.current,
+          })
+          return true
+        }
+        restoreRevealStateRef.current = 'idle'
+        publishRestoreRevealDebug({
+          invokeCount,
+          successCount: restoreRevealSuccessCountRef.current,
+          state: 'idle',
+        })
+        logRestoreRevealDebug('revealPendingResults returned false', { source, invokeCount })
+        return false
+      } catch (err) {
+        restoreRevealStateRef.current = 'idle'
+        publishRestoreRevealDebug({
+          invokeCount,
+          successCount: restoreRevealSuccessCountRef.current,
+          state: 'idle',
+        })
+        throw err
+      }
+    },
+    [revealPendingResults],
+  )
 
   const waitForRestoreSession = useCallback(async (reason: string): Promise<Session | null> => {
     logQuizAuthDebug('waitForRestoreSession CALLED', { reason })
@@ -626,7 +726,7 @@ export default function HomePageClient({
       setRestoreError(null)
 
       const session = await waitForRestoreSession('attemptPostAuthRestore:hasResults')
-      if (session?.user && (await revealPendingResults(session))) {
+      if (session?.user && (await tryRevealPendingResultsForRestore(session, 'attemptPostAuthRestore:hasResults'))) {
         return true
       }
 
@@ -668,7 +768,7 @@ export default function HomePageClient({
     resetPostOAuthRestoreCache()
     await runAnalyzeRef.current(quiz, { isRestoreRefetch: true })
     return true
-  }, [revealPendingResults, waitForRestoreSession])
+  }, [tryRevealPendingResultsForRestore, waitForRestoreSession])
 
   const openAuthForSave = useCallback(() => {
     setAuthVariant('default')
@@ -676,7 +776,8 @@ export default function HomePageClient({
     setAuthOpen(true)
   }, [])
 
-  const restoreAttemptedRef = useRef(false)
+  /** Prevents double kickoff of attemptPostAuthRestore (not the durable auth listener). */
+  const restoreKickoffAttemptedRef = useRef(false)
   const savedPlanAttemptedRef = useRef(false)
   const purchaseTrackedRef = useRef(false)
 
@@ -786,19 +887,20 @@ export default function HomePageClient({
     return () => window.cancelAnimationFrame(id)
   }, [awaitingAuthToView, loading, matches, restoringAfterOAuth, restoreError])
 
-  // Restore results after OAuth redirect (full page remount loses React state).
+  // One-shot kickoff: poll for session when landing on post-OAuth restore.
+  // Strict Mode may remount; kickoff runs at most once via restoreKickoffAttemptedRef.
   useEffect(() => {
-    logQuizAuthDebug('restore useEffect mount')
-    if (restoreAttemptedRef.current) {
-      logQuizAuthDebug('restore useEffect SKIP — already attempted')
+    logQuizAuthDebug('restore kickoff useEffect mount')
+    if (restoreKickoffAttemptedRef.current) {
+      logQuizAuthDebug('restore kickoff SKIP — already attempted')
       return
     }
-    restoreAttemptedRef.current = true
+    restoreKickoffAttemptedRef.current = true
 
     const postOAuth = isPostOAuthRestore()
-    logQuizAuthDebug('restore useEffect — isPostOAuthRestore check', { isPostOAuthRestore: postOAuth })
+    logQuizAuthDebug('restore kickoff — isPostOAuthRestore check', { isPostOAuthRestore: postOAuth })
     if (!postOAuth) {
-      logQuizAuthDebug('restore useEffect SKIP — not post-OAuth restore')
+      logQuizAuthDebug('restore kickoff SKIP — not post-OAuth restore')
       return
     }
 
@@ -809,18 +911,53 @@ export default function HomePageClient({
     }
 
     let cancelled = false
-
     void (async () => {
       if (cancelled) return
       await attemptPostAuthRestore()
     })()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      logQuizAuthDebug('onAuthStateChange', {
+    return () => {
+      cancelled = true
+    }
+  }, [attemptPostAuthRestore])
+
+  // Durable listener: survives Strict Mode remount and late session after poll failure.
+  // Armed only while post-OAuth restore is unresolved; gives up after RESTORE_GIVE_UP_MS.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (matches !== null) return
+
+    const postOAuth = isPostOAuthRestore()
+    if (!postOAuth) return
+    if (!hasPendingResults() && !loadPendingAnalyze()) return
+
+    logQuizAuthDebug('restore durable listener mount', { giveUpMs: RESTORE_GIVE_UP_MS })
+    let gaveUp = false
+    let quizRefetchStarted = false
+
+    const giveUpTimer = window.setTimeout(() => {
+      gaveUp = true
+      if (restoreRevealStateRef.current === 'done') return
+      if (!hasPendingResults() && !loadPendingAnalyze()) return
+      logQuizAuthDebug('restore give-up window expired')
+      setRestoringAfterOAuth(false)
+      setRestoreError((prev) =>
+        prev ??
+        'Could not verify your sign-in. Your results are still saved — try signing in again.',
+      )
+      setAwaitingAuthToView(true)
+    }, RESTORE_GIVE_UP_MS)
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      logQuizAuthDebug('restore durable onAuthStateChange', {
         event,
         hasUser: Boolean(session?.user),
+        gaveUp,
         isPostOAuthRestore: isPostOAuthRestore(),
       })
+      if (gaveUp) return
       if (
         !session?.user ||
         (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED')
@@ -828,11 +965,13 @@ export default function HomePageClient({
         return
       }
       if (!isPostOAuthRestore()) return
+
       void (async () => {
-        if (await revealPendingResults(session)) return
+        if (await tryRevealPendingResultsForRestore(session, `durableListener:${event}`)) return
         if (hasPendingResults()) return
         const quiz = loadPendingAnalyze()
-        if (!quiz) return
+        if (!quiz || quizRefetchStarted) return
+        quizRefetchStarted = true
         setAuthOpen(false)
         setAuthVariant('default')
         setRestoringAfterOAuth(false)
@@ -843,10 +982,11 @@ export default function HomePageClient({
     })
 
     return () => {
-      cancelled = true
+      window.clearTimeout(giveUpTimer)
       subscription.unsubscribe()
+      logQuizAuthDebug('restore durable listener cleanup')
     }
-  }, [attemptPostAuthRestore, revealPendingResults])
+  }, [matches, tryRevealPendingResultsForRestore])
 
   async function handleAnalyzeRequest(data: AnalyzeRequest) {
     await runAnalyze(data)
@@ -863,6 +1003,10 @@ export default function HomePageClient({
     resetPostOAuthRestoreCache()
     clearPendingResults()
     clearPendingAnalyze()
+    restoreRevealStateRef.current = 'idle'
+    restoreRevealInvokeCountRef.current = 0
+    restoreRevealSuccessCountRef.current = 0
+    publishRestoreRevealDebug({ invokeCount: 0, successCount: 0, state: 'idle' })
   }
 
   function openSignInToView() {
@@ -1018,6 +1162,9 @@ export default function HomePageClient({
                 type="button"
                 onClick={() => {
                   setRestoreError(null)
+                  if (restoreRevealStateRef.current !== 'done') {
+                    restoreRevealStateRef.current = 'idle'
+                  }
                   void attemptPostAuthRestore()
                 }}
                 style={{
@@ -1171,7 +1318,10 @@ export default function HomePageClient({
               hasSession: Boolean(session?.user),
               isPostOAuthRestore: isPostOAuthRestore(),
             })
-            if (session?.user && (await revealPendingResults(session))) {
+            if (
+              session?.user &&
+              (await tryRevealPendingResultsForRestore(session, 'onAuthSuccess:immediate'))
+            ) {
               logQuizAuthDebug('onAuthSuccess — revealPendingResults succeeded (immediate)')
               return
             }
@@ -1193,7 +1343,12 @@ export default function HomePageClient({
             setRestoringAfterOAuth(true)
             setRestoreError(null)
             const waited = await waitForRestoreSession('onAuthSuccess')
-            if (waited?.user && (await revealPendingResults(waited))) return
+            if (
+              waited?.user &&
+              (await tryRevealPendingResultsForRestore(waited, 'onAuthSuccess:waited'))
+            ) {
+              return
+            }
             if (hasPendingResults()) {
               setRestoringAfterOAuth(false)
               setRestoreError(
