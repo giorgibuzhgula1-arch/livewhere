@@ -230,6 +230,7 @@ export default function HomePageClient({
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
   const [restoreError, setRestoreError] = useState<string | null>(null)
   const [oauthSignInError, setOauthSignInError] = useState<string | null>(null)
+  const unlockWallRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!awaitingAuthToView && !authOpen && !restoringAfterOAuth) return
@@ -772,6 +773,19 @@ export default function HomePageClient({
     }
   }, [])
 
+  // Smooth-scroll to the unlock/preview wall once it mounts with pending cities.
+  useEffect(() => {
+    if (!awaitingAuthToView || loading || matches !== null) return
+    if (restoringAfterOAuth || restoreError) return
+    const pending = loadPendingResults()
+    if (!pending?.cities.length) return
+
+    const id = window.requestAnimationFrame(() => {
+      unlockWallRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [awaitingAuthToView, loading, matches, restoringAfterOAuth, restoreError])
+
   // Restore results after OAuth redirect (full page remount loses React state).
   useEffect(() => {
     logQuizAuthDebug('restore useEffect mount')
@@ -975,7 +989,9 @@ export default function HomePageClient({
       )}
 
       {awaitingAuthToView && !loading && matches === null && (
-        <div style={{
+        <div
+          ref={unlockWallRef}
+          style={{
           minHeight: '100vh', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 20, padding: 20,
         }}>
