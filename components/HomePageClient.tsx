@@ -245,8 +245,11 @@ function DataSourcesAttribution() {
 
 export default function HomePageClient({
   defaultSavingsLocation = 'Florida',
+  initialPostOAuthRestore = false,
 }: {
   defaultSavingsLocation?: string
+  /** SSR/client hint from `?restore=results` only — must match server for hydration. */
+  initialPostOAuthRestore?: boolean
 }) {
   const [matches, setMatches] = useState<CityResult[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -256,8 +259,8 @@ export default function HomePageClient({
   const [error, setError] = useState<string | null>(null)
   const [resultMaxCities, setResultMaxCities] = useState<number | null>(null)
   const [quizData, setQuizData] = useState<AnalyzeRequest | null>(null)
-  const [awaitingAuthToView, setAwaitingAuthToView] = useState(false)
-  const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(false)
+  const [awaitingAuthToView, setAwaitingAuthToView] = useState(initialPostOAuthRestore)
+  const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(initialPostOAuthRestore)
   const [restoreError, setRestoreError] = useState<string | null>(null)
   const [oauthSignInError, setOauthSignInError] = useState<string | null>(null)
   const unlockWallRef = useRef<HTMLDivElement | null>(null)
@@ -277,6 +280,7 @@ export default function HomePageClient({
   const showLanding =
     matches === null && !loading && !awaitingAuthToView && !restoringAfterOAuth
   const showHero =
+    !restoringAfterOAuth &&
     !(matches !== null && matches.length > 0) &&
     !(matches !== null && loading && matches.length === 0)
 
@@ -724,7 +728,11 @@ export default function HomePageClient({
       clearPostAuthRestoreState()
       resetPostOAuthRestoreCache()
       setRestoringAfterOAuth(false)
+      setAwaitingAuthToView(false)
       setRestoreError(null)
+      if (typeof window !== 'undefined' && window.location.search.includes('restore=results')) {
+        window.history.replaceState(null, '', '/')
+      }
       return false
     }
 
