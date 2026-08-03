@@ -40,49 +40,13 @@ function sanitizeLockedCity(city: CityResult): CityResult {
 const FREE_SEARCH_LIMIT_MESSAGE =
   'Free plan limit reached. Continue to Pro for unlimited exploration.'
 
-/** Strip whitespace and optional wrapping quotes from env / header values. */
-function normalizeEnvValue(raw: string | undefined | null): string {
-  if (!raw) return ''
-  let v = raw.trim()
-  if (
-    (v.startsWith('"') && v.endsWith('"')) ||
-    (v.startsWith("'") && v.endsWith("'"))
-  ) {
-    v = v.slice(1, -1).trim()
-  }
-  return v.replace(/^\uFEFF/, '')
-}
-
-/** Local/dev only — set ANALYZE_BYPASS_RATE_LIMIT=1 in .env.local. Never honored in production. */
-function shouldBypassAnalyzeRateLimitLocal(): boolean {
-  if (process.env.NODE_ENV === 'production') return false
-  return process.env.ANALYZE_BYPASS_RATE_LIMIT === '1'
-}
-
 /**
- * Temporary OAuth-restore test bypass (remove after testing).
- * Honored when env is set — including production/preview:
- * - ANALYZE_TEST_BYPASS_EMAIL matches the logged-in user's email, or
- * - ?test_bypass= matches ANALYZE_TEST_BYPASS_TOKEN
+ * Marks that this browser already received its free anonymous preview analyze.
+ * The first call (no cookie) is never blocked by the IP/monthly bucket so
+ * paid-traffic first-time users always get their 3-city preview.
  */
-function shouldBypassSearchLimitsForTest(
-  req: NextRequest,
-  userEmail?: string | null,
-): boolean {
-  if (shouldBypassAnalyzeRateLimitLocal()) return true
-
-  const token = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_TOKEN)
-  if (token) {
-    const provided = normalizeEnvValue(req.nextUrl.searchParams.get('test_bypass'))
-    if (provided && provided === token) return true
-  }
-
-  const allowEmail = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_EMAIL).toLowerCase()
-  const actualEmail = normalizeEnvValue(userEmail).toLowerCase()
-  if (allowEmail && actualEmail && actualEmail === allowEmail) return true
-
-  return false
-}
+const ANON_PREVIEW_COOKIE = 'lw_anon_preview'
+const ANON_PREVIEW_COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 30 // 30 days
 
 /** Strict cap when no usable client IP — avoids one shared "unknown" bucket. */
 const FREE_ANONYMOUS_NO_IP_SEARCHES_PER_MONTH = 2
@@ -176,19 +140,17 @@ export async function POST(req: NextRequest) {
 
   const authHeader = req.headers.get('Authorization')
   let userId: string | null = null
-  let userEmail: string | null = null
   let plan = 'free'
   let searchesToday = 0
   const today = getSearchDayUtc()
+  /** Set on the streaming response after a first-time anonymous preview is allowed. */
+  let setAnonPreviewCookie = false
 
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7)
     const { data: { user } } = await supabaseAdmin.auth.getUser(token)
     if (user) {
       userId = user.id
-      userEmail =
-        user.email ??
-        (typeof user.user_metadata?.email === 'string' ? user.user_metadata.email : null)
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('plan, searches_today, search_day')
@@ -199,27 +161,7 @@ export async function POST(req: NextRequest) {
       searchesToday =
         profile?.search_day === today ? (profile?.searches_today ?? 0) : 0
 
-      const bypassEnvEmail = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_EMAIL)
-      const bypass = shouldBypassSearchLimitsForTest(req, userEmail)
-      console.log('[analyze-bypass-debug]', {
-        path: 'logged-in',
-        userEmail,
-        ANALYZE_TEST_BYPASS_EMAIL: bypassEnvEmail || '(unset)',
-        emailsMatch:
-          Boolean(userEmail) &&
-          Boolean(bypassEnvEmail) &&
-          normalizeEnvValue(userEmail).toLowerCase() === bypassEnvEmail.toLowerCase(),
-        bypass,
-        plan,
-        searchesToday,
-        freeLimit: FREE_SEARCHES_PER_DAY,
-      })
-
-      if (
-        !bypass &&
-        plan === 'free' &&
-        searchesToday >= FREE_SEARCHES_PER_DAY
-      ) {
+      if (plan === 'free' && searchesToday >= FREE_SEARCHES_PER_DAY) {
         return NextResponse.json(
           { error: FREE_SEARCH_LIMIT_MESSAGE },
           { status: 403 },
@@ -229,45 +171,39 @@ export async function POST(req: NextRequest) {
   }
 
   if (!userId) {
-    const bypassEnvEmail = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_EMAIL)
-    const bypass = shouldBypassSearchLimitsForTest(req, userEmail)
-    console.log('[analyze-bypass-debug]', {
-      path: 'anonymous',
-      userEmail: userEmail || null,
-      ANALYZE_TEST_BYPASS_EMAIL: bypassEnvEmail || '(unset)',
-      hasAuthHeader: Boolean(authHeader?.startsWith('Bearer ')),
-      bypass,
-      note: 'Email bypass only applies on logged-in path; anonymous needs ?test_bypass= token',
-    })
-    if (!bypass) {
-      const { ipKey, limit } = anonymousSearchBucket(req)
-      const month = getSearchMonth()
+    const { ipKey, limit } = anonymousSearchBucket(req)
+    const month = getSearchMonth()
+    // First preview per browser: never blocked, even if the shared IP bucket is full.
+    const isFirstPreview = req.cookies.get(ANON_PREVIEW_COOKIE)?.value !== '1'
 
-      const { data: anonRow, error: readError } = await supabaseAdmin
-        .from('anonymous_searches')
-        .select('count')
-        .eq('ip', ipKey)
-        .eq('month', month)
-        .maybeSingle()
+    const { data: anonRow, error: readError } = await supabaseAdmin
+      .from('anonymous_searches')
+      .select('count')
+      .eq('ip', ipKey)
+      .eq('month', month)
+      .maybeSingle()
 
-      if (readError) {
-        console.error('anonymous_searches read error:', readError)
-        return NextResponse.json({ error: 'Could not verify usage limit. Please try again.' }, { status: 500 })
-      }
+    if (readError) {
+      console.error('anonymous_searches read error:', readError)
+      return NextResponse.json({ error: 'Could not verify usage limit. Please try again.' }, { status: 500 })
+    }
 
-      const anonCount = anonRow?.count ?? 0
-      if (anonCount >= limit) {
-        return NextResponse.json({ error: FREE_SEARCH_LIMIT_MESSAGE }, { status: 403 })
-      }
+    const anonCount = anonRow?.count ?? 0
+    if (!isFirstPreview && anonCount >= limit) {
+      return NextResponse.json({ error: FREE_SEARCH_LIMIT_MESSAGE }, { status: 403 })
+    }
 
-      const { error: upsertError } = await supabaseAdmin
-        .from('anonymous_searches')
-        .upsert({ ip: ipKey, month, count: anonCount + 1 }, { onConflict: 'ip,month' })
+    const { error: upsertError } = await supabaseAdmin
+      .from('anonymous_searches')
+      .upsert({ ip: ipKey, month, count: anonCount + 1 }, { onConflict: 'ip,month' })
 
-      if (upsertError) {
-        console.error('anonymous_searches upsert error:', upsertError)
-        return NextResponse.json({ error: 'Could not record usage limit. Please try again.' }, { status: 500 })
-      }
+    if (upsertError) {
+      console.error('anonymous_searches upsert error:', upsertError)
+      return NextResponse.json({ error: 'Could not record usage limit. Please try again.' }, { status: 500 })
+    }
+
+    if (isFirstPreview) {
+      setAnonPreviewCookie = true
     }
   }
 
@@ -352,12 +288,18 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    },
+  const headers = new Headers({
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
   })
+  if (setAnonPreviewCookie) {
+    headers.append(
+      'Set-Cookie',
+      `${ANON_PREVIEW_COOKIE}=1; Path=/; Max-Age=${ANON_PREVIEW_COOKIE_MAX_AGE_SEC}; SameSite=Lax`,
+    )
+  }
+
+  return new Response(stream, { headers })
 }
