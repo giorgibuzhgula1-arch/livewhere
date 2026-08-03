@@ -40,6 +40,19 @@ function sanitizeLockedCity(city: CityResult): CityResult {
 const FREE_SEARCH_LIMIT_MESSAGE =
   'Free plan limit reached. Continue to Pro for unlimited exploration.'
 
+/** Strip whitespace and optional wrapping quotes from env / header values. */
+function normalizeEnvValue(raw: string | undefined | null): string {
+  if (!raw) return ''
+  let v = raw.trim()
+  if (
+    (v.startsWith('"') && v.endsWith('"')) ||
+    (v.startsWith("'") && v.endsWith("'"))
+  ) {
+    v = v.slice(1, -1).trim()
+  }
+  return v.replace(/^\uFEFF/, '')
+}
+
 /** Local/dev only — set ANALYZE_BYPASS_RATE_LIMIT=1 in .env.local. Never honored in production. */
 function shouldBypassAnalyzeRateLimitLocal(): boolean {
   if (process.env.NODE_ENV === 'production') return false
@@ -58,14 +71,15 @@ function shouldBypassSearchLimitsForTest(
 ): boolean {
   if (shouldBypassAnalyzeRateLimitLocal()) return true
 
-  const token = process.env.ANALYZE_TEST_BYPASS_TOKEN?.trim()
+  const token = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_TOKEN)
   if (token) {
-    const provided = req.nextUrl.searchParams.get('test_bypass')?.trim()
+    const provided = normalizeEnvValue(req.nextUrl.searchParams.get('test_bypass'))
     if (provided && provided === token) return true
   }
 
-  const allowEmail = process.env.ANALYZE_TEST_BYPASS_EMAIL?.trim().toLowerCase()
-  if (allowEmail && userEmail?.trim().toLowerCase() === allowEmail) return true
+  const allowEmail = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_EMAIL).toLowerCase()
+  const actualEmail = normalizeEnvValue(userEmail).toLowerCase()
+  if (allowEmail && actualEmail && actualEmail === allowEmail) return true
 
   return false
 }
@@ -172,7 +186,9 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabaseAdmin.auth.getUser(token)
     if (user) {
       userId = user.id
-      userEmail = user.email ?? null
+      userEmail =
+        user.email ??
+        (typeof user.user_metadata?.email === 'string' ? user.user_metadata.email : null)
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('plan, searches_today, search_day')
@@ -183,8 +199,24 @@ export async function POST(req: NextRequest) {
       searchesToday =
         profile?.search_day === today ? (profile?.searches_today ?? 0) : 0
 
+      const bypassEnvEmail = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_EMAIL)
+      const bypass = shouldBypassSearchLimitsForTest(req, userEmail)
+      console.log('[analyze-bypass-debug]', {
+        path: 'logged-in',
+        userEmail,
+        ANALYZE_TEST_BYPASS_EMAIL: bypassEnvEmail || '(unset)',
+        emailsMatch:
+          Boolean(userEmail) &&
+          Boolean(bypassEnvEmail) &&
+          normalizeEnvValue(userEmail).toLowerCase() === bypassEnvEmail.toLowerCase(),
+        bypass,
+        plan,
+        searchesToday,
+        freeLimit: FREE_SEARCHES_PER_DAY,
+      })
+
       if (
-        !shouldBypassSearchLimitsForTest(req, userEmail) &&
+        !bypass &&
         plan === 'free' &&
         searchesToday >= FREE_SEARCHES_PER_DAY
       ) {
@@ -197,7 +229,17 @@ export async function POST(req: NextRequest) {
   }
 
   if (!userId) {
-    if (!shouldBypassSearchLimitsForTest(req, userEmail)) {
+    const bypassEnvEmail = normalizeEnvValue(process.env.ANALYZE_TEST_BYPASS_EMAIL)
+    const bypass = shouldBypassSearchLimitsForTest(req, userEmail)
+    console.log('[analyze-bypass-debug]', {
+      path: 'anonymous',
+      userEmail: userEmail || null,
+      ANALYZE_TEST_BYPASS_EMAIL: bypassEnvEmail || '(unset)',
+      hasAuthHeader: Boolean(authHeader?.startsWith('Bearer ')),
+      bypass,
+      note: 'Email bypass only applies on logged-in path; anonymous needs ?test_bypass= token',
+    })
+    if (!bypass) {
       const { ipKey, limit } = anonymousSearchBucket(req)
       const month = getSearchMonth()
 
