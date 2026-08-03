@@ -1,4 +1,6 @@
+import { createHash } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { ipAddress } from '@vercel/functions'
 import { streamRecommendCities, buildTeaserCities } from '@/lib/recommendation'
 import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT, FREE_SEARCHES_PER_DAY, FREE_ANONYMOUS_SEARCHES_PER_MONTH } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -38,16 +40,61 @@ function sanitizeLockedCity(city: CityResult): CityResult {
 const FREE_SEARCH_LIMIT_MESSAGE =
   'Free plan limit reached. Continue to Pro for unlimited exploration.'
 
-function getClientIp(req: NextRequest): string {
-  const forwarded = req.headers.get('x-forwarded-for')
-  if (forwarded) {
-    return forwarded.split(',')[0].trim()
+/** Strict cap when no usable client IP — avoids one shared "unknown" bucket. */
+const FREE_ANONYMOUS_NO_IP_SEARCHES_PER_MONTH = 2
+
+function isUsableClientIp(ip: string): boolean {
+  const value = ip.trim().toLowerCase()
+  return value !== '' && value !== '::1' && value !== '127.0.0.1' && value !== 'unknown'
+}
+
+/**
+ * Resolve client IP for anonymous rate limiting.
+ * Primary: Vercel `ipAddress` (x-real-ip). Never returns loopback / "unknown".
+ */
+function getClientIp(req: NextRequest): string | null {
+  try {
+    const fromVercel = ipAddress(req)
+    if (fromVercel && isUsableClientIp(fromVercel)) {
+      return fromVercel.trim()
+    }
+  } catch {
+    // Fall through to header parsing; never fail the request here.
   }
+
   const realIp = req.headers.get('x-real-ip')
-  if (realIp) {
+  if (realIp && isUsableClientIp(realIp)) {
     return realIp.trim()
   }
-  return 'unknown'
+
+  const forwarded = req.headers.get('x-forwarded-for')
+  if (forwarded) {
+    for (const part of forwarded.split(',')) {
+      const candidate = part.trim()
+      if (candidate && isUsableClientIp(candidate)) {
+        return candidate
+      }
+    }
+  }
+
+  return null
+}
+
+/** Rate-limit key + monthly cap for anonymous analyze. */
+function anonymousSearchBucket(req: NextRequest): { ipKey: string; limit: number } {
+  const clientIp = getClientIp(req)
+  if (clientIp) {
+    return { ipKey: clientIp, limit: FREE_ANONYMOUS_SEARCHES_PER_MONTH }
+  }
+
+  // Safer than a global "unknown" key: coarse UA/lang fingerprint, very low cap.
+  const ua = req.headers.get('user-agent') ?? ''
+  const lang = req.headers.get('accept-language') ?? ''
+  const digest = createHash('sha256')
+    .update(`nofp\0${ua}\0${lang}`)
+    .digest('hex')
+    .slice(0, 32)
+  return { ipKey: `nofp:${digest}`, limit: FREE_ANONYMOUS_NO_IP_SEARCHES_PER_MONTH }
 }
 
 function getSearchDayUtc(): string {
@@ -114,13 +161,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (!userId) {
-    const clientIp = getClientIp(req)
+    const { ipKey, limit } = anonymousSearchBucket(req)
     const month = getSearchMonth()
 
     const { data: anonRow, error: readError } = await supabaseAdmin
       .from('anonymous_searches')
       .select('count')
-      .eq('ip', clientIp)
+      .eq('ip', ipKey)
       .eq('month', month)
       .maybeSingle()
 
@@ -130,13 +177,13 @@ export async function POST(req: NextRequest) {
     }
 
     const anonCount = anonRow?.count ?? 0
-    if (anonCount >= FREE_ANONYMOUS_SEARCHES_PER_MONTH) {
+    if (anonCount >= limit) {
       return NextResponse.json({ error: FREE_SEARCH_LIMIT_MESSAGE }, { status: 403 })
     }
 
     const { error: upsertError } = await supabaseAdmin
       .from('anonymous_searches')
-      .upsert({ ip: clientIp, month, count: anonCount + 1 }, { onConflict: 'ip,month' })
+      .upsert({ ip: ipKey, month, count: anonCount + 1 }, { onConflict: 'ip,month' })
 
     if (upsertError) {
       console.error('anonymous_searches upsert error:', upsertError)
