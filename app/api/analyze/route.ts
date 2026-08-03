@@ -40,6 +40,36 @@ function sanitizeLockedCity(city: CityResult): CityResult {
 const FREE_SEARCH_LIMIT_MESSAGE =
   'Free plan limit reached. Continue to Pro for unlimited exploration.'
 
+/** Local/dev only — set ANALYZE_BYPASS_RATE_LIMIT=1 in .env.local. Never honored in production. */
+function shouldBypassAnalyzeRateLimitLocal(): boolean {
+  if (process.env.NODE_ENV === 'production') return false
+  return process.env.ANALYZE_BYPASS_RATE_LIMIT === '1'
+}
+
+/**
+ * Temporary OAuth-restore test bypass (remove after testing).
+ * Honored when env is set — including production/preview:
+ * - ANALYZE_TEST_BYPASS_EMAIL matches the logged-in user's email, or
+ * - ?test_bypass= matches ANALYZE_TEST_BYPASS_TOKEN
+ */
+function shouldBypassSearchLimitsForTest(
+  req: NextRequest,
+  userEmail?: string | null,
+): boolean {
+  if (shouldBypassAnalyzeRateLimitLocal()) return true
+
+  const token = process.env.ANALYZE_TEST_BYPASS_TOKEN?.trim()
+  if (token) {
+    const provided = req.nextUrl.searchParams.get('test_bypass')?.trim()
+    if (provided && provided === token) return true
+  }
+
+  const allowEmail = process.env.ANALYZE_TEST_BYPASS_EMAIL?.trim().toLowerCase()
+  if (allowEmail && userEmail?.trim().toLowerCase() === allowEmail) return true
+
+  return false
+}
+
 /** Strict cap when no usable client IP — avoids one shared "unknown" bucket. */
 const FREE_ANONYMOUS_NO_IP_SEARCHES_PER_MONTH = 2
 
@@ -132,6 +162,7 @@ export async function POST(req: NextRequest) {
 
   const authHeader = req.headers.get('Authorization')
   let userId: string | null = null
+  let userEmail: string | null = null
   let plan = 'free'
   let searchesToday = 0
   const today = getSearchDayUtc()
@@ -141,6 +172,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabaseAdmin.auth.getUser(token)
     if (user) {
       userId = user.id
+      userEmail = user.email ?? null
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('plan, searches_today, search_day')
@@ -151,7 +183,11 @@ export async function POST(req: NextRequest) {
       searchesToday =
         profile?.search_day === today ? (profile?.searches_today ?? 0) : 0
 
-      if (plan === 'free' && searchesToday >= FREE_SEARCHES_PER_DAY) {
+      if (
+        !shouldBypassSearchLimitsForTest(req, userEmail) &&
+        plan === 'free' &&
+        searchesToday >= FREE_SEARCHES_PER_DAY
+      ) {
         return NextResponse.json(
           { error: FREE_SEARCH_LIMIT_MESSAGE },
           { status: 403 },
@@ -161,33 +197,35 @@ export async function POST(req: NextRequest) {
   }
 
   if (!userId) {
-    const { ipKey, limit } = anonymousSearchBucket(req)
-    const month = getSearchMonth()
+    if (!shouldBypassSearchLimitsForTest(req, userEmail)) {
+      const { ipKey, limit } = anonymousSearchBucket(req)
+      const month = getSearchMonth()
 
-    const { data: anonRow, error: readError } = await supabaseAdmin
-      .from('anonymous_searches')
-      .select('count')
-      .eq('ip', ipKey)
-      .eq('month', month)
-      .maybeSingle()
+      const { data: anonRow, error: readError } = await supabaseAdmin
+        .from('anonymous_searches')
+        .select('count')
+        .eq('ip', ipKey)
+        .eq('month', month)
+        .maybeSingle()
 
-    if (readError) {
-      console.error('anonymous_searches read error:', readError)
-      return NextResponse.json({ error: 'Could not verify usage limit. Please try again.' }, { status: 500 })
-    }
+      if (readError) {
+        console.error('anonymous_searches read error:', readError)
+        return NextResponse.json({ error: 'Could not verify usage limit. Please try again.' }, { status: 500 })
+      }
 
-    const anonCount = anonRow?.count ?? 0
-    if (anonCount >= limit) {
-      return NextResponse.json({ error: FREE_SEARCH_LIMIT_MESSAGE }, { status: 403 })
-    }
+      const anonCount = anonRow?.count ?? 0
+      if (anonCount >= limit) {
+        return NextResponse.json({ error: FREE_SEARCH_LIMIT_MESSAGE }, { status: 403 })
+      }
 
-    const { error: upsertError } = await supabaseAdmin
-      .from('anonymous_searches')
-      .upsert({ ip: ipKey, month, count: anonCount + 1 }, { onConflict: 'ip,month' })
+      const { error: upsertError } = await supabaseAdmin
+        .from('anonymous_searches')
+        .upsert({ ip: ipKey, month, count: anonCount + 1 }, { onConflict: 'ip,month' })
 
-    if (upsertError) {
-      console.error('anonymous_searches upsert error:', upsertError)
-      return NextResponse.json({ error: 'Could not record usage limit. Please try again.' }, { status: 500 })
+      if (upsertError) {
+        console.error('anonymous_searches upsert error:', upsertError)
+        return NextResponse.json({ error: 'Could not record usage limit. Please try again.' }, { status: 500 })
+      }
     }
   }
 
