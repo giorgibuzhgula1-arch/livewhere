@@ -84,6 +84,9 @@ type SessionReadResult = {
   stop: boolean
 }
 
+/** Hard ceiling so confirmAuthSessionReady cannot hang on a stuck getSession(). */
+const CONFIRM_SESSION_TIMEOUT_MS = 15_000
+
 /**
  * Single getSession read with circuit-breaker awareness.
  * Avoids pairing getSession + getUser on every poll (each can trigger refresh).
@@ -101,6 +104,53 @@ async function readAuthSessionOnce(): Promise<SessionReadResult> {
     return { session, stop: false }
   }
   return { session: null, stop: false }
+}
+
+/**
+ * Like readAuthSessionOnce, but abandons a hung getSession after timeoutMs.
+ * On timeout / unexpected rejection: stop polling (session null).
+ */
+async function readAuthSessionOnceWithTimeout(
+  timeoutMs: number,
+): Promise<SessionReadResult> {
+  if (isRefreshCircuitOpen()) {
+    return { session: null, stop: true }
+  }
+  if (timeoutMs <= 0) {
+    return { session: null, stop: true }
+  }
+
+  try {
+    const result = await new Promise<{
+      session: Session | null
+      error: unknown
+    }>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error('getSession_timeout'))
+      }, timeoutMs)
+
+      void supabase.auth.getSession().then(
+        ({ data, error }) => {
+          clearTimeout(timer)
+          resolve({ session: data.session, error })
+        },
+        (err) => {
+          clearTimeout(timer)
+          reject(err)
+        },
+      )
+    })
+
+    if (result.error && isAuthRateLimited(result.error)) {
+      return { session: null, stop: true }
+    }
+    if (result.session?.user) {
+      return { session: result.session, stop: false }
+    }
+    return { session: null, stop: false }
+  } catch {
+    return { session: null, stop: true }
+  }
 }
 
 /**
@@ -170,18 +220,33 @@ export function clearPostAuthRestoreState(): void {
 /**
  * After exchangeCodeForSession, wait until getSession returns a user.
  * Uses backoff; stops immediately on rate limit / refresh circuit.
+ * Wall-clock + per-getSession timeout (15s) so a hung getSession cannot spin forever.
  */
 export async function confirmAuthSessionReady(
   maxAttempts = 40,
   initialDelayMs = 250,
 ): Promise<Session | null> {
+  const deadline = Date.now() + CONFIRM_SESSION_TIMEOUT_MS
   let delayMs = initialDelayMs
+
   for (let i = 0; i < maxAttempts; i++) {
-    const { session, stop } = await readAuthSessionOnce()
+    const remaining = deadline - Date.now()
+    if (remaining <= 0) return null
+
+    const { session, stop } = await readAuthSessionOnceWithTimeout(remaining)
     if (session?.user) return session
     if (stop) return null
-    await new Promise((r) => setTimeout(r, delayMs))
+
+    const sleepMs = Math.min(delayMs, deadline - Date.now())
+    if (sleepMs <= 0) return null
+    await new Promise((r) => setTimeout(r, sleepMs))
     delayMs = Math.min(Math.round(delayMs * 1.5), MAX_POLL_DELAY_MS)
   }
-  return waitForAuthSession(20, initialDelayMs)
+
+  const remaining = deadline - Date.now()
+  if (remaining <= 0) return null
+
+  // Final timed read instead of an unbounded waitForAuthSession tail.
+  const last = await readAuthSessionOnceWithTimeout(remaining)
+  return last.session?.user ? last.session : null
 }
