@@ -12,6 +12,9 @@ import { trackSignUp } from '@/lib/gtag'
 import { trackSignupCompleted } from '@/lib/analytics'
 import type { User } from '@supabase/supabase-js'
 
+const SESSION_FAIL_MESSAGE =
+  'Something went wrong, please try signing in again'
+
 function safeNextPath(raw: string | null): string {
   if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/'
   return raw
@@ -23,9 +26,10 @@ function safeNextPath(raw: string | null): string {
  */
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('Signing you in…')
+  const [showRetry, setShowRetry] = useState(false)
 
   useEffect(() => {
-    let cancelled = false
+    let active = true
     let redirecting = false
     let signUpTracked = false
 
@@ -40,13 +44,19 @@ export default function AuthCallbackPage() {
     }
 
     function redirectHome(path: string, oauthSuccess: boolean) {
-      if (redirecting || cancelled) return
+      if (redirecting || !active) return
       redirecting = true
       if (oauthSuccess) {
         markOAuthReturn()
       }
       clearOAuthNext()
       window.location.replace(path)
+    }
+
+    function failWithRetry(message: string) {
+      if (!active || redirecting) return
+      setShowRetry(true)
+      setStatus(message)
     }
 
     async function finish() {
@@ -62,8 +72,10 @@ export default function AuthCallbackPage() {
       }
 
       if (code) {
+        if (!active) return
         setStatus('Completing sign-in…')
         const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!active) return
         if (error) {
           console.error('exchangeCodeForSession:', error)
           redirectHome('/?auth_error=oauth', false)
@@ -72,9 +84,11 @@ export default function AuthCallbackPage() {
         window.history.replaceState(null, '', window.location.pathname)
       }
 
+      if (!active) return
       setStatus('Saving your session…')
       const session = await confirmAuthSessionReady(12, 100)
-      if (cancelled) return
+      // Unmounted/remounted: do not touch UI — the new effect owns the spinner.
+      if (!active) return
 
       if (session?.user) {
         trackNewGoogleSignUp(session.user)
@@ -83,39 +97,13 @@ export default function AuthCallbackPage() {
         return
       }
 
-      setStatus('Waiting for session…')
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (
-          session?.user &&
-          (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
-        ) {
-          subscription.unsubscribe()
-          void (async () => {
-            const ready = await confirmAuthSessionReady(8, 100)
-            if (ready?.user) {
-              trackNewGoogleSignUp(ready.user)
-              redirectHome(next, true)
-            }
-          })()
-        }
-      })
-
-      window.setTimeout(async () => {
-        subscription.unsubscribe()
-        if (cancelled || redirecting) return
-        const retry = await confirmAuthSessionReady(5, 100)
-        if (retry?.user) {
-          trackNewGoogleSignUp(retry.user)
-          redirectHome(next, true)
-        } else {
-          redirectHome('/?auth_error=session', false)
-        }
-      }, 1500)
+      // Timed-out / no session: never leave an infinite spinner.
+      failWithRetry(SESSION_FAIL_MESSAGE)
     }
 
     void finish()
     return () => {
-      cancelled = true
+      active = false
     }
   }, [])
 
@@ -133,16 +121,39 @@ export default function AuthCallbackPage() {
       padding: 20,
       textAlign: 'center',
     }}>
-      <div style={{
-        width: 40,
-        height: 40,
-        border: '3px solid #1a1a26',
-        borderTopColor: '#c8f05a',
-        borderRadius: '50%',
-        animation: 'oauth-spin 1s linear infinite',
-      }} />
+      {!showRetry && (
+        <div style={{
+          width: 40,
+          height: 40,
+          border: '3px solid #1a1a26',
+          borderTopColor: '#c8f05a',
+          borderRadius: '50%',
+          animation: 'oauth-spin 1s linear infinite',
+        }} />
+      )}
       <style>{`@keyframes oauth-spin { to { transform: rotate(360deg) } }`}</style>
-      {status}
+      <p style={{ margin: 0, maxWidth: 360, lineHeight: 1.5 }}>{status}</p>
+      {showRetry && (
+        <button
+          type="button"
+          onClick={() => {
+            window.location.assign('/')
+          }}
+          style={{
+            background: '#c8f05a',
+            color: '#0a0a0f',
+            border: 'none',
+            padding: '12px 20px',
+            borderRadius: 10,
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          Try signing in again
+        </button>
+      )}
     </div>
   )
 }
