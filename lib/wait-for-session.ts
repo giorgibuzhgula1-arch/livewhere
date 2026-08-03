@@ -84,57 +84,6 @@ type SessionReadResult = {
   stop: boolean
 }
 
-/** Same ceiling as OAuth confirm — hung getSession must not block analyze forever. */
-export const GET_SESSION_TIMEOUT_MS = 15_000
-
-export type AuthSessionWithTimeoutResult =
-  | { ok: true; session: Session | null }
-  | { ok: false; timedOut: true }
-
-/**
- * Single getSession with a hard timeout so callers (e.g. analyze) cannot hang
- * forever waiting for auth. Distinguishes "no session" (ok + null) from timeout.
- */
-export async function getAuthSessionWithTimeout(
-  timeoutMs = GET_SESSION_TIMEOUT_MS,
-): Promise<AuthSessionWithTimeoutResult> {
-  if (isRefreshCircuitOpen()) {
-    return { ok: true, session: null }
-  }
-  if (timeoutMs <= 0) {
-    return { ok: false, timedOut: true }
-  }
-
-  try {
-    const result = await new Promise<{
-      session: Session | null
-      error: unknown
-    }>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error('getSession_timeout'))
-      }, timeoutMs)
-
-      void supabase.auth.getSession().then(
-        ({ data, error }) => {
-          clearTimeout(timer)
-          resolve({ session: data.session, error })
-        },
-        (err) => {
-          clearTimeout(timer)
-          reject(err)
-        },
-      )
-    })
-
-    if (result.error && isAuthRateLimited(result.error)) {
-      return { ok: true, session: null }
-    }
-    return { ok: true, session: result.session }
-  } catch {
-    return { ok: false, timedOut: true }
-  }
-}
-
 /**
  * Single getSession read with circuit-breaker awareness.
  * Avoids pairing getSession + getUser on every poll (each can trigger refresh).
