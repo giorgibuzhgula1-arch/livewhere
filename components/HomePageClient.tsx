@@ -36,6 +36,7 @@ import {
 import { saveCheckoutSnapshot } from '@/lib/checkout-snapshot'
 import {
   waitForAuthSession,
+  getAuthSessionWithTimeout,
   clearPostAuthRestoreState,
   clearOAuthReturn,
   isOAuthReturnPending,
@@ -405,7 +406,15 @@ export default function HomePageClient({
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), ANALYZE_CLIENT_TIMEOUT_MS)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const sessionRead = await getAuthSessionWithTimeout()
+      if (!sessionRead.ok) {
+        setMatches(null)
+        setAwaitingAuthToView(false)
+        setAuthOpen(false)
+        setError('Something went wrong, please try again')
+        return
+      }
+      const session = sessionRead.session
       const startedLoggedIn = Boolean(session?.user)
 
       if (!options?.isRestoreRefetch) {
