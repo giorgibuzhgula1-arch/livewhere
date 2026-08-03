@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   confirmAuthSessionReady,
@@ -27,6 +27,8 @@ function safeNextPath(raw: string | null): string {
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('Signing you in…')
   const [showRetry, setShowRetry] = useState(false)
+  /** Strict Mode may remount; PKCE code+verifier are single-use — exchange only once per page instance. */
+  const codeExchangeAttemptedRef = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -72,16 +74,20 @@ export default function AuthCallbackPage() {
       }
 
       if (code) {
-        if (!active) return
-        setStatus('Completing sign-in…')
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!active) return
-        if (error) {
-          console.error('exchangeCodeForSession:', error)
-          redirectHome('/?auth_error=oauth', false)
-          return
+        if (!codeExchangeAttemptedRef.current) {
+          codeExchangeAttemptedRef.current = true
+          if (!active) return
+          setStatus('Completing sign-in…')
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (!active) return
+          if (error) {
+            console.error('exchangeCodeForSession:', error)
+            redirectHome('/?auth_error=oauth', false)
+            return
+          }
+          window.history.replaceState(null, '', window.location.pathname)
         }
-        window.history.replaceState(null, '', window.location.pathname)
+        // Second pass on same instance: skip exchange; fall through to session wait.
       }
 
       if (!active) return
