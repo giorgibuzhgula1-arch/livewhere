@@ -336,7 +336,7 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                Unlock — Continue to Pro
+                See Full City Analysis — Pro
               </Link>
             </div>
           )}

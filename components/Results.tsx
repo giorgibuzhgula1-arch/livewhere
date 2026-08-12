@@ -790,7 +790,7 @@ export default function Results({
           lineHeight: 1.6,
           color: 'rgba(240,237,232,0.7)',
         }}>
-          You&apos;re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. Unlock the full breakdown we prepared and all 12 matches with Pro.
+          Your Top 3 matches are 100% free — no payment required. You&apos;re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.
         </div>
       )}
 

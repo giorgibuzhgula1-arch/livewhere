@@ -1216,7 +1216,7 @@ export default function HomePageClient({
             textAlign: 'center',
             maxWidth: 480,
           }}>
-            Unlock Your Results.
+            Your Top 3 Matches Are Ready.
           </h2>
           {(() => {
             const pendingCities = loadPendingResults()?.cities ?? []
@@ -1231,13 +1231,13 @@ export default function HomePageClient({
             return previewCities.length > 0 ? (
               <>
                 <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6, margin: 0 }}>
-                  Your top matches are ready. Sign in to unlock the full relocation analysis.
+                  See your 3 best-matching cities — completely free. Sign in to view.
                 </p>
                 <AnonymousResultsPreview cities={previewCities} />
               </>
             ) : (
               <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
-                Sign in with Google or email to see your full relocation analysis — takes 10 seconds, no extra forms.
+                See your 3 best-matching cities — completely free. Sign in to view.
               </p>
             )
           })()}
@@ -1250,8 +1250,11 @@ export default function HomePageClient({
               cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            Unlock Full Results
+            See My Free Results
           </button>
+          <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 13, textAlign: 'center', margin: 0 }}>
+            No payment required — just sign in.
+          </p>
           <button
             type="button"
             onClick={handleResetMatches}

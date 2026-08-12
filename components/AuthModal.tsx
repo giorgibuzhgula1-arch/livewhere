@@ -159,7 +159,7 @@ export default function AuthModal({
   }
 
   const title = restoreResults
-    ? 'Unlock Your Results'
+    ? 'See Your Free Results'
     : mode === 'signup'
       ? 'Sign up'
       : 'Sign in'
