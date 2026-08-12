@@ -76,12 +76,6 @@ function CityDetails({ city, color, showCompareLink = false }: { city: CityResul
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        {city.tags.slice(0, 2).map(tag => (
-          <span key={tag} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(200,240,90,0.1)', color: '#c8f05a' }}>{tag}</span>
-        ))}
-        <VisaBadge country={city.country} />
-      </div>
       {showCompareLink && (
         <Link
           href={compareHrefForCity(city.name)}
@@ -105,6 +99,12 @@ function CityDetails({ city, color, showCompareLink = false }: { city: CityResul
           Compare
         </Link>
       )}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 14 }}>
+        {city.tags.slice(0, 2).map(tag => (
+          <span key={tag} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'rgba(200,240,90,0.1)', color: '#c8f05a' }}>{tag}</span>
+        ))}
+        <VisaBadge country={city.country} />
+      </div>
     </>
   )
 }
@@ -336,7 +336,7 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                See Full City Analysis — Pro
+                Financial Breakdown — Pro
               </Link>
             </div>
           )}
@@ -409,6 +409,19 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
     >
       <CityDetails city={city} color={color} showCompareLink={showCompareLink} />
+      <p
+        aria-hidden
+        style={{
+          margin: '14px 0 0',
+          fontSize: 12,
+          fontWeight: 600,
+          letterSpacing: 0.2,
+          color: 'rgba(200,240,90,0.85)',
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        Tap card to see full breakdown for free.
+      </p>
       <WhyThisMatchesYou city={city} />
     </div>
   )
