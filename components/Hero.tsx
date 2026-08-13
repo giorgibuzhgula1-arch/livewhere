@@ -82,7 +82,7 @@ export default function Hero({ onStart }: Props) {
             fontSize: 'clamp(16px, 2.2vw, 20px)',
             fontWeight: 400,
             lineHeight: 1.5,
-            color: 'rgba(240, 237, 232, 0.62)',
+            color: '#c8f05a',
             maxWidth: 700,
             margin: '0 auto 28px',
           }}

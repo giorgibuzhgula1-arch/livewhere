@@ -1167,7 +1167,7 @@ export default function Results({
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 12,
               lineHeight: 1.5,
-              color: 'rgba(240,237,232,0.4)',
+              color: '#c8f05a',
             }}
           >
             🔒 Secure checkout via Stripe
