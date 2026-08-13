@@ -513,6 +513,19 @@ export default function Pricing({ onUpgrade, checkoutContext }: Props) {
               >
                 {tier.btn}
               </button>
+              {tier.id === 'pro' && (
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: 'rgba(240,237,232,0.4)',
+                    marginTop: 10,
+                    lineHeight: 1.5,
+                    marginBottom: 0,
+                  }}
+                >
+                  🔒 Secure checkout via Stripe
+                </p>
+              )}
               {tier.note && (
                 <p
                   style={{

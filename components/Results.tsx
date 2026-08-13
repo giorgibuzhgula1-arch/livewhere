@@ -1067,6 +1067,21 @@ export default function Results({
             Don&apos;t make this decision with incomplete information.
           </p>
 
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: 'rgba(240,237,232,0.65)',
+              margin: '0 0 16px',
+              maxWidth: 520,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            Your Top 3 matches are free. Pro unlocks the remaining 9 cities and deeper relocation analysis.
+          </p>
+
           <div
             style={{
               maxWidth: 480,
@@ -1105,6 +1120,30 @@ export default function Results({
             </ul>
           </div>
 
+          <p
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 'clamp(18px, 2.4vw, 22px)',
+              fontWeight: 700,
+              lineHeight: 1.3,
+              color: '#f0ede8',
+              margin: '0 0 6px',
+            }}
+          >
+            Unlock All 12 Personalized Matches — $79
+          </p>
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: 'rgba(240,237,232,0.5)',
+              margin: '0 0 16px',
+            }}
+          >
+            One-time payment · Lifetime access · No subscription
+          </p>
+
           <button
             type="button"
             onClick={() => onUnlockPro?.()}
@@ -1122,6 +1161,17 @@ export default function Results({
           >
             Unlock My Complete Relocation Blueprint
           </button>
+          <p
+            style={{
+              margin: '10px 0 0',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 12,
+              lineHeight: 1.5,
+              color: 'rgba(240,237,232,0.4)',
+            }}
+          >
+            🔒 Secure checkout via Stripe
+          </p>
           <p
             style={{
               margin: '12px 0 0',

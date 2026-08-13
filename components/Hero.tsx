@@ -69,12 +69,26 @@ export default function Hero({ onStart }: Props) {
             fontWeight: 900,
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
-            margin: '0 0 28px',
+            margin: '0 0 16px',
             color: '#f0ede8',
           }}
         >
           Don&apos;t Make A Six-Figure Relocation Mistake.
         </h1>
+
+        <p
+          style={{
+            fontFamily: fontFamilySans,
+            fontSize: 'clamp(16px, 2.2vw, 20px)',
+            fontWeight: 400,
+            lineHeight: 1.5,
+            color: 'rgba(240, 237, 232, 0.62)',
+            maxWidth: 700,
+            margin: '0 auto 28px',
+          }}
+        >
+          Find the best cities and countries to move to based on your budget, taxes, healthcare, safety and lifestyle.
+        </p>
 
         <div style={{ marginBottom: 72 }}>
           <button
