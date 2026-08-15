@@ -33,7 +33,7 @@ import {
   loadPendingAnalyze,
   clearPendingAnalyze,
 } from '@/lib/pending-analyze'
-import { saveCheckoutSnapshot } from '@/lib/checkout-snapshot'
+import { saveCheckoutSnapshot, loadCheckoutSnapshot, clearCheckoutSnapshot } from '@/lib/checkout-snapshot'
 import {
   waitForAuthSession,
   getAuthSessionWithTimeout,
@@ -796,6 +796,7 @@ export default function HomePageClient({
   /** Prevents double kickoff of attemptPostAuthRestore (not the durable auth listener). */
   const restoreKickoffAttemptedRef = useRef(false)
   const savedPlanAttemptedRef = useRef(false)
+  const compareReturnAttemptedRef = useRef(false)
   const purchaseTrackedRef = useRef(false)
 
   // Track successful Stripe purchase return.
@@ -861,6 +862,43 @@ export default function HomePageClient({
 
     return () => { cancelled = true }
   }, [openAuthForSave])
+
+  // Return from /compare?from=results — rehydrate Results from checkout snapshot only.
+  // Separate from OAuth ?restore=results; never touches restore flags or spinner UI.
+  useEffect(() => {
+    if (compareReturnAttemptedRef.current) return
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('compareReturn') !== '1') return
+
+    compareReturnAttemptedRef.current = true
+
+    const snapshot = loadCheckoutSnapshot()
+    const cities = snapshot?.cities
+    const quiz = snapshot?.quizInput
+    const valid =
+      snapshot != null &&
+      Array.isArray(cities) &&
+      cities.length > 0 &&
+      quiz != null &&
+      typeof quiz === 'object' &&
+      typeof quiz.monthlyBudget === 'number' &&
+      typeof quiz.currency === 'string' &&
+      quiz.priorities != null &&
+      typeof quiz.priorities === 'object'
+
+    if (valid) {
+      setQuizData(quiz)
+      setMatches(cities)
+      setResultMaxCities(snapshot.maxCities ?? null)
+      setError(null)
+    }
+
+    params.delete('compareReturn')
+    const remaining = params.toString()
+    window.history.replaceState(null, '', remaining ? `/?${remaining}` : '/')
+  }, [])
 
   // Keep quiz inputs in sync when results are shown (e.g. after auth restore).
   useEffect(() => {
@@ -1020,6 +1058,7 @@ export default function HomePageClient({
     resetPostOAuthRestoreCache()
     clearPendingResults()
     clearPendingAnalyze()
+    clearCheckoutSnapshot()
     restoreRevealStateRef.current = 'idle'
     restoreRevealInvokeCountRef.current = 0
     restoreRevealSuccessCountRef.current = 0

@@ -88,7 +88,10 @@ export default function CompareView() {
 
   return (
     <main className={styles.page}>
-      <Link href="/" className={styles.back}>
+      <Link
+        href={searchParams.get('from') === 'results' ? '/?compareReturn=1' : '/'}
+        className={styles.back}
+      >
         ← Back to LiveWhere
       </Link>
 

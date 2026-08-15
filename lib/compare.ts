@@ -78,7 +78,7 @@ export function getCityCompareMetrics(city: CityRow): CityCompareMetrics {
 }
 
 export function compareHrefForCity(cityName: string, cityB?: string): string {
-  const params = new URLSearchParams({ cityA: cityName })
+  const params = new URLSearchParams({ cityA: cityName, from: 'results' })
   if (cityB) params.set('cityB', cityB)
   return `/compare?${params.toString()}`
 }
