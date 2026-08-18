@@ -868,7 +868,7 @@ export default function Results({
       )}
 
       {/* Cities grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 16 }}>
         {filtered.map((city, i) => {
           const compareSelected = isCompareSelected(city)
           const compareDisabled =
