@@ -150,22 +150,24 @@ function isPostOAuthRestore(): boolean {
 
 function logQuizAuthDebug(context: string, extra?: Record<string, unknown>) {
   if (typeof window === 'undefined') return
-  const params = new URLSearchParams(window.location.search)
-  const restoreParam = params.get('restore')
-  const oauthReturnPending = isOAuthReturnPending()
-  console.log('[quiz-auth-debug]', context, {
-    href: window.location.href,
-    search: window.location.search,
-    restoreParam,
-    oauthReturnPending,
-    isPostOAuthRestore: isPostOAuthRestore(),
-    localStorage_oauth_return: localStorage.getItem('livewhere_oauth_return'),
-    localStorage_pending_auth_restore: localStorage.getItem('livewhere_pending_auth_restore'),
-    localStorage_oauth_next: localStorage.getItem('livewhere_oauth_next'),
-    hasPendingResults: hasPendingResults(),
-    hasPendingAnalyze: Boolean(loadPendingAnalyze()),
-    ...extra,
-  })
+  window.setTimeout(() => {
+    const params = new URLSearchParams(window.location.search)
+    const restoreParam = params.get('restore')
+    const oauthReturnPending = isOAuthReturnPending()
+    console.log('[quiz-auth-debug]', context, {
+      href: window.location.href,
+      search: window.location.search,
+      restoreParam,
+      oauthReturnPending,
+      isPostOAuthRestore: isPostOAuthRestore(),
+      localStorage_oauth_return: localStorage.getItem('livewhere_oauth_return'),
+      localStorage_pending_auth_restore: localStorage.getItem('livewhere_pending_auth_restore'),
+      localStorage_oauth_next: localStorage.getItem('livewhere_oauth_next'),
+      hasPendingResults: hasPendingResults(),
+      hasPendingAnalyze: Boolean(loadPendingAnalyze()),
+      ...extra,
+    })
+  }, 0)
 }
 
 const DATA_SOURCES = [
