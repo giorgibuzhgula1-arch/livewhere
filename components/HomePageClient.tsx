@@ -1163,7 +1163,7 @@ export default function HomePageClient({
         </>
       )}
 
-      {loading && matches === null && !awaitingAuthToView && !restoringAfterOAuth && (
+      {loading && matches === null && !restoringAfterOAuth && (
         <div style={{
           position: 'fixed',
           inset: 0,
