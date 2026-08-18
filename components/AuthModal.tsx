@@ -171,7 +171,7 @@ export default function AuthModal({
     color: '#f0ede8',
     padding: '12px 14px',
     borderRadius: 10,
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: "'DM Sans', sans-serif",
     outline: 'none',
     boxSizing: 'border-box',
@@ -201,12 +201,13 @@ export default function AuthModal({
             position: 'fixed',
             inset: 0,
             background: 'rgba(0,0,0,0.8)',
-            backdropFilter: 'blur(10px)',
             zIndex: 300,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
-            padding: 20,
+            padding: '20px 20px 40px',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           <motion.div
@@ -220,6 +221,8 @@ export default function AuthModal({
               padding: '28px 24px',
               maxWidth: 380,
               width: '100%',
+              marginTop: 48,
+              marginBottom: 24,
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
