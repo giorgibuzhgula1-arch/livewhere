@@ -278,11 +278,10 @@ export default function HomePageClient({
   }, [awaitingAuthToView, restoringAfterOAuth, authOpen, loading, matches, authVariant])
 
   const showLanding =
-    matches === null && !loading && !awaitingAuthToView && !restoringAfterOAuth
+    matches === null && !awaitingAuthToView && !restoringAfterOAuth
   const showHero =
     !restoringAfterOAuth &&
-    !(matches !== null && matches.length > 0) &&
-    !(matches !== null && loading && matches.length === 0)
+    !(matches !== null && matches.length > 0)
 
   const revealPendingResults = useCallback(async (existingSession?: Session | null): Promise<boolean> => {
     const pending = loadPendingResults()
@@ -501,7 +500,6 @@ export default function HomePageClient({
     if (!options?.isRestoreRefetch) {
       clearPendingResults()
     }
-    setMatches([])
     setResultMaxCities(null)
 
     let accumulatedAi = ''
@@ -1165,9 +1163,12 @@ export default function HomePageClient({
         </>
       )}
 
-      {matches !== null && loading && matches.length === 0 && (
+      {loading && matches === null && !awaitingAuthToView && !restoringAfterOAuth && (
         <div style={{
-          minHeight: '100vh', display: 'flex', flexDirection: 'column',
+          position: 'fixed',
+          inset: 0,
+          zIndex: 200,
+          display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: '24px',
           padding: '0 20px'
         }}>
