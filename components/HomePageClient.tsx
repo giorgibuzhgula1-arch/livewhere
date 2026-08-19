@@ -283,6 +283,7 @@ export default function HomePageClient({
     matches === null && !awaitingAuthToView && !restoringAfterOAuth
   const showHero =
     !restoringAfterOAuth &&
+    !awaitingAuthToView &&
     !(matches !== null && matches.length > 0)
 
   const revealPendingResults = useCallback(async (existingSession?: Session | null): Promise<boolean> => {
@@ -1170,6 +1171,7 @@ export default function HomePageClient({
           position: 'fixed',
           inset: 0,
           zIndex: 200,
+          background: 'rgba(10,10,15,0.72)',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: '24px',
           padding: '0 20px'
