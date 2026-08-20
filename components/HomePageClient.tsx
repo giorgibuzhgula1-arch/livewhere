@@ -11,6 +11,7 @@ import CorePromise from '@/components/CorePromise'
 import Quiz from '@/components/Quiz'
 import AnonymousResultsPreview from '@/components/AnonymousResultsPreview'
 import RetirementStatsBar from '@/components/RetirementStatsBar'
+import Testimonials from '@/components/Testimonials'
 import SavingsCalculator from '@/components/SavingsCalculator'
 import Pricing from '@/components/Pricing'
 import LandingFaq from '@/components/LandingFaq'
@@ -1152,6 +1153,7 @@ export default function HomePageClient({
             <Quiz onSubmit={handleAnalyzeRequest} loading={loading} error={error} />
           </div>
           <RetirementStatsBar />
+          <Testimonials />
           <DataSourcesAttribution />
           <Pricing
             onUpgrade={() => { setAuthVariant('default'); setAuthOpen(true); setAuthMode('signup') }}
