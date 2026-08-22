@@ -59,8 +59,8 @@ function ClickToPlayVideo({ src, poster }: { src: string; poster?: string }) {
 
   const boxStyle: CSSProperties = {
     position: 'relative',
-    width: 140,
-    maxWidth: 140,
+    width: 105,
+    maxWidth: 105,
     aspectRatio: '9 / 16',
     borderRadius: 12,
     overflow: 'hidden',
@@ -71,8 +71,8 @@ function ClickToPlayVideo({ src, poster }: { src: string; poster?: string }) {
   }
 
   const videoStyle: CSSProperties = {
-    width: 140,
-    maxWidth: 140,
+    width: 105,
+    maxWidth: 105,
     aspectRatio: '9 / 16',
     borderRadius: 12,
     overflow: 'hidden',
@@ -438,7 +438,7 @@ export default function Testimonials() {
       <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(32px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, marginBottom: 48 }}>
         People who found their country
       </h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24, alignItems: 'start' }}>
         {(showAll ? TESTIMONIALS : TESTIMONIALS.slice(0, 6)).map((t, i) => (
           <motion.div
             key={i}
@@ -475,9 +475,11 @@ export default function Testimonials() {
 
             {t.videoUrl ? <ClickToPlayVideo src={t.videoUrl} poster={t.poster} /> : null}
 
-            <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.75)', lineHeight: 1.7, margin: 0, flexGrow: 1 }}>
+            {!t.videoUrl && (
+            <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.75)', lineHeight: 1.7, margin: 0 }}>
               {'"'}{t.text}{'"'}
             </p>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div
