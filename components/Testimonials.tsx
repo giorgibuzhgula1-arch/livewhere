@@ -11,7 +11,7 @@ function reviewerInitials(name: string): string {
     const lastInitial = secondParts[secondParts.length - 1]?.replace(/\./g, '')[0] ?? ''
     return (firstInitial + lastInitial).toUpperCase()
   }
-  const parts = name.split(/\s+/).filter(Boolean)
+  const parts = name.split(/\s+/).filter((p) => p && !/^\d+$/.test(p.replace(/[.,]/g, '')))
   const firstInitial = parts[0]?.[0] ?? ''
   const lastInitial = parts[parts.length - 1]?.replace(/\./g, '')[0] ?? ''
   return (firstInitial + lastInitial).toUpperCase()
@@ -147,8 +147,8 @@ function ClickToPlayVideo({ src }: { src: string }) {
 
 const TESTIMONIALS: Testimonial[] = [
   {
-    name: 'Robert M., 64',
-    role: 'Retired Engineer',
+    name: 'Sarah Mitchell, 64',
+    role: 'Retired Teacher',
     location: '🇪🇸 Spain',
     stars: 5,
     savings: 'up to ~$850/mo vs Florida',
