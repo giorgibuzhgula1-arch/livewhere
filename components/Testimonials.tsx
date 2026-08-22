@@ -218,10 +218,12 @@ const TESTIMONIALS: Testimonial[] = [
   {
     name: 'Susan H., 63',
     role: 'Retired Accountant',
-    location: '🇵🇦 Panama',
+    location: '🇩🇴 Dominican Republic',
     stars: 5,
     savings: 'up to ~$1,920/mo vs Georgia',
     text: "The monthly breakdown was what finally made everything click. I could see exactly how far my retirement income would stretch — and Panama made the numbers work better than anywhere else I'd looked.",
+    videoUrl: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/susan-testimonial.mp4',
+    poster: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/susan-poster.jpg',
   },
   {
     name: 'Richard & Karen B.',
