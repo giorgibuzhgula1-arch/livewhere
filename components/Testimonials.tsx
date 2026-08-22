@@ -31,11 +31,11 @@ function ClickToPlayYouTube({ videoId }: { videoId: string }) {
   const hq720 = `https://i.ytimg.com/vi/${videoId}/hq720.jpg`
   const hqDefault = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
   const [thumb, setThumb] = useState(hq720)
-  const embedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&fs=0&disablekb=1&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`
+  const embedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&fs=0&disablekb=1&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`
 
   const boxStyle: CSSProperties = {
     position: 'relative',
-    width: '100%',
+    width: 140,
     maxWidth: 140,
     aspectRatio: '9 / 16',
     borderRadius: 12,
@@ -43,6 +43,7 @@ function ClickToPlayYouTube({ videoId }: { videoId: string }) {
     background: '#1a1a1a',
     flexShrink: 0,
     alignSelf: 'center',
+    margin: '0 auto',
   }
 
   if (playing) {
