@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { flushSync } from 'react-dom'
 import { motion } from 'framer-motion'
 
@@ -24,65 +24,12 @@ type Testimonial = {
   stars: number
   savings: string
   text: string
-  videoId?: string
+  videoUrl?: string
 }
 
-type YTPlayer = {
-  playVideo: () => void
-  destroy: () => void
-}
-
-type YTPlayerEvent = { target: YTPlayer }
-
-declare global {
-  interface Window {
-    YT?: {
-      Player: new (
-        el: HTMLElement | string,
-        opts: {
-          videoId: string
-          width?: string | number
-          height?: string | number
-          playerVars?: Record<string, number>
-          events?: { onReady?: (e: YTPlayerEvent) => void }
-        },
-      ) => YTPlayer
-    }
-    onYouTubeIframeAPIReady?: () => void
-  }
-}
-
-let youtubeApiPromise: Promise<void> | null = null
-
-function loadYouTubeIframeApi(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve()
-  if (window.YT?.Player) return Promise.resolve()
-  if (youtubeApiPromise) return youtubeApiPromise
-
-  youtubeApiPromise = new Promise((resolve) => {
-    const prev = window.onYouTubeIframeAPIReady
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof prev === 'function') prev()
-      resolve()
-    }
-    const src = 'https://www.youtube.com/iframe_api'
-    if (!document.querySelector(`script[src="${src}"]`)) {
-      const tag = document.createElement('script')
-      tag.src = src
-      document.head.appendChild(tag)
-    }
-  })
-
-  return youtubeApiPromise
-}
-
-function ClickToPlayYouTube({ videoId }: { videoId: string }) {
+function ClickToPlayVideo({ src }: { src: string }) {
   const [playing, setPlaying] = useState(false)
-  const hq720 = `https://i.ytimg.com/vi/${videoId}/hq720.jpg`
-  const hqDefault = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
-  const [thumb, setThumb] = useState(hq720)
-  const playerHostRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<YTPlayer | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const boxStyle: CSSProperties = {
     position: 'relative',
@@ -97,53 +44,34 @@ function ClickToPlayYouTube({ videoId }: { videoId: string }) {
     margin: '0 auto',
   }
 
-  useEffect(() => {
-    void loadYouTubeIframeApi()
-    return () => {
-      playerRef.current?.destroy()
-      playerRef.current = null
-    }
-  }, [])
-
-  function createPlayer() {
-    const host = playerHostRef.current
-    if (!host || playerRef.current || !window.YT?.Player) return
-    playerRef.current = new window.YT.Player(host, {
-      videoId,
-      width: 140,
-      height: Math.round((140 * 16) / 9),
-      playerVars: {
-        controls: 0,
-        fs: 0,
-        disablekb: 1,
-        modestbranding: 1,
-        rel: 0,
-        playsinline: 1,
-        iv_load_policy: 3,
-      },
-      events: {
-        onReady: (event) => {
-          event.target.playVideo()
-        },
-      },
-    })
+  const videoStyle: CSSProperties = {
+    width: 140,
+    maxWidth: 140,
+    aspectRatio: '9 / 16',
+    borderRadius: 12,
+    overflow: 'hidden',
+    objectFit: 'cover',
+    background: '#1a1a1a',
+    flexShrink: 0,
+    alignSelf: 'center',
+    margin: '0 auto',
+    display: 'block',
   }
 
   function handlePlayClick() {
     flushSync(() => setPlaying(true))
-    if (window.YT?.Player) {
-      createPlayer()
-      return
-    }
-    void loadYouTubeIframeApi().then(() => createPlayer())
+    void videoRef.current?.play()
   }
 
   if (playing) {
     return (
       <div style={boxStyle}>
-        <div
-          ref={playerHostRef}
-          style={{ width: '100%', height: '100%' }}
+        <video
+          ref={videoRef}
+          src={src}
+          playsInline
+          onEnded={() => setPlaying(false)}
+          style={videoStyle}
         />
         <div
           aria-hidden
@@ -171,23 +99,6 @@ function ClickToPlayYouTube({ videoId }: { videoId: string }) {
         display: 'block',
       }}
     >
-      <img
-        src={thumb}
-        alt=""
-        width={480}
-        height={360}
-        onError={() => {
-          setThumb((prev) => (prev === hqDefault ? prev : hqDefault))
-        }}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          display: 'block',
-        }}
-      />
       <span
         aria-hidden
         style={{
@@ -228,7 +139,7 @@ const TESTIMONIALS: Testimonial[] = [
     stars: 5,
     savings: 'up to ~$850/mo vs Florida',
     text: "I honestly thought retiring abroad meant sacrificing comfort. Instead, I ended up with a nicer apartment, better weather, and about $850 extra in my pocket every month. Portugal has been a pleasant surprise.",
-    videoId: '5-y4DtB5Wms',
+    videoUrl: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-testimonial-sound.mp4',
   },
   {
     name: 'Linda C., 61',
@@ -518,7 +429,7 @@ export default function Testimonials() {
               </div>
             </div>
 
-            {t.videoId ? <ClickToPlayYouTube videoId={t.videoId} /> : null}
+            {t.videoUrl ? <ClickToPlayVideo src={t.videoUrl} /> : null}
 
             <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.75)', lineHeight: 1.7, margin: 0, flexGrow: 1 }}>
               {'"'}{t.text}{'"'}
