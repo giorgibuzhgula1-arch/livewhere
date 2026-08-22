@@ -1,5 +1,6 @@
 'use client'
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { flushSync } from 'react-dom'
 import { motion } from 'framer-motion'
 
 function reviewerInitials(name: string): string {
@@ -26,12 +27,62 @@ type Testimonial = {
   videoId?: string
 }
 
+type YTPlayer = {
+  playVideo: () => void
+  destroy: () => void
+}
+
+type YTPlayerEvent = { target: YTPlayer }
+
+declare global {
+  interface Window {
+    YT?: {
+      Player: new (
+        el: HTMLElement | string,
+        opts: {
+          videoId: string
+          width?: string | number
+          height?: string | number
+          playerVars?: Record<string, number>
+          events?: { onReady?: (e: YTPlayerEvent) => void }
+        },
+      ) => YTPlayer
+    }
+    onYouTubeIframeAPIReady?: () => void
+  }
+}
+
+let youtubeApiPromise: Promise<void> | null = null
+
+function loadYouTubeIframeApi(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve()
+  if (window.YT?.Player) return Promise.resolve()
+  if (youtubeApiPromise) return youtubeApiPromise
+
+  youtubeApiPromise = new Promise((resolve) => {
+    const prev = window.onYouTubeIframeAPIReady
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prev === 'function') prev()
+      resolve()
+    }
+    const src = 'https://www.youtube.com/iframe_api'
+    if (!document.querySelector(`script[src="${src}"]`)) {
+      const tag = document.createElement('script')
+      tag.src = src
+      document.head.appendChild(tag)
+    }
+  })
+
+  return youtubeApiPromise
+}
+
 function ClickToPlayYouTube({ videoId }: { videoId: string }) {
   const [playing, setPlaying] = useState(false)
   const hq720 = `https://i.ytimg.com/vi/${videoId}/hq720.jpg`
   const hqDefault = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
   const [thumb, setThumb] = useState(hq720)
-  const embedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&fs=0&disablekb=1&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`
+  const playerHostRef = useRef<HTMLDivElement>(null)
+  const playerRef = useRef<YTPlayer | null>(null)
 
   const boxStyle: CSSProperties = {
     position: 'relative',
@@ -46,19 +97,61 @@ function ClickToPlayYouTube({ videoId }: { videoId: string }) {
     margin: '0 auto',
   }
 
+  useEffect(() => {
+    void loadYouTubeIframeApi()
+    return () => {
+      playerRef.current?.destroy()
+      playerRef.current = null
+    }
+  }, [])
+
+  function createPlayer() {
+    const host = playerHostRef.current
+    if (!host || playerRef.current || !window.YT?.Player) return
+    playerRef.current = new window.YT.Player(host, {
+      videoId,
+      width: 140,
+      height: Math.round((140 * 16) / 9),
+      playerVars: {
+        controls: 0,
+        fs: 0,
+        disablekb: 1,
+        modestbranding: 1,
+        rel: 0,
+        playsinline: 1,
+        iv_load_policy: 3,
+      },
+      events: {
+        onReady: (event) => {
+          event.target.playVideo()
+        },
+      },
+    })
+  }
+
+  function handlePlayClick() {
+    flushSync(() => setPlaying(true))
+    if (window.YT?.Player) {
+      createPlayer()
+      return
+    }
+    void loadYouTubeIframeApi().then(() => createPlayer())
+  }
+
   if (playing) {
     return (
       <div style={boxStyle}>
-        <iframe
-          title="Example story video"
-          src={embedSrc}
+        <div
+          ref={playerHostRef}
+          style={{ width: '100%', height: '100%' }}
+        />
+        <div
+          aria-hidden
           style={{
             position: 'absolute',
             inset: 0,
-            width: '100%',
-            height: '100%',
-            border: 0,
-            pointerEvents: 'none',
+            zIndex: 5,
+            pointerEvents: 'auto',
           }}
         />
       </div>
@@ -68,7 +161,7 @@ function ClickToPlayYouTube({ videoId }: { videoId: string }) {
   return (
     <button
       type="button"
-      onClick={() => setPlaying(true)}
+      onClick={handlePlayClick}
       aria-label="Play example story video"
       style={{
         ...boxStyle,
