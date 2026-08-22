@@ -12,7 +12,7 @@ declare global {
 }
 
 function applyOffset() {
-  window.tidioChatApi.adjustStyles(
+  window.tidioChatApi?.adjustStyles(
     '@media only screen and (max-width: 980px) { #tidio { bottom: 100px !important; } }',
   )
 }
