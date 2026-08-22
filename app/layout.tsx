@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import RefClickTracker from '@/components/RefClickTracker'
+import TidioMobileOffset from '@/components/TidioMobileOffset'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { PostHogProvider } from '@/app/providers'
 import { getSiteUrl } from '@/lib/site-url'
@@ -54,6 +55,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           strategy="afterInteractive"
           async
         />
+        <TidioMobileOffset />
       </head>
       <body className={dmSans.className}>
         <noscript>
