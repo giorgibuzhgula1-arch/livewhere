@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { motion } from 'framer-motion'
 
 function reviewerInitials(name: string): string {
@@ -16,7 +16,112 @@ function reviewerInitials(name: string): string {
   return (firstInitial + lastInitial).toUpperCase()
 }
 
-const TESTIMONIALS = [
+type Testimonial = {
+  name: string
+  role: string
+  location: string
+  stars: number
+  savings: string
+  text: string
+  videoId?: string
+}
+
+function ClickToPlayYouTube({ videoId }: { videoId: string }) {
+  const [playing, setPlaying] = useState(false)
+  const thumb = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+  const embedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&fs=0&disablekb=1&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`
+
+  const boxStyle: CSSProperties = {
+    position: 'relative',
+    width: '100%',
+    maxWidth: 240,
+    aspectRatio: '9 / 16',
+    borderRadius: 12,
+    overflow: 'hidden',
+    background: '#000',
+    flexShrink: 0,
+    alignSelf: 'center',
+  }
+
+  if (playing) {
+    return (
+      <div style={boxStyle}>
+        <iframe
+          title="Example story video"
+          src={embedSrc}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            border: 0,
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setPlaying(true)}
+      aria-label="Play example story video"
+      style={{
+        ...boxStyle,
+        padding: 0,
+        border: 'none',
+        cursor: 'pointer',
+        display: 'block',
+      }}
+    >
+      <img
+        src={thumb}
+        alt=""
+        width={480}
+        height={360}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+        }}
+      />
+      <span
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          background: 'rgba(10,10,15,0.72)',
+          border: '1px solid rgba(200,240,90,0.45)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <span
+          style={{
+            width: 0,
+            height: 0,
+            marginLeft: 3,
+            borderTop: '8px solid transparent',
+            borderBottom: '8px solid transparent',
+            borderLeft: '14px solid #c8f05a',
+          }}
+        />
+      </span>
+    </button>
+  )
+}
+
+const TESTIMONIALS: Testimonial[] = [
   {
     name: 'Robert M., 64',
     role: 'Retired Engineer',
@@ -24,6 +129,7 @@ const TESTIMONIALS = [
     stars: 5,
     savings: 'up to ~$850/mo vs Florida',
     text: "I honestly thought retiring abroad meant sacrificing comfort. Instead, I ended up with a nicer apartment, better weather, and about $850 extra in my pocket every month. Portugal has been a pleasant surprise.",
+    videoId: 'yNz-D84cSmc',
   },
   {
     name: 'Linda C., 61',
@@ -312,6 +418,8 @@ export default function Testimonials() {
                 {t.savings}
               </div>
             </div>
+
+            {t.videoId ? <ClickToPlayYouTube videoId={t.videoId} /> : null}
 
             <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.75)', lineHeight: 1.7, margin: 0, flexGrow: 1 }}>
               {'"'}{t.text}{'"'}
