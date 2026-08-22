@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card'],
       allow_promotion_codes: true,
       line_items: lineItems,
-      success_url: `${appUrl}/?upgraded=true&session_id={CHECKOUT_SESSION_ID}&plan=${checkoutType}`,
+      success_url: `${appUrl}/thank-you?upgraded=true&session_id={CHECKOUT_SESSION_ID}&plan=${checkoutType}`,
       cancel_url: `${appUrl}/pricing`,
       metadata: {
         ...sessionMetadata,
