@@ -28,17 +28,19 @@ type Testimonial = {
 
 function ClickToPlayYouTube({ videoId }: { videoId: string }) {
   const [playing, setPlaying] = useState(false)
-  const thumb = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+  const hq720 = `https://i.ytimg.com/vi/${videoId}/hq720.jpg`
+  const hqDefault = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+  const [thumb, setThumb] = useState(hq720)
   const embedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&fs=0&disablekb=1&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`
 
   const boxStyle: CSSProperties = {
     position: 'relative',
     width: '100%',
-    maxWidth: 240,
+    maxWidth: 140,
     aspectRatio: '9 / 16',
     borderRadius: 12,
     overflow: 'hidden',
-    background: '#000',
+    background: '#1a1a1a',
     flexShrink: 0,
     alignSelf: 'center',
   }
@@ -80,6 +82,9 @@ function ClickToPlayYouTube({ videoId }: { videoId: string }) {
         alt=""
         width={480}
         height={360}
+        onError={() => {
+          setThumb((prev) => (prev === hqDefault ? prev : hqDefault))
+        }}
         style={{
           position: 'absolute',
           inset: 0,
