@@ -50,12 +50,12 @@ type Testimonial = {
   savings: string
   text: string
   videoUrl?: string
+  poster?: string
 }
 
-function ClickToPlayVideo({ src }: { src: string }) {
+function ClickToPlayVideo({ src, poster }: { src: string; poster?: string }) {
   const [playing, setPlaying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
-  const poster = 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-poster.jpg'
 
   const boxStyle: CSSProperties = {
     position: 'relative',
@@ -95,7 +95,7 @@ function ClickToPlayVideo({ src }: { src: string }) {
         <video
           ref={videoRef}
           src={src}
-          poster="https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-poster.jpg"
+          poster={poster}
           playsInline
           onEnded={() => setPlaying(false)}
           style={videoStyle}
@@ -126,6 +126,7 @@ function ClickToPlayVideo({ src }: { src: string }) {
         display: 'block',
       }}
     >
+      {poster ? (
       <img
         src={poster}
         alt=""
@@ -138,6 +139,7 @@ function ClickToPlayVideo({ src }: { src: string }) {
           display: 'block',
         }}
       />
+      ) : null}
       <span
         aria-hidden
         style={{
@@ -179,6 +181,7 @@ const TESTIMONIALS: Testimonial[] = [
     savings: 'up to ~$850/mo vs Florida',
     text: "I honestly thought retiring abroad meant sacrificing comfort. Instead, I ended up with a nicer apartment, better weather, and about $850 extra in my pocket every month. Spain has been a pleasant surprise.",
     videoUrl: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-testimonial-sound.mp4',
+    poster: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-poster.jpg',
   },
   {
     name: 'Linda C., 61',
@@ -235,6 +238,8 @@ const TESTIMONIALS: Testimonial[] = [
     stars: 5,
     savings: 'up to ~$2,480/mo vs Ohio',
     text: "What stood out wasn't just the destination recommendations — it was understanding why each one fit my situation. Malaysia wasn't on my radar until the data made a strong case for it.",
+    videoUrl: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/thomas-testimonial.mp4',
+    poster: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/thomas-poster.jpg',
   },
   {
     name: 'Barbara L., 70',
@@ -468,7 +473,7 @@ export default function Testimonials() {
               </div>
             </div>
 
-            {t.videoUrl ? <ClickToPlayVideo src={t.videoUrl} /> : null}
+            {t.videoUrl ? <ClickToPlayVideo src={t.videoUrl} poster={t.poster} /> : null}
 
             <p style={{ fontSize: 14, color: 'rgba(240,237,232,0.75)', lineHeight: 1.7, margin: 0, flexGrow: 1 }}>
               {'"'}{t.text}{'"'}
