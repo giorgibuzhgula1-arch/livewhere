@@ -3,6 +3,22 @@ import { useRef, useState, type CSSProperties } from 'react'
 import { flushSync } from 'react-dom'
 import { motion } from 'framer-motion'
 
+function reviewerNameParts(name: string): {
+  first: string
+  lastLetter: string
+  age: string | null
+  nameCount: number
+} {
+  const tokens = name.split(/\s+/).filter(Boolean)
+  const ageToken = tokens.find((t) => /^\d+$/.test(t.replace(/[.,]/g, '')))
+  const age = ageToken ? ageToken.replace(/[.,]/g, '') : null
+  const nameTokens = tokens.filter((t) => !/^\d+$/.test(t.replace(/[.,]/g, '')))
+  const first = (nameTokens[0] ?? '').replace(/,$/, '')
+  const lastRaw = (nameTokens[nameTokens.length - 1] ?? first).replace(/[.,]/g, '')
+  const lastLetter = lastRaw[0] ?? ''
+  return { first, lastLetter, age, nameCount: nameTokens.length }
+}
+
 function reviewerInitials(name: string): string {
   if (name.includes('&')) {
     const [first, second] = name.split('&').map((s) => s.trim())
@@ -11,10 +27,19 @@ function reviewerInitials(name: string): string {
     const lastInitial = secondParts[secondParts.length - 1]?.replace(/\./g, '')[0] ?? ''
     return (firstInitial + lastInitial).toUpperCase()
   }
-  const parts = name.split(/\s+/).filter((p) => p && !/^\d+$/.test(p.replace(/[.,]/g, '')))
-  const firstInitial = parts[0]?.[0] ?? ''
-  const lastInitial = parts[parts.length - 1]?.replace(/\./g, '')[0] ?? ''
-  return (firstInitial + lastInitial).toUpperCase()
+  const { first, lastLetter } = reviewerNameParts(name)
+  return `${first[0] ?? ''}${lastLetter}`.toUpperCase()
+}
+
+function formatReviewerName(name: string): string {
+  if (name.includes('&')) return name
+  const { first, lastLetter, age, nameCount } = reviewerNameParts(name)
+  if (!first) return name
+  if (nameCount < 2 || !lastLetter) {
+    return age ? `${first}, ${age}` : first
+  }
+  const abbreviated = `${first} ${lastLetter.toUpperCase()}.`
+  return age ? `${abbreviated}, ${age}` : abbreviated
 }
 
 type Testimonial = {
@@ -147,7 +172,7 @@ function ClickToPlayVideo({ src }: { src: string }) {
 
 const TESTIMONIALS: Testimonial[] = [
   {
-    name: 'Sarah Mitchell, 64',
+    name: 'Sarah M., 64',
     role: 'Retired Teacher',
     location: '🇪🇸 Spain',
     stars: 5,
@@ -470,8 +495,7 @@ export default function Testimonials() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</div>
-                <div style={{ fontSize: 12, color: 'rgba(240,237,232,0.45)' }}>{t.role}</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{formatReviewerName(t.name)}</div>
                 <div style={{ fontSize: 12, color: '#c8f05a' }}>{t.location}</div>
               </div>
             </div>
