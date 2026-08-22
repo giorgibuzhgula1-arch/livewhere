@@ -149,10 +149,10 @@ const TESTIMONIALS: Testimonial[] = [
   {
     name: 'Robert M., 64',
     role: 'Retired Engineer',
-    location: '🇵🇹 Portugal',
+    location: '🇪🇸 Spain',
     stars: 5,
     savings: 'up to ~$850/mo vs Florida',
-    text: "I honestly thought retiring abroad meant sacrificing comfort. Instead, I ended up with a nicer apartment, better weather, and about $850 extra in my pocket every month. Portugal has been a pleasant surprise.",
+    text: "I honestly thought retiring abroad meant sacrificing comfort. Instead, I ended up with a nicer apartment, better weather, and about $850 extra in my pocket every month. Spain has been a pleasant surprise.",
     videoUrl: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-testimonial-sound.mp4',
   },
   {
