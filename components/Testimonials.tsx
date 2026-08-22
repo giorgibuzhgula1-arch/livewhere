@@ -30,6 +30,7 @@ type Testimonial = {
 function ClickToPlayVideo({ src }: { src: string }) {
   const [playing, setPlaying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const poster = 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-poster.jpg'
 
   const boxStyle: CSSProperties = {
     position: 'relative',
@@ -69,6 +70,7 @@ function ClickToPlayVideo({ src }: { src: string }) {
         <video
           ref={videoRef}
           src={src}
+          poster="https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/robert-poster.jpg"
           playsInline
           onEnded={() => setPlaying(false)}
           style={videoStyle}
@@ -99,6 +101,18 @@ function ClickToPlayVideo({ src }: { src: string }) {
         display: 'block',
       }}
     >
+      <img
+        src={poster}
+        alt=""
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+        }}
+      />
       <span
         aria-hidden
         style={{
