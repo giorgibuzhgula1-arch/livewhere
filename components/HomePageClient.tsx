@@ -801,7 +801,8 @@ export default function HomePageClient({
   const compareReturnAttemptedRef = useRef(false)
   const purchaseTrackedRef = useRef(false)
 
-  // Track successful Stripe purchase return.
+  // Fallback if an old Stripe success_url still lands on /?upgraded=true.
+  // New checkouts go to /thank-you. trackPurchaseCompleted is one-shot per session_id.
   useEffect(() => {
     if (purchaseTrackedRef.current || typeof window === 'undefined') return
 
