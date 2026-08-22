@@ -228,7 +228,7 @@ const TESTIMONIALS: Testimonial[] = [
     stars: 5,
     savings: 'up to ~$850/mo vs Florida',
     text: "I honestly thought retiring abroad meant sacrificing comfort. Instead, I ended up with a nicer apartment, better weather, and about $850 extra in my pocket every month. Portugal has been a pleasant surprise.",
-    videoId: 'yNz-D84cSmc',
+    videoId: '5-y4DtB5Wms',
   },
   {
     name: 'Linda C., 61',
