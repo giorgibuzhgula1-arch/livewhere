@@ -236,10 +236,10 @@ const TESTIMONIALS: Testimonial[] = [
   {
     name: 'Thomas W., 49',
     role: 'Former Executive',
-    location: '🇲🇾 Malaysia',
+    location: '🇫🇷 Southern France',
     stars: 5,
     savings: 'up to ~$2,480/mo vs Ohio',
-    text: "What stood out wasn't just the destination recommendations — it was understanding why each one fit my situation. Malaysia wasn't on my radar until the data made a strong case for it.",
+    text: "What stood out wasn't just the destination recommendations — it was understanding why each one fit my situation. Southern France wasn't on my radar until the data made a strong case for it.",
     videoUrl: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/thomas-testimonial.mp4',
     poster: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/thomas-poster.jpg',
   },
