@@ -1,9 +1,22 @@
 import { createHash } from 'crypto'
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { ipAddress } from '@vercel/functions'
+import { ipAddress, waitUntil } from '@vercel/functions'
 import { streamRecommendCities, buildTeaserCities } from '@/lib/recommendation'
 import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT, FREE_SEARCHES_PER_DAY, FREE_ANONYMOUS_SEARCHES_PER_MONTH } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { createClient } from '@/lib/supabase/server'
+import { supabaseAuthStorageKey } from '@/lib/supabase/cookie-options'
+import {
+  parseCookieHeader,
+  parseSupabaseSessionFromCookies,
+  type CookiePair,
+} from '@/lib/supabase/session-cookie'
+import {
+  createAnalyzeSearchId,
+  isPaywallV2Enabled,
+  persistAnalyzeSearchSnapshot,
+} from '@/lib/paywall-v2'
 import { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -105,6 +118,36 @@ function anonymousSearchBucket(req: NextRequest): { ipKey: string; limit: number
   return { ipKey: `nofp:${digest}`, limit: FREE_ANONYMOUS_NO_IP_SEARCHES_PER_MONTH }
 }
 
+function cookiePairsFromRequest(req: NextRequest): CookiePair[] {
+  try {
+    const fromReq = req.cookies.getAll().map((cookie) => ({
+      name: cookie.name,
+      value: cookie.value,
+    }))
+    if (fromReq.length > 0) return fromReq
+  } catch {
+    /* fall through */
+  }
+  try {
+    const fromStore = cookies().getAll().map((cookie) => ({
+      name: cookie.name,
+      value: cookie.value,
+    }))
+    if (fromStore.length > 0) return fromStore
+  } catch {
+    /* fall through */
+  }
+  return parseCookieHeader(req.headers.get('cookie') ?? '')
+}
+
+async function userIdFromAuthCookies(req: NextRequest): Promise<string | null> {
+  const storageKey = supabaseAuthStorageKey(process.env.NEXT_PUBLIC_SUPABASE_URL || '')
+  const session = parseSupabaseSessionFromCookies(cookiePairsFromRequest(req), storageKey)
+  if (!session?.access_token) return null
+  const { data: { user } } = await supabaseAdmin.auth.getUser(session.access_token)
+  return user?.id ?? null
+}
+
 function getSearchDayUtc(): string {
   return new Date().toISOString().slice(0, 10)
 }
@@ -151,26 +194,47 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabaseAdmin.auth.getUser(token)
     if (user) {
       userId = user.id
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('plan, searches_today, search_day')
-        .eq('id', user.id)
-        .single()
-
-      plan = profile?.plan || 'free'
-      searchesToday =
-        profile?.search_day === today ? (profile?.searches_today ?? 0) : 0
-
-      if (plan === 'free' && searchesToday >= FREE_SEARCHES_PER_DAY) {
-        return NextResponse.json(
-          { error: FREE_SEARCH_LIMIT_MESSAGE },
-          { status: 403 },
-        )
-      }
     }
   }
 
   if (!userId) {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        userId = user.id
+      }
+    } catch {
+      // Cookie session unavailable — try direct cookie JWT next.
+    }
+  }
+
+  if (!userId) {
+    try {
+      userId = await userIdFromAuthCookies(req)
+    } catch {
+      // Malformed cookie JWT — keep anonymous.
+    }
+  }
+
+  if (userId) {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('plan, searches_today, search_day')
+      .eq('id', userId)
+      .single()
+
+    plan = profile?.plan || 'free'
+    searchesToday =
+      profile?.search_day === today ? (profile?.searches_today ?? 0) : 0
+
+    if (plan === 'free' && searchesToday >= FREE_SEARCHES_PER_DAY) {
+      return NextResponse.json(
+        { error: FREE_SEARCH_LIMIT_MESSAGE },
+        { status: 403 },
+      )
+    }
+  } else {
     const { ipKey, limit } = anonymousSearchBucket(req)
     const month = getSearchMonth()
     // First preview per browser: never blocked, even if the shared IP bucket is full.
@@ -278,7 +342,26 @@ export async function POST(req: NextRequest) {
             .eq('id', userId)
         }
 
-        send({ type: 'done', cities: clientCities })
+        const paywallV2 = isPaywallV2Enabled()
+        const searchId = paywallV2 ? createAnalyzeSearchId() : null
+        if (paywallV2 && searchId) {
+          send({ type: 'done', cities: clientCities, searchId })
+          try {
+            waitUntil(
+              persistAnalyzeSearchSnapshot({
+                searchId,
+                userId,
+                quizInput: request,
+                generatedCities: cities,
+                resultCount,
+              }),
+            )
+          } catch (err) {
+            console.error('[paywall-v2] waitUntil failed:', err)
+          }
+        } else {
+          send({ type: 'done', cities: clientCities })
+        }
       } catch (err) {
         console.error('Recommendation error:', err)
         send({ type: 'error', error: 'Could not build your matches. Please try again.' })

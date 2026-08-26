@@ -543,6 +543,7 @@ export default function HomePageClient({
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify(data),
         signal: controller.signal,
       })

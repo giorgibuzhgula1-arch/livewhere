@@ -1,32 +1,21 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { supabaseAuthStorageKey } from '@/lib/supabase/cookie-options'
+import { createSupabaseSsrCookieMethods } from '@/lib/supabase/session-cookie'
 
 export function createClient() {
   const cookieStore = cookies()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options })
-          } catch {
-            /* read-only Server Component context */
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options })
-          } catch {
-            /* read-only Server Component context */
-          }
-        },
+  return createServerClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookieOptions: {
+      name: supabaseAuthStorageKey(supabaseUrl),
+    },
+    cookies: createSupabaseSsrCookieMethods({
+      getAll: () => cookieStore.getAll().map((cookie) => ({ name: cookie.name, value: cookie.value })),
+      set: ({ name, value, ...options }) => {
+        cookieStore.set({ name, value, ...options })
       },
-    }
-  )
+    }),
+  })
 }

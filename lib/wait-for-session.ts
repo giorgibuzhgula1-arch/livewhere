@@ -1,6 +1,7 @@
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAuthStorageKeyName } from '@/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import { isAuthRateLimited, isRefreshCircuitOpen } from '@/lib/auth-refresh-circuit'
+import { parseCookieHeader, parseSupabaseSessionFromCookies } from '@/lib/supabase/session-cookie'
 import { hasPendingAnalyze } from '@/lib/pending-analyze'
 import { hasPendingResults } from '@/lib/pending-results'
 
@@ -94,18 +95,32 @@ export type AuthSessionWithTimeoutResult =
   | { ok: true; session: Session | null }
   | { ok: false; timedOut: true }
 
+function readLocalSupabaseSession(): Session | null {
+  if (typeof document === 'undefined') return null
+  const parsed = parseSupabaseSessionFromCookies(
+    parseCookieHeader(document.cookie),
+    supabaseAuthStorageKeyName,
+  )
+  if (!parsed?.access_token) return null
+  return parsed as Session
+}
+
 /**
  * Single getSession with a hard timeout. Distinguishes timeout from
  * ok + null session (anonymous analyze must still proceed).
+ *
+ * When the refresh circuit is open, skip getSession() (it can 429 and
+ * clear cookies) and read a still-valid access_token from document.cookie.
  */
 export async function getAuthSessionWithTimeout(
   timeoutMs = GET_SESSION_TIMEOUT_MS,
 ): Promise<AuthSessionWithTimeoutResult> {
-  if (isRefreshCircuitOpen()) {
-    return { ok: true, session: null }
-  }
   if (timeoutMs <= 0) {
     return { ok: false, timedOut: true }
+  }
+
+  if (isRefreshCircuitOpen()) {
+    return { ok: true, session: readLocalSupabaseSession() }
   }
 
   try {
@@ -129,11 +144,24 @@ export async function getAuthSessionWithTimeout(
       )
     })
 
+    if (result.session?.access_token) {
+      return { ok: true, session: result.session }
+    }
+
+    const fromCookie = readLocalSupabaseSession()
+    if (fromCookie?.access_token) {
+      return { ok: true, session: fromCookie }
+    }
+
     if (result.error && isAuthRateLimited(result.error)) {
       return { ok: true, session: null }
     }
     return { ok: true, session: result.session }
   } catch {
+    const fromCookie = readLocalSupabaseSession()
+    if (fromCookie?.access_token) {
+      return { ok: true, session: fromCookie }
+    }
     return { ok: false, timedOut: true }
   }
 }

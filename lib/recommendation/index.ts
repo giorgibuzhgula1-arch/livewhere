@@ -457,6 +457,29 @@ function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: n
   }
 }
 
+/**
+ * Top-N ranked cities with unsanitized LLM rows overlaid when present.
+ * Used only for paywall-v2 write-only persistence — does not change streaming.
+ */
+export function unsanitizedCitiesForPersist(
+  body: AnalyzeRequest,
+  generated: CityResult[],
+  count: number,
+): CityResult[] {
+  const ranked = rankSurvivorsForUser(body, count)
+  const generatedByKey = new Map(
+    generated.map((c) => [`${c.name}|${c.country}`, c] as const),
+  )
+  return ranked.map((r) => {
+    const generatedCity = generatedByKey.get(`${r.city.name}|${r.city.country}`)
+    if (!generatedCity) {
+      return rowToCityResult(r.city, r, body.monthlyBudget)
+    }
+    const { locked: _locked, ...unsanitized } = generatedCity
+    return unsanitized
+  })
+}
+
 function mergeNarrative(base: CityResult, partial: Partial<CityResult>): CityResult {
   return {
     ...base,
