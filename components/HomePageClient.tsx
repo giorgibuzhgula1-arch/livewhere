@@ -249,10 +249,12 @@ function DataSourcesAttribution() {
 export default function HomePageClient({
   defaultSavingsLocation = 'Florida',
   initialPostOAuthRestore = false,
+  paywallV2Enabled = false,
 }: {
   defaultSavingsLocation?: string
   /** SSR/client hint from `?restore=results` only — must match server for hydration. */
   initialPostOAuthRestore?: boolean
+  paywallV2Enabled?: boolean
 }) {
   const [matches, setMatches] = useState<CityResult[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -1264,28 +1266,33 @@ export default function HomePageClient({
             textAlign: 'center',
             maxWidth: 480,
           }}>
-            Your Top 3 Matches Are Ready.
+            {paywallV2Enabled ? 'See a preview of your matches.' : 'Your Top 3 Matches Are Ready.'}
           </h2>
           {(() => {
             const pendingCities = loadPendingResults()?.cities ?? []
-            const unlocked = pendingCities.filter((c) => !c.locked).slice(0, 3)
-            const previewSource = unlocked.length > 0 ? unlocked : pendingCities.slice(0, 3)
+            const unlockedNamed = pendingCities.filter((c) => !c.locked && c.name.trim() !== '')
+            const previewSource = paywallV2Enabled
+              ? unlockedNamed.slice(0, 3)
+              : (unlockedNamed.length > 0 ? unlockedNamed : pendingCities).slice(0, 3)
             const previewCities = previewSource.map((c) => ({
               name: c.name,
               country: c.country,
               flag: c.flag,
               score: c.score,
             }))
+            const teaserCopy = paywallV2Enabled
+              ? 'Here are a few cities that fit your quiz. Sign in to see all 9 free matches.'
+              : 'See your 3 best-matching cities — completely free. Sign in to view.'
             return previewCities.length > 0 ? (
               <>
                 <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6, margin: 0 }}>
-                  See your 3 best-matching cities — completely free. Sign in to view.
+                  {teaserCopy}
                 </p>
-                <AnonymousResultsPreview cities={previewCities} />
+                <AnonymousResultsPreview cities={previewCities} showRank={!paywallV2Enabled} />
               </>
             ) : (
               <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
-                See your 3 best-matching cities — completely free. Sign in to view.
+                {teaserCopy}
               </p>
             )
           })()}
@@ -1331,6 +1338,7 @@ export default function HomePageClient({
           lifestyle={quizData?.lifestyle}
           quizInput={quizData}
           onAuthClick={openAuthForSave}
+          paywallV2Enabled={paywallV2Enabled}
         />
       )}
 

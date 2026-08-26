@@ -236,6 +236,7 @@ interface Props {
   lifestyle?: string[]
   quizInput?: AnalyzeRequest | null
   onAuthClick?: () => void
+  paywallV2Enabled?: boolean
 }
 
 const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
@@ -288,6 +289,7 @@ export default function Results({
   lifestyle,
   quizInput = null,
   onAuthClick,
+  paywallV2Enabled = false,
 }: Props) {
   const showStreamingIndicator =
     streaming && (maxCities == null || cities.length < maxCities)
@@ -319,6 +321,7 @@ export default function Results({
   const isBlueprint = isBlueprintPlan(plan)
   const locked = !paid
   const isUnlocked = (city: CityResult) => paid || !city.locked
+  const useV2FreeLayout = paywallV2Enabled && !paid
   const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
 
   const effectiveQuizInput = resolveQuizInput(quizInput, monthlyBudget, currency, lifestyle)
@@ -332,16 +335,22 @@ export default function Results({
     setSavePlanOpen(true)
   }
 
-  // Always show unlocked card(s) first, then by descending score.
-  const ordered = [...cities].sort((a, b) => {
-    const au = isUnlocked(a) ? 1 : 0
-    const bu = isUnlocked(b) ? 1 : 0
-    if (au !== bu) return bu - au
-    return b.score - a.score
-  })
+  // Flag off: unlocked first, then descending score. Flag-on free: #12…#4 then Top 3/2/1.
+  const ordered = useV2FreeLayout
+    ? [
+        ...cities.filter((c) => !c.locked).sort((a, b) => a.score - b.score),
+        ...cities.filter((c) => c.locked).sort((a, b) => a.score - b.score),
+      ]
+    : [...cities].sort((a, b) => {
+        const au = isUnlocked(a) ? 1 : 0
+        const bu = isUnlocked(b) ? 1 : 0
+        if (au !== bu) return bu - au
+        return b.score - a.score
+      })
+  const v2UnlockedCount = useV2FreeLayout ? ordered.filter((c) => !c.locked).length : 0
 
   const filtered = filter === 'all' ? ordered : ordered.filter(c => c.continent === filter)
-  const top = ordered[0]
+  const top = useV2FreeLayout ? null : ordered[0]
   const shareLine = top ? buildShareLine(top) : ''
   const siteUrl = getSiteUrl()
 
@@ -790,7 +799,9 @@ export default function Results({
           lineHeight: 1.6,
           color: 'rgba(240,237,232,0.7)',
         }}>
-          Your Top 3 matches are 100% free — no payment required. You&apos;re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.
+          {useV2FreeLayout
+            ? 'Your 9 free matches are below. The true Top 3 stay locked until you upgrade.'
+            : 'Your Top 3 matches are 100% free — no payment required. You\'re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.'}
         </div>
       )}
 
@@ -876,6 +887,18 @@ export default function Results({
             isUnlocked(city) &&
             !compareSelected &&
             compareSelection.length >= MAX_COMPARE_CITIES
+          const v2EngineRank = 3 + v2UnlockedCount - i
+          const v2TopN = Math.max(1, 3 - (i - v2UnlockedCount))
+          const cardRank = !useV2FreeLayout
+            ? i + 1
+            : city.locked
+              ? v2TopN
+              : v2EngineRank
+          const cardRankLabel = !useV2FreeLayout
+            ? undefined
+            : city.locked
+              ? `Top ${v2TopN}`
+              : `#${v2EngineRank}`
 
           return (
           <motion.div
@@ -917,7 +940,8 @@ export default function Results({
             )}
             <CityCard
               city={city}
-              rank={i + 1}
+              rank={cardRank}
+              rankLabel={cardRankLabel}
               locked={!isUnlocked(city)}
               onUnlock={onUnlockPro}
               showCompareLink={isUnlocked(city)}
@@ -1079,7 +1103,9 @@ export default function Results({
               marginRight: 'auto',
             }}
           >
-            Your Top 3 matches are free. Pro unlocks the remaining 9 cities and deeper relocation analysis.
+            {useV2FreeLayout
+              ? 'Your 9 free matches are below. Upgrade to unlock the true Top 3 and your complete relocation blueprint.'
+              : 'Your Top 3 matches are free. Pro unlocks the remaining 9 cities and deeper relocation analysis.'}
           </p>
 
           <div

@@ -7,6 +7,7 @@ type PreviewCity = {
 
 type Props = {
   cities: PreviewCity[]
+  showRank?: boolean
 }
 
 function getScoreColor(score: number) {
@@ -33,7 +34,7 @@ function cardShellStyle(rank: number) {
 }
 
 /** Dumb presentational preview - name / country / flag / score only. */
-export default function AnonymousResultsPreview({ cities }: Props) {
+export default function AnonymousResultsPreview({ cities, showRank = true }: Props) {
   if (cities.length === 0) return null
 
   return (
@@ -82,7 +83,7 @@ export default function AnonymousResultsPreview({ cities }: Props) {
                     paddingTop: 4,
                   }}
                 >
-                  {rank}
+                  {showRank ? rank : null}
                 </span>
                 <span style={{ fontSize: 32, lineHeight: 1, flexShrink: 0 }} aria-hidden>
                   {city.flag}

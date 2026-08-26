@@ -15,6 +15,8 @@ interface Props {
   onUnlock?: () => void
   /** When set, show a link to the /compare page with this city pre-selected. */
   showCompareLink?: boolean
+  /** Optional visible rank text (e.g. "#12" or "Top 3"). Flag-off leaves this unset. */
+  rankLabel?: string
 }
 
 function getScoreColor(score: number) {
@@ -41,7 +43,7 @@ function cardShellStyle(rank: number, cursor: string) {
   }
 }
 
-function CityDetails({ city, color, showCompareLink = false }: { city: CityResult; color: string; showCompareLink?: boolean }) {
+function CityDetails({ city, color, showCompareLink = false, rankLabel }: { city: CityResult; color: string; showCompareLink?: boolean; rankLabel?: string }) {
   return (
     <>
       <div style={{
@@ -49,7 +51,17 @@ function CityDetails({ city, color, showCompareLink = false }: { city: CityResul
         background: color, width: `${city.score}%`, transition: 'width 0.5s ease',
       }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-        <span style={{ fontSize: 32 }}>{city.flag}</span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0 }}>
+          {rankLabel ? (
+            <span style={{
+              fontSize: 12, fontWeight: 700, color: 'rgba(240,237,232,0.35)',
+              width: 28, flexShrink: 0, paddingTop: 8,
+            }}>
+              {rankLabel}
+            </span>
+          ) : null}
+          <span style={{ fontSize: 32 }}>{city.flag}</span>
+        </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>
             {city.score}
@@ -346,7 +358,7 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
   )
 }
 
-export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false }: Props) {
+export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false, rankLabel }: Props) {
   const color = getScoreColor(city.score)
 
   if (locked) {
@@ -362,7 +374,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
               color: 'rgba(240,237,232,0.55)', background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: 6,
             }}>
-              🔒 Locked
+              {rankLabel ? `🔒 ${rankLabel}` : '🔒 Locked'}
             </span>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', marginTop: 10, lineHeight: 1.2 }}>
               City in {region}
@@ -408,7 +420,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 20px 40px rgba(0,0,0,0.4)' }}
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
     >
-      <CityDetails city={city} color={color} showCompareLink={showCompareLink} />
+      <CityDetails city={city} color={color} showCompareLink={showCompareLink} rankLabel={rankLabel} />
       <p
         aria-hidden
         style={{

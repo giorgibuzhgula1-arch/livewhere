@@ -17,6 +17,7 @@ export default function Home({
     <HomePageClient
       defaultSavingsLocation={defaultSavingsLocationFromCountry(country)}
       initialPostOAuthRestore={initialPostOAuthRestore}
+      paywallV2Enabled={process.env.PAYWALL_V2_ENABLED === 'true'}
     />
   )
 }

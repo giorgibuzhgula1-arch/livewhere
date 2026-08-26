@@ -1,0 +1,285 @@
+﻿diff --git a/app/page.tsx b/app/page.tsx
+index 64e5d04..82ee5b9 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -17,6 +17,7 @@ export default function Home({
+     <HomePageClient
+       defaultSavingsLocation={defaultSavingsLocationFromCountry(country)}
+       initialPostOAuthRestore={initialPostOAuthRestore}
++      paywallV2Enabled={process.env.PAYWALL_V2_ENABLED === 'true'}
+     />
+   )
+ }
+diff --git a/components/AnonymousResultsPreview.tsx b/components/AnonymousResultsPreview.tsx
+index e2c7f86..4286814 100644
+--- a/components/AnonymousResultsPreview.tsx
++++ b/components/AnonymousResultsPreview.tsx
+@@ -7,6 +7,7 @@ type PreviewCity = {
+ 
+ type Props = {
+   cities: PreviewCity[]
++  showRank?: boolean
+ }
+ 
+ function getScoreColor(score: number) {
+@@ -33,7 +34,7 @@ function cardShellStyle(rank: number) {
+ }
+ 
+ /** Dumb presentational preview - name / country / flag / score only. */
+-export default function AnonymousResultsPreview({ cities }: Props) {
++export default function AnonymousResultsPreview({ cities, showRank = true }: Props) {
+   if (cities.length === 0) return null
+ 
+   return (
+@@ -82,7 +83,7 @@ export default function AnonymousResultsPreview({ cities }: Props) {
+                     paddingTop: 4,
+                   }}
+                 >
+-                  {rank}
++                  {showRank ? rank : null}
+                 </span>
+                 <span style={{ fontSize: 32, lineHeight: 1, flexShrink: 0 }} aria-hidden>
+                   {city.flag}
+diff --git a/components/CityCard.tsx b/components/CityCard.tsx
+index 33b2046..d45738f 100644
+--- a/components/CityCard.tsx
++++ b/components/CityCard.tsx
+@@ -15,6 +15,8 @@ interface Props {
+   onUnlock?: () => void
+   /** When set, show a link to the /compare page with this city pre-selected. */
+   showCompareLink?: boolean
++  /** Optional visible rank text (e.g. "#12" or "Top 3"). Flag-off leaves this unset. */
++  rankLabel?: string
+ }
+ 
+ function getScoreColor(score: number) {
+@@ -41,7 +43,7 @@ function cardShellStyle(rank: number, cursor: string) {
+   }
+ }
+ 
+-function CityDetails({ city, color, showCompareLink = false }: { city: CityResult; color: string; showCompareLink?: boolean }) {
++function CityDetails({ city, color, showCompareLink = false, rankLabel }: { city: CityResult; color: string; showCompareLink?: boolean; rankLabel?: string }) {
+   return (
+     <>
+       <div style={{
+@@ -49,7 +51,17 @@ function CityDetails({ city, color, showCompareLink = false }: { city: CityResul
+         background: color, width: `${city.score}%`, transition: 'width 0.5s ease',
+       }} />
+       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+-        <span style={{ fontSize: 32 }}>{city.flag}</span>
++        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0 }}>
++          {rankLabel ? (
++            <span style={{
++              fontSize: 12, fontWeight: 700, color: 'rgba(240,237,232,0.35)',
++              width: 28, flexShrink: 0, paddingTop: 8,
++            }}>
++              {rankLabel}
++            </span>
++          ) : null}
++          <span style={{ fontSize: 32 }}>{city.flag}</span>
++        </div>
+         <div style={{ textAlign: 'right' }}>
+           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>
+             {city.score}
+@@ -346,7 +358,7 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
+   )
+ }
+ 
+-export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false }: Props) {
++export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false, rankLabel }: Props) {
+   const color = getScoreColor(city.score)
+ 
+   if (locked) {
+@@ -362,7 +374,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
+               color: 'rgba(240,237,232,0.55)', background: 'rgba(255,255,255,0.05)',
+               border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: 6,
+             }}>
+-              ≡ƒöÆ Locked
++              {rankLabel ? `≡ƒöÆ ${rankLabel}` : '≡ƒöÆ Locked'}
+             </span>
+             <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', marginTop: 10, lineHeight: 1.2 }}>
+               City in {region}
+@@ -408,7 +420,7 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
+       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 20px 40px rgba(0,0,0,0.4)' }}
+       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
+     >
+-      <CityDetails city={city} color={color} showCompareLink={showCompareLink} />
++      <CityDetails city={city} color={color} showCompareLink={showCompareLink} rankLabel={rankLabel} />
+       <p
+         aria-hidden
+         style={{
+diff --git a/components/HomePageClient.tsx b/components/HomePageClient.tsx
+index 778eb1e..4ac8121 100644
+--- a/components/HomePageClient.tsx
++++ b/components/HomePageClient.tsx
+@@ -249,10 +249,12 @@ function DataSourcesAttribution() {
+ export default function HomePageClient({
+   defaultSavingsLocation = 'Florida',
+   initialPostOAuthRestore = false,
++  paywallV2Enabled = false,
+ }: {
+   defaultSavingsLocation?: string
+   /** SSR/client hint from `?restore=results` only ΓÇö must match server for hydration. */
+   initialPostOAuthRestore?: boolean
++  paywallV2Enabled?: boolean
+ }) {
+   const [matches, setMatches] = useState<CityResult[] | null>(null)
+   const [loading, setLoading] = useState(false)
+@@ -1264,28 +1266,33 @@ export default function HomePageClient({
+             textAlign: 'center',
+             maxWidth: 480,
+           }}>
+-            Your Top 3 Matches Are Ready.
++            {paywallV2Enabled ? 'See a preview of your matches.' : 'Your Top 3 Matches Are Ready.'}
+           </h2>
+           {(() => {
+             const pendingCities = loadPendingResults()?.cities ?? []
+-            const unlocked = pendingCities.filter((c) => !c.locked).slice(0, 3)
+-            const previewSource = unlocked.length > 0 ? unlocked : pendingCities.slice(0, 3)
++            const unlockedNamed = pendingCities.filter((c) => !c.locked && c.name.trim() !== '')
++            const previewSource = paywallV2Enabled
++              ? unlockedNamed.slice(0, 3)
++              : (unlockedNamed.length > 0 ? unlockedNamed : pendingCities).slice(0, 3)
+             const previewCities = previewSource.map((c) => ({
+               name: c.name,
+               country: c.country,
+               flag: c.flag,
+               score: c.score,
+             }))
++            const teaserCopy = paywallV2Enabled
++              ? 'Here are a few cities that fit your quiz. Sign in to see all 9 free matches.'
++              : 'See your 3 best-matching cities ΓÇö completely free. Sign in to view.'
+             return previewCities.length > 0 ? (
+               <>
+                 <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6, margin: 0 }}>
+-                  See your 3 best-matching cities ΓÇö completely free. Sign in to view.
++                  {teaserCopy}
+                 </p>
+-                <AnonymousResultsPreview cities={previewCities} />
++                <AnonymousResultsPreview cities={previewCities} showRank={!paywallV2Enabled} />
+               </>
+             ) : (
+               <p style={{ color: 'rgba(240,237,232,0.55)', fontSize: 15, textAlign: 'center', maxWidth: 420, lineHeight: 1.6 }}>
+-                See your 3 best-matching cities ΓÇö completely free. Sign in to view.
++                {teaserCopy}
+               </p>
+             )
+           })()}
+@@ -1331,6 +1338,7 @@ export default function HomePageClient({
+           lifestyle={quizData?.lifestyle}
+           quizInput={quizData}
+           onAuthClick={openAuthForSave}
++          paywallV2Enabled={paywallV2Enabled}
+         />
+       )}
+ 
+diff --git a/components/Results.tsx b/components/Results.tsx
+index 89b7bbc..f54b56a 100644
+--- a/components/Results.tsx
++++ b/components/Results.tsx
+@@ -236,6 +236,7 @@ interface Props {
+   lifestyle?: string[]
+   quizInput?: AnalyzeRequest | null
+   onAuthClick?: () => void
++  paywallV2Enabled?: boolean
+ }
+ 
+ const CONTINENTS = ['all', 'Europe', 'Americas', 'Asia', 'Other']
+@@ -288,6 +289,7 @@ export default function Results({
+   lifestyle,
+   quizInput = null,
+   onAuthClick,
++  paywallV2Enabled = false,
+ }: Props) {
+   const showStreamingIndicator =
+     streaming && (maxCities == null || cities.length < maxCities)
+@@ -319,6 +321,7 @@ export default function Results({
+   const isBlueprint = isBlueprintPlan(plan)
+   const locked = !paid
+   const isUnlocked = (city: CityResult) => paid || !city.locked
++  const useV2FreeLayout = paywallV2Enabled && !paid
+   const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
+ 
+   const effectiveQuizInput = resolveQuizInput(quizInput, monthlyBudget, currency, lifestyle)
+@@ -332,16 +335,22 @@ export default function Results({
+     setSavePlanOpen(true)
+   }
+ 
+-  // Always show unlocked card(s) first, then by descending score.
+-  const ordered = [...cities].sort((a, b) => {
+-    const au = isUnlocked(a) ? 1 : 0
+-    const bu = isUnlocked(b) ? 1 : 0
+-    if (au !== bu) return bu - au
+-    return b.score - a.score
+-  })
++  // Flag off: unlocked first, then descending score. Flag-on free: #12ΓÇª#4 then Top 3/2/1.
++  const ordered = useV2FreeLayout
++    ? [
++        ...cities.filter((c) => !c.locked).sort((a, b) => a.score - b.score),
++        ...cities.filter((c) => c.locked).sort((a, b) => a.score - b.score),
++      ]
++    : [...cities].sort((a, b) => {
++        const au = isUnlocked(a) ? 1 : 0
++        const bu = isUnlocked(b) ? 1 : 0
++        if (au !== bu) return bu - au
++        return b.score - a.score
++      })
++  const v2UnlockedCount = useV2FreeLayout ? ordered.filter((c) => !c.locked).length : 0
+ 
+   const filtered = filter === 'all' ? ordered : ordered.filter(c => c.continent === filter)
+-  const top = ordered[0]
++  const top = useV2FreeLayout ? null : ordered[0]
+   const shareLine = top ? buildShareLine(top) : ''
+   const siteUrl = getSiteUrl()
+ 
+@@ -790,7 +799,9 @@ export default function Results({
+           lineHeight: 1.6,
+           color: 'rgba(240,237,232,0.7)',
+         }}>
+-          Your Top 3 matches are 100% free ΓÇö no payment required. You&apos;re seeing real data for your #1 match ΓÇö take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.
++          {useV2FreeLayout
++            ? 'Your 9 free matches are below. The true Top 3 stay locked until you upgrade.'
++            : 'Your Top 3 matches are 100% free ΓÇö no payment required. You\'re seeing real data for your #1 match ΓÇö take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.'}
+         </div>
+       )}
+ 
+@@ -876,6 +887,18 @@ export default function Results({
+             isUnlocked(city) &&
+             !compareSelected &&
+             compareSelection.length >= MAX_COMPARE_CITIES
++          const v2EngineRank = 3 + v2UnlockedCount - i
++          const v2TopN = Math.max(1, 3 - (i - v2UnlockedCount))
++          const cardRank = !useV2FreeLayout
++            ? i + 1
++            : city.locked
++              ? v2TopN
++              : v2EngineRank
++          const cardRankLabel = !useV2FreeLayout
++            ? undefined
++            : city.locked
++              ? `Top ${v2TopN}`
++              : `#${v2EngineRank}`
+ 
+           return (
+           <motion.div
+@@ -917,7 +940,8 @@ export default function Results({
+             )}
+             <CityCard
+               city={city}
+-              rank={i + 1}
++              rank={cardRank}
++              rankLabel={cardRankLabel}
+               locked={!isUnlocked(city)}
+               onUnlock={onUnlockPro}
+               showCompareLink={isUnlocked(city)}
+@@ -1079,7 +1103,9 @@ export default function Results({
+               marginRight: 'auto',
+             }}
+           >
+-            Your Top 3 matches are free. Pro unlocks the remaining 9 cities and deeper relocation analysis.
++            {useV2FreeLayout
++              ? 'Your 9 free matches are below. Upgrade to unlock the true Top 3 and your complete relocation blueprint.'
++              : 'Your Top 3 matches are free. Pro unlocks the remaining 9 cities and deeper relocation analysis.'}
+           </p>
+ 
+           <div
