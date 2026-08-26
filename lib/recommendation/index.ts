@@ -480,6 +480,39 @@ export function unsanitizedCitiesForPersist(
   })
 }
 
+/**
+ * Locked paywall-v2 stubs for engine ranks #1–#3: score + continent only.
+ * Zero-width names keep Results keys unique without revealing identity.
+ */
+export function buildLockedScoreContinentStubs(
+  body: AnalyzeRequest,
+  count: number,
+): CityResult[] {
+  return rankSurvivorsForUser(body, count).map((ranked, i) => {
+    const meta = metaFor(ranked.city)
+    return {
+      name: "\u200B".repeat(i + 1),
+      country: "",
+      continent: meta.continent,
+      flag: "",
+      score: Math.round(ranked.score!),
+      taxRate: 0,
+      monthlyRent: 0,
+      monthlyCost: 0,
+      takeHomeMonthly: 0,
+      monthlySavings: 0,
+      pros: [],
+      cons: [],
+      tags: [],
+      visa: "",
+      healthcare: "",
+      scores: { tax: 0, housing: 0, climate: 0, health: 0, stability: 0, safety: 0 },
+      aiInsight: "",
+      locked: true,
+    }
+  })
+}
+
 function mergeNarrative(base: CityResult, partial: Partial<CityResult>): CityResult {
   return {
     ...base,
@@ -851,6 +884,8 @@ function buildNarrativeRequestBody(
 export type RecommendStreamHandlers = {
   onDelta?: (text: string) => void
   onCity?: (city: CityResult) => void
+  /** Skip this many top-ranked cities before LLM generation. Paywall-v2 free path uses 3 → engine #4–#12. */
+  rankOffset?: number
 }
 
 function emitNarrativesFromBuffer(
@@ -937,13 +972,14 @@ export async function streamRecommendCities(
   handlers: RecommendStreamHandlers = {}
 ): Promise<CityResult[]> {
   const resultCount = Math.max(1, Math.min(PRO_RESULT_COUNT, Math.round(count)))
+  const offset = Math.max(0, Math.min(PRO_RESULT_COUNT - 1, Math.round(handlers.rankOffset ?? 0)))
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured")
   }
 
   const priorities = normPrioritiesFromBody(body)
-  const ranked = rankSurvivorsForUser(body, resultCount)
+  const ranked = rankSurvivorsForUser(body, offset + resultCount).slice(offset)
   if (ranked.length === 0) {
     throw new Error("No cities matched your budget and priority filters")
   }

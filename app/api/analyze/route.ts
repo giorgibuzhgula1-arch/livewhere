@@ -2,7 +2,7 @@ import { createHash } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { ipAddress, waitUntil } from '@vercel/functions'
-import { streamRecommendCities, buildTeaserCities } from '@/lib/recommendation'
+import { streamRecommendCities, buildTeaserCities, buildLockedScoreContinentStubs } from '@/lib/recommendation'
 import { resultCountForPlan, isPaidPlan, FREE_UNLOCKED_COUNT, FREE_DETAILED_COUNT, FREE_SEARCHES_PER_DAY, FREE_ANONYMOUS_SEARCHES_PER_MONTH } from '@/lib/plan'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { createClient } from '@/lib/supabase/server'
@@ -285,10 +285,18 @@ export async function POST(req: NextRequest) {
       try {
         const paid = isPaidPlan(plan)
         const resultCount = resultCountForPlan(plan)
+        const paywallV2 = isPaywallV2Enabled()
         // Free users only ever see ONE city in full, so we generate a small
         // detailed set instead of all 12 rich objects (the cause of the ~1 min
         // analyses). The locked grid is padded with cheap teasers below.
-        const detailedCount = paid ? resultCount : FREE_DETAILED_COUNT
+        // Paywall-v2 free: LLM writes engine #4–#12 (9 full cities); #1–#3 are
+        // score+continent stubs. Flag off keeps today's 3 + teasers.
+        const detailedCount = paid
+          ? resultCount
+          : paywallV2
+            ? Math.max(1, resultCount - FREE_UNLOCKED_COUNT)
+            : FREE_DETAILED_COUNT
+        const rankOffset = !paid && paywallV2 ? FREE_UNLOCKED_COUNT : 0
 
         send({ type: 'limits', maxCities: resultCount })
         send({ type: 'status', text: 'Scoring cities and writing your personalized insights…' })
@@ -296,10 +304,13 @@ export async function POST(req: NextRequest) {
         // Stream the #1 match unlocked the moment it parses so the free user
         // sees their top card within a few seconds; later matches stream as
         // locked teasers. Paid users get every city unlocked progressively.
+        // Paywall-v2 free: onCity only receives engine #4–#12 (rankOffset=3);
+        // those 9 are the free full cities. True #1–#3 are locked stubs on done.
         let emitted = 0
         const cities = await streamRecommendCities(request, detailedCount, {
+          rankOffset,
           onCity(city) {
-            const unlock = paid || emitted < FREE_UNLOCKED_COUNT
+            const unlock = paid || paywallV2 || emitted < FREE_UNLOCKED_COUNT
             send({
               type: 'city',
               city: unlock ? { ...city, locked: false } : sanitizeLockedCity(city),
@@ -311,6 +322,10 @@ export async function POST(req: NextRequest) {
         let clientCities: CityResult[]
         if (paid) {
           clientCities = cities.map((city) => ({ ...city, locked: false }))
+        } else if (paywallV2) {
+          const stubs = buildLockedScoreContinentStubs(request, FREE_UNLOCKED_COUNT)
+          const unlocked = cities.map((city) => ({ ...city, locked: false }))
+          clientCities = [...stubs, ...unlocked]
         } else {
           // Keep the first generated match as the unlocked #1 (matches what we
           // streamed, so the top card never flashes), then sanitize the rest
@@ -342,7 +357,6 @@ export async function POST(req: NextRequest) {
             .eq('id', userId)
         }
 
-        const paywallV2 = isPaywallV2Enabled()
         const searchId = paywallV2 ? createAnalyzeSearchId() : null
         if (paywallV2 && searchId) {
           send({ type: 'done', cities: clientCities, searchId })
