@@ -151,7 +151,7 @@ export default function ThankYouClient() {
         </ul>
 
         <Link
-          href="/"
+          href="/?reveal=snapshot"
           style={{
             display: 'inline-block',
             background: '#c8f05a',

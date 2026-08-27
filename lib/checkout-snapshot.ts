@@ -6,6 +6,7 @@ export type CheckoutSnapshot = {
   quizInput: AnalyzeRequest
   cities: CityResult[]
   maxCities?: number | null
+  searchId?: string | null
 }
 
 function read(): string | null {

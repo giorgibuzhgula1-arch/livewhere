@@ -57,9 +57,9 @@ export type AnalyzeSearchSnapshot = {
 
 /**
  * Read a stored analyze snapshot. Never throws.
- * - searchId: that row, if it exists
+ * - searchId: that row, if it exists (anonymous NULL user_id allowed when caller is paid)
  * - userId only: latest row for that user
- * - both: that searchId, only if user_id matches
+ * - searchId + userId: that searchId if user_id is null or matches the caller
  * Caller must still enforce paid + flag at the HTTP layer.
  */
 export async function getAnalyzeSearchSnapshot(params: {
@@ -79,7 +79,6 @@ export async function getAnalyzeSearchSnapshot(params: {
 
     if (searchId) {
       query = query.eq('id', searchId)
-      if (userId) query = query.eq('user_id', userId)
     } else {
       query = query.eq('user_id', userId!).order('created_at', { ascending: false }).limit(1)
     }
@@ -87,6 +86,7 @@ export async function getAnalyzeSearchSnapshot(params: {
     const { data, error } = await query.maybeSingle()
     if (error || !data) return null
     if (!Array.isArray(data.cities)) return null
+    if (userId && data.user_id && data.user_id !== userId) return null
 
     return {
       searchId: data.id,

@@ -1,0 +1,575 @@
+﻿diff --git a/app/thank-you/ThankYouClient.tsx b/app/thank-you/ThankYouClient.tsx
+index 02f9548..02a5f8b 100644
+--- a/app/thank-you/ThankYouClient.tsx
++++ b/app/thank-you/ThankYouClient.tsx
+@@ -151,7 +151,7 @@ export default function ThankYouClient() {
+         </ul>
+ 
+         <Link
+-          href="/"
++          href="/?reveal=snapshot"
+           style={{
+             display: 'inline-block',
+             background: '#c8f05a',
+diff --git a/components/HomePageClient.tsx b/components/HomePageClient.tsx
+index 4ac8121..6cf8a73 100644
+--- a/components/HomePageClient.tsx
++++ b/components/HomePageClient.tsx
+@@ -52,7 +52,7 @@ type StreamPayload =
+   | { type: 'delta'; text: string }
+   | { type: 'status'; text: string }
+   | { type: 'city'; city: CityResult }
+-  | { type: 'done'; cities: CityResult[] }
++  | { type: 'done'; cities: CityResult[]; searchId?: string }
+   | { type: 'error'; error: string }
+   | { type: 'limits'; maxCities: number | null }
+ 
+@@ -309,6 +309,7 @@ export default function HomePageClient({
+         quizInput: pendingRequest,
+         cities: pending.cities,
+         maxCities: pending.maxCities,
++        ...(pending.searchId ? { searchId: pending.searchId } : {}),
+       })
+     }
+     clearPendingResults()
+@@ -475,13 +476,18 @@ export default function HomePageClient({
+     )
+   }, [openAuthForResults])
+ 
+-  const savePendingAnonymousResults = useCallback((cities: CityResult[], maxCities: number | null) => {
++  const savePendingAnonymousResults = useCallback((
++    cities: CityResult[],
++    maxCities: number | null,
++    searchId?: string,
++  ) => {
+     logQuizAuthDebug('savePendingAnonymousResults ΓÇö analyze done, anonymous user', {
+       cityCount: cities.length,
+       maxCities,
++      searchId: searchId ?? null,
+       isPostOAuthRestore: isPostOAuthRestore(),
+     })
+-    savePendingResults(cities, maxCities)
++    savePendingResults(cities, maxCities, searchId)
+     setMatches(null)
+   }, [])
+ 
+@@ -591,6 +597,7 @@ export default function HomePageClient({
+       let finished = false
+       let streamError: string | null = null
+       let streamMaxCities: number | null = null
++      let doneSearchId: string | undefined
+       const loggedIn = await isLoggedIn()
+ 
+       const capMatches = (list: CityResult[]) =>
+@@ -601,15 +608,21 @@ export default function HomePageClient({
+       const finishWithCities = async (cities: CityResult[]) => {
+         const capped = capMatches(cities)
+         const loggedInNow = await isLoggedIn()
++        const searchId =
++          typeof doneSearchId === 'string' && doneSearchId.trim()
++            ? doneSearchId.trim()
++            : undefined
+         logQuizAuthDebug('finishWithCities ΓÇö analyze stream done', {
+           cityCount: capped.length,
+           loggedIn: loggedInNow,
++          searchId: searchId ?? null,
+           isPostOAuthRestore: isPostOAuthRestore(),
+         })
+         saveCheckoutSnapshot({
+           quizInput: data,
+           cities: capped,
+           maxCities: streamMaxCities,
++          ...(searchId ? { searchId } : {}),
+         })
+         if (loggedInNow) {
+           setMatches(capped)
+@@ -620,12 +633,13 @@ export default function HomePageClient({
+             quizInput: data,
+             cities: capped,
+             maxCities: streamMaxCities,
++            ...(searchId ? { searchId } : {}),
+           })
+           clearPendingResults()
+           clearPendingAnalyze()
+           clearPostAuthRestoreState()
+         } else {
+-          savePendingAnonymousResults(capped, streamMaxCities)
++          savePendingAnonymousResults(capped, streamMaxCities, searchId)
+         }
+       }
+ 
+@@ -651,6 +665,9 @@ export default function HomePageClient({
+             setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
+           }
+         } else if (payload.type === 'done') {
++          const rawId = payload.searchId
++          doneSearchId =
++            typeof rawId === 'string' && rawId.trim() ? rawId.trim() : undefined
+           await finishWithCities(payload.cities)
+           finished = true
+         } else if (payload.type === 'error') {
+@@ -803,6 +820,114 @@ export default function HomePageClient({
+   const savedPlanAttemptedRef = useRef(false)
+   const compareReturnAttemptedRef = useRef(false)
+   const purchaseTrackedRef = useRef(false)
++  const snapshotRevealAttemptedRef = useRef(false)
++
++  // Paywall-v2: after Stripe, hydrate Top 3 from persisted snapshot instead of re-running analyze.
++  useEffect(() => {
++    if (typeof window === 'undefined') return
++    if (snapshotRevealAttemptedRef.current) return
++
++    const params = new URLSearchParams(window.location.search)
++    if (params.get('reveal') !== 'snapshot') return
++    snapshotRevealAttemptedRef.current = true
++
++    const stripRevealParam = () => {
++      params.delete('reveal')
++      const remaining = params.toString()
++      window.history.replaceState(null, '', remaining ? `/?${remaining}` : '/')
++    }
++
++    if (!paywallV2Enabled) {
++      stripRevealParam()
++      return
++    }
++
++    void (async () => {
++      const checkout = loadCheckoutSnapshot()
++      const pending = loadPendingResults()
++      const searchId = (checkout?.searchId || pending?.searchId || '').trim()
++      const quiz = checkout?.quizInput ?? loadPendingAnalyze()
++
++      const fallbackAnalyze = async (reason: string, extra?: Record<string, unknown>) => {
++        console.warn('[paywall-v2] snapshot reveal failed, falling back to analyze', {
++          searchId: searchId || null,
++          reason,
++          ...extra,
++        })
++        stripRevealParam()
++        if (quiz) {
++          await runAnalyzeRef.current(quiz, { isRestoreRefetch: true })
++        }
++      }
++
++      if (!searchId) {
++        await fallbackAnalyze('missing_searchId')
++        return
++      }
++
++      const sessionRead = await getAuthSessionWithTimeout()
++      const token = sessionRead.ok ? sessionRead.session?.access_token : undefined
++      if (!sessionRead.ok || !sessionRead.session?.user) {
++        await fallbackAnalyze('not_logged_in')
++        return
++      }
++
++      const maxAttempts = 6
++      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
++        try {
++          const headers: Record<string, string> = {}
++          if (token) headers.Authorization = `Bearer ${token}`
++          const res = await fetch(
++            `/api/analyze/snapshot?searchId=${encodeURIComponent(searchId)}`,
++            { credentials: 'include', headers },
++          )
++
++          if (res.status === 403 && attempt < maxAttempts) {
++            await new Promise((r) => window.setTimeout(r, 1000))
++            continue
++          }
++
++          if (!res.ok) {
++            await fallbackAnalyze('http_error', { status: res.status, attempt })
++            return
++          }
++
++          const body = (await res.json()) as {
++            snapshot?: { cities?: CityResult[]; quizInput?: AnalyzeRequest | null } | null
++          }
++          const cities = body.snapshot?.cities
++          if (!Array.isArray(cities) || cities.length === 0) {
++            await fallbackAnalyze('empty_snapshot', { status: res.status, attempt })
++            return
++          }
++
++          const unlocked = cities.map((c) => ({ ...c, locked: false }))
++          const quizInput = body.snapshot?.quizInput ?? quiz ?? null
++          if (quizInput) setQuizData(quizInput)
++          setMatches(unlocked)
++          setResultMaxCities(unlocked.length)
++          setError(null)
++          setAwaitingAuthToView(false)
++          if (quizInput) {
++            saveCheckoutSnapshot({
++              quizInput,
++              cities: unlocked,
++              maxCities: unlocked.length,
++              searchId,
++            })
++          }
++          stripRevealParam()
++          return
++        } catch (err) {
++          await fallbackAnalyze('network_error', {
++            attempt,
++            error: err instanceof Error ? err.message : String(err),
++          })
++          return
++        }
++      }
++    })()
++  }, [paywallV2Enabled])
+ 
+   // Fallback if an old Stripe success_url still lands on /?upgraded=true.
+   // New checkouts go to /thank-you. trackPurchaseCompleted is one-shot per session_id.
+@@ -1281,7 +1406,7 @@ export default function HomePageClient({
+               score: c.score,
+             }))
+             const teaserCopy = paywallV2Enabled
+-              ? 'Here are a few cities that fit your quiz. Sign in to see all 9 free matches.'
++              ? 'Your matches: 12 cities ranked, 9 free to see right now. Sign in to unlock them ΓÇö 100% free, no card required.'
+               : 'See your 3 best-matching cities ΓÇö completely free. Sign in to view.'
+             return previewCities.length > 0 ? (
+               <>
+diff --git a/components/Results.tsx b/components/Results.tsx
+index f54b56a..6dd971f 100644
+--- a/components/Results.tsx
++++ b/components/Results.tsx
+@@ -154,6 +154,12 @@ const lockedPreviewBlur: React.CSSProperties = {
+   opacity: 0.85,
+ }
+ 
++const LOCKED_HERO_PLACEHOLDER_FLAG = '≡ƒÅ│∩╕Å'
++const LOCKED_HERO_PLACEHOLDER_NAME = 'Your top city'
++const LOCKED_HERO_PLACEHOLDER_COUNTRY = 'Hidden destination'
++const LOCKED_HERO_PLACEHOLDER_INSIGHT =
++  'This city is your strongest overall match on the priorities you selected. The full write-up covers tax treatment, visa path, healthcare quality, and 10-year savings.'
++
+ /**
+  * Split aiInsight for paywall teaser: first sentence clear, remainder blurred.
+  * Falls back to first ~40% when there is only one sentence (no period with trailing text).
+@@ -320,7 +326,8 @@ export default function Results({
+   const paid = isPaidPlan(plan)
+   const isBlueprint = isBlueprintPlan(plan)
+   const locked = !paid
+-  const isUnlocked = (city: CityResult) => paid || !city.locked
++  const isUnlocked = (city: CityResult) =>
++    paywallV2Enabled && paid ? !city.locked : paid || !city.locked
+   const useV2FreeLayout = paywallV2Enabled && !paid
+   const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
+ 
+@@ -348,9 +355,14 @@ export default function Results({
+         return b.score - a.score
+       })
+   const v2UnlockedCount = useV2FreeLayout ? ordered.filter((c) => !c.locked).length : 0
++  const v2Top1 = useV2FreeLayout
++    ? ordered.filter((c) => c.locked).at(-1) ?? null
++    : null
+ 
+   const filtered = filter === 'all' ? ordered : ordered.filter(c => c.continent === filter)
+   const top = useV2FreeLayout ? null : ordered[0]
++  const heroCity = useV2FreeLayout ? v2Top1 : (top && isUnlocked(top) ? top : null)
++  const heroObscured = Boolean(useV2FreeLayout && heroCity?.locked)
+   const shareLine = top ? buildShareLine(top) : ''
+   const siteUrl = getSiteUrl()
+ 
+@@ -583,8 +595,8 @@ export default function Results({
+         </div>
+       </div>
+ 
+-      {/* #1 match score + key metrics (free + paid) */}
+-      {top && isUnlocked(top) && (
++      {/* #1 match score + key metrics (free + paid). V2 free: locked Top 1, no sub-score tiles. */}
++      {heroCity && (
+         <motion.div
+           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+           style={{
+@@ -601,7 +613,7 @@ export default function Results({
+             marginBottom: 16,
+             fontFamily: "'DM Sans', sans-serif",
+           }}>
+-            Your #1 match
++            {heroObscured ? 'Your Top 1 match' : 'Your #1 match'}
+           </div>
+           <div style={{
+             display: 'flex',
+@@ -612,24 +624,28 @@ export default function Results({
+             flexWrap: 'wrap',
+           }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+-              <span style={{ fontSize: 36 }}>{top.flag}</span>
+-              <div>
+-                <div style={{
+-                  fontFamily: "'Playfair Display', serif",
+-                  fontSize: 22,
+-                  fontWeight: 700,
+-                  color: '#f0ede8',
+-                  lineHeight: 1.2,
+-                }}>
+-                  {top.name}
+-                </div>
+-                <div style={{
+-                  fontSize: 13,
+-                  color: 'rgba(240,237,232,0.45)',
+-                  fontFamily: "'DM Sans', sans-serif",
+-                  marginTop: 2,
+-                }}>
+-                  {top.country}
++              <div style={heroObscured ? lockedPreviewBlur : undefined}>
++                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
++                  <span style={{ fontSize: 36 }}>{heroObscured ? LOCKED_HERO_PLACEHOLDER_FLAG : heroCity.flag}</span>
++                  <div>
++                    <div style={{
++                      fontFamily: "'Playfair Display', serif",
++                      fontSize: 22,
++                      fontWeight: 700,
++                      color: '#f0ede8',
++                      lineHeight: 1.2,
++                    }}>
++                      {heroObscured ? LOCKED_HERO_PLACEHOLDER_NAME : heroCity.name}
++                    </div>
++                    <div style={{
++                      fontSize: 13,
++                      color: 'rgba(240,237,232,0.45)',
++                      fontFamily: "'DM Sans', sans-serif",
++                      marginTop: 2,
++                    }}>
++                      {heroObscured ? LOCKED_HERO_PLACEHOLDER_COUNTRY : heroCity.country}
++                    </div>
++                  </div>
+                 </div>
+               </div>
+             </div>
+@@ -638,10 +654,10 @@ export default function Results({
+                 fontFamily: "'Playfair Display', serif",
+                 fontSize: 48,
+                 fontWeight: 900,
+-                color: getScoreColor(top.score),
++                color: getScoreColor(heroCity.score),
+                 lineHeight: 1,
+               }}>
+-                {top.score}
++                {heroCity.score}
+               </div>
+               <div style={{
+                 fontSize: 11,
+@@ -653,25 +669,38 @@ export default function Results({
+               }}>
+                 match score
+               </div>
++              {heroObscured && (
++                <div style={{
++                  fontSize: 13,
++                  color: 'rgba(240,237,232,0.7)',
++                  fontFamily: "'DM Sans', sans-serif",
++                  marginTop: 8,
++                }}>
++                  {heroCity.continent && heroCity.continent !== 'Other' ? heroCity.continent : 'Another region'}
++                </div>
++              )}
+             </div>
+           </div>
+-          <p
+-            style={{
+-              fontSize: 13,
+-              color: 'rgba(240,237,232,0.45)',
+-              fontFamily: "'DM Sans', sans-serif",
+-              margin: '0 0 16px',
+-              lineHeight: 1.5,
+-            }}
+-          >
+-            We eliminate bad options before recommending good ones.
+-          </p>
++          {!heroObscured && (
++            <p
++              style={{
++                fontSize: 13,
++                color: 'rgba(240,237,232,0.45)',
++                fontFamily: "'DM Sans', sans-serif",
++                margin: '0 0 16px',
++                lineHeight: 1.5,
++              }}
++            >
++              We eliminate bad options before recommending good ones.
++            </p>
++          )}
++          {!heroObscured && (
+           <div style={{
+             display: 'grid',
+             gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+             gap: 10,
+           }}>
+-            {topMatchMetrics(top).map(({ label, score, kind }) => (
++            {topMatchMetrics(heroCity).map(({ label, score, kind }) => (
+               <div
+                 key={label}
+                 style={{
+@@ -722,15 +751,71 @@ export default function Results({
+               </div>
+             ))}
+           </div>
++          )}
+ 
+-          {effectiveQuizInput && (
++          {!heroObscured && effectiveQuizInput && (
+             <WhyNotFitBlock
+-              reason={buildAvoidReason(top, effectiveQuizInput.priorities)}
++              reason={buildAvoidReason(heroCity, effectiveQuizInput.priorities)}
+             />
+           )}
+ 
+           {locked && (() => {
+-            const insightParts = splitAiInsightPreview(top.aiInsight)
++            if (heroObscured) {
++              return (
++                <div
++                  style={{
++                    marginTop: 20,
++                    paddingTop: 20,
++                    borderTop: '1px solid rgba(255,255,255,0.08)',
++                  }}
++                >
++                  <div
++                    style={{
++                      fontSize: 11,
++                      letterSpacing: 1.5,
++                      textTransform: 'uppercase',
++                      color: '#c8f05a',
++                      fontWeight: 600,
++                      marginBottom: 12,
++                      fontFamily: "'DM Sans', sans-serif",
++                    }}
++                  >
++                    Why This City
++                  </div>
++                  <p
++                    aria-hidden
++                    style={{
++                      ...lockedPreviewBlur,
++                      fontSize: 14,
++                      lineHeight: 1.7,
++                      color: 'rgba(240,237,232,0.88)',
++                      fontFamily: "'DM Sans', sans-serif",
++                      margin: '0 0 16px',
++                    }}
++                  >
++                    {LOCKED_HERO_PLACEHOLDER_INSIGHT}
++                  </p>
++                  <button
++                    type="button"
++                    onClick={() => onUnlockPro?.()}
++                    style={{
++                      background: '#c8f05a',
++                      color: '#0a0a0f',
++                      border: 'none',
++                      padding: '10px 18px',
++                      borderRadius: 10,
++                      fontSize: 13,
++                      fontWeight: 700,
++                      cursor: 'pointer',
++                      fontFamily: "'DM Sans', sans-serif",
++                    }}
++                  >
++                    Unlock My Complete Relocation Blueprint
++                  </button>
++                </div>
++              )
++            }
++            const insightParts = splitAiInsightPreview(heroCity.aiInsight)
+             if (!insightParts) return null
+             return (
+               <div
+@@ -800,7 +885,7 @@ export default function Results({
+           color: 'rgba(240,237,232,0.7)',
+         }}>
+           {useV2FreeLayout
+-            ? 'Your 9 free matches are below. The true Top 3 stay locked until you upgrade.'
++            ? "You're looking at matches #12 through #4. Your true Top 3 scored higher than every city on this page ΓÇö they're locked until you upgrade."
+             : 'Your Top 3 matches are 100% free ΓÇö no payment required. You\'re seeing real data for your #1 match ΓÇö take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.'}
+         </div>
+       )}
+@@ -943,6 +1028,7 @@ export default function Results({
+               rank={cardRank}
+               rankLabel={cardRankLabel}
+               locked={!isUnlocked(city)}
++              fullLockedLayout={useV2FreeLayout && city.locked}
+               onUnlock={onUnlockPro}
+               showCompareLink={isUnlocked(city)}
+               onClick={() => {
+diff --git a/lib/checkout-snapshot.ts b/lib/checkout-snapshot.ts
+index 2014f48..8d007ad 100644
+--- a/lib/checkout-snapshot.ts
++++ b/lib/checkout-snapshot.ts
+@@ -6,6 +6,7 @@ export type CheckoutSnapshot = {
+   quizInput: AnalyzeRequest
+   cities: CityResult[]
+   maxCities?: number | null
++  searchId?: string | null
+ }
+ 
+ function read(): string | null {
+diff --git a/lib/paywall-v2.ts b/lib/paywall-v2.ts
+index b6be5ae..8cfdda6 100644
+--- a/lib/paywall-v2.ts
++++ b/lib/paywall-v2.ts
+@@ -57,9 +57,9 @@ export type AnalyzeSearchSnapshot = {
+ 
+ /**
+  * Read a stored analyze snapshot. Never throws.
+- * - searchId: that row, if it exists
++ * - searchId: that row, if it exists (anonymous NULL user_id allowed when caller is paid)
+  * - userId only: latest row for that user
+- * - both: that searchId, only if user_id matches
++ * - searchId + userId: that searchId if user_id is null or matches the caller
+  * Caller must still enforce paid + flag at the HTTP layer.
+  */
+ export async function getAnalyzeSearchSnapshot(params: {
+@@ -79,7 +79,6 @@ export async function getAnalyzeSearchSnapshot(params: {
+ 
+     if (searchId) {
+       query = query.eq('id', searchId)
+-      if (userId) query = query.eq('user_id', userId)
+     } else {
+       query = query.eq('user_id', userId!).order('created_at', { ascending: false }).limit(1)
+     }
+@@ -87,6 +86,7 @@ export async function getAnalyzeSearchSnapshot(params: {
+     const { data, error } = await query.maybeSingle()
+     if (error || !data) return null
+     if (!Array.isArray(data.cities)) return null
++    if (userId && data.user_id && data.user_id !== userId) return null
+ 
+     return {
+       searchId: data.id,
+diff --git a/lib/pending-results.ts b/lib/pending-results.ts
+index 5351f6a..af2cd35 100644
+--- a/lib/pending-results.ts
++++ b/lib/pending-results.ts
+@@ -5,6 +5,7 @@ export const PENDING_RESULTS_KEY = 'livewhere_pending_results'
+ type PendingResultsPayload = {
+   cities: CityResult[]
+   maxCities: number | null
++  searchId?: string | null
+ }
+ 
+ function read(key: string): string | null {
+@@ -22,9 +23,17 @@ function remove(key: string): void {
+   sessionStorage.removeItem(key)
+ }
+ 
+-export function savePendingResults(cities: CityResult[], maxCities: number | null): void {
++export function savePendingResults(
++  cities: CityResult[],
++  maxCities: number | null,
++  searchId?: string | null,
++): void {
+   if (typeof window === 'undefined') return
+-  const payload: PendingResultsPayload = { cities, maxCities }
++  const payload: PendingResultsPayload = {
++    cities,
++    maxCities,
++    ...(searchId ? { searchId } : {}),
++  }
+   write(PENDING_RESULTS_KEY, JSON.stringify(payload))
+ }
+ 

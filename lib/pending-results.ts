@@ -5,6 +5,7 @@ export const PENDING_RESULTS_KEY = 'livewhere_pending_results'
 type PendingResultsPayload = {
   cities: CityResult[]
   maxCities: number | null
+  searchId?: string | null
 }
 
 function read(key: string): string | null {
@@ -22,9 +23,17 @@ function remove(key: string): void {
   sessionStorage.removeItem(key)
 }
 
-export function savePendingResults(cities: CityResult[], maxCities: number | null): void {
+export function savePendingResults(
+  cities: CityResult[],
+  maxCities: number | null,
+  searchId?: string | null,
+): void {
   if (typeof window === 'undefined') return
-  const payload: PendingResultsPayload = { cities, maxCities }
+  const payload: PendingResultsPayload = {
+    cities,
+    maxCities,
+    ...(searchId ? { searchId } : {}),
+  }
   write(PENDING_RESULTS_KEY, JSON.stringify(payload))
 }
 

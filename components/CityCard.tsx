@@ -17,7 +17,22 @@ interface Props {
   showCompareLink?: boolean
   /** Optional visible rank text (e.g. "#12" or "Top 3"). Flag-off leaves this unset. */
   rankLabel?: string
+  /** Paywall-v2 locked rows: full card chrome with blurred identity + insight, not the compact stub. */
+  fullLockedLayout?: boolean
 }
+
+const lockedIdentityBlur: React.CSSProperties = {
+  filter: 'blur(7px)',
+  userSelect: 'none',
+  pointerEvents: 'none',
+  opacity: 0.85,
+}
+
+const LOCKED_PLACEHOLDER_FLAG = '🏳️'
+const LOCKED_PLACEHOLDER_NAME = 'Your top city'
+const LOCKED_PLACEHOLDER_COUNTRY = 'Hidden destination'
+const LOCKED_PLACEHOLDER_INSIGHT =
+  'This city is your strongest overall match on the priorities you selected. The full write-up covers tax treatment, visa path, healthcare quality, and 10-year savings.'
 
 function getScoreColor(score: number) {
   if (score >= 80) return '#c8f05a'
@@ -54,8 +69,14 @@ function CityDetails({ city, color, showCompareLink = false, rankLabel }: { city
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0 }}>
           {rankLabel ? (
             <span style={{
-              fontSize: 12, fontWeight: 700, color: 'rgba(240,237,232,0.35)',
-              width: 28, flexShrink: 0, paddingTop: 8,
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 28,
+              fontWeight: 800,
+              color: '#c8f05a',
+              lineHeight: 1,
+              width: 56,
+              flexShrink: 0,
+              paddingTop: 4,
             }}>
               {rankLabel}
             </span>
@@ -358,8 +379,96 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
   )
 }
 
-export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false, rankLabel }: Props) {
+export default function CityCard({ city, rank, onClick, locked = false, onUnlock, showCompareLink = false, rankLabel, fullLockedLayout = false }: Props) {
   const color = getScoreColor(city.score)
+
+  if (locked && fullLockedLayout) {
+    const region = city.continent && city.continent !== 'Other' ? city.continent : 'another region'
+    return (
+      <div style={cardShellStyle(rank, 'default')}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+          <div>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase',
+              color: 'rgba(240,237,232,0.55)', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: 6,
+            }}>
+              {rankLabel ? `🔒 ${rankLabel}` : '🔒 Locked'}
+            </span>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', marginTop: 10, lineHeight: 1.2 }}>
+              City in {region}
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>
+              {city.score}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(240,237,232,0.45)', textTransform: 'uppercase', letterSpacing: 1 }}>
+              match score
+            </div>
+          </div>
+        </div>
+
+        <div aria-hidden style={{ ...lockedIdentityBlur, marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <span style={{ fontSize: 32, lineHeight: 1 }}>{LOCKED_PLACEHOLDER_FLAG}</span>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', lineHeight: 1.2, marginBottom: 2 }}>
+                {LOCKED_PLACEHOLDER_NAME}
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>
+                {LOCKED_PLACEHOLDER_COUNTRY}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginBottom: 18,
+            paddingTop: 16,
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              letterSpacing: 1.5,
+              textTransform: 'uppercase',
+              color: '#c8f05a',
+              fontWeight: 600,
+              marginBottom: 12,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Why this city
+          </div>
+          <p
+            aria-hidden
+            style={{
+              ...lockedIdentityBlur,
+              fontSize: 14,
+              lineHeight: 1.7,
+              color: 'rgba(240,237,232,0.88)',
+              fontFamily: "'DM Sans', sans-serif",
+              margin: 0,
+            }}
+          >
+            {LOCKED_PLACEHOLDER_INSIGHT}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onUnlock?.() }}
+          style={{ width: '100%', background: '#c8f05a', color: '#0a0a0f', border: 'none', padding: '12px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+        >
+          Get My Retirement Plan — $79
+        </button>
+      </div>
+    )
+  }
 
   if (locked) {
     const region = city.continent && city.continent !== 'Other' ? city.continent : 'another region'

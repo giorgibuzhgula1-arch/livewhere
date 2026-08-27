@@ -52,7 +52,7 @@ type StreamPayload =
   | { type: 'delta'; text: string }
   | { type: 'status'; text: string }
   | { type: 'city'; city: CityResult }
-  | { type: 'done'; cities: CityResult[] }
+  | { type: 'done'; cities: CityResult[]; searchId?: string }
   | { type: 'error'; error: string }
   | { type: 'limits'; maxCities: number | null }
 
@@ -309,6 +309,7 @@ export default function HomePageClient({
         quizInput: pendingRequest,
         cities: pending.cities,
         maxCities: pending.maxCities,
+        ...(pending.searchId ? { searchId: pending.searchId } : {}),
       })
     }
     clearPendingResults()
@@ -475,13 +476,18 @@ export default function HomePageClient({
     )
   }, [openAuthForResults])
 
-  const savePendingAnonymousResults = useCallback((cities: CityResult[], maxCities: number | null) => {
+  const savePendingAnonymousResults = useCallback((
+    cities: CityResult[],
+    maxCities: number | null,
+    searchId?: string,
+  ) => {
     logQuizAuthDebug('savePendingAnonymousResults — analyze done, anonymous user', {
       cityCount: cities.length,
       maxCities,
+      searchId: searchId ?? null,
       isPostOAuthRestore: isPostOAuthRestore(),
     })
-    savePendingResults(cities, maxCities)
+    savePendingResults(cities, maxCities, searchId)
     setMatches(null)
   }, [])
 
@@ -591,6 +597,7 @@ export default function HomePageClient({
       let finished = false
       let streamError: string | null = null
       let streamMaxCities: number | null = null
+      let doneSearchId: string | undefined
       const loggedIn = await isLoggedIn()
 
       const capMatches = (list: CityResult[]) =>
@@ -601,15 +608,21 @@ export default function HomePageClient({
       const finishWithCities = async (cities: CityResult[]) => {
         const capped = capMatches(cities)
         const loggedInNow = await isLoggedIn()
+        const searchId =
+          typeof doneSearchId === 'string' && doneSearchId.trim()
+            ? doneSearchId.trim()
+            : undefined
         logQuizAuthDebug('finishWithCities — analyze stream done', {
           cityCount: capped.length,
           loggedIn: loggedInNow,
+          searchId: searchId ?? null,
           isPostOAuthRestore: isPostOAuthRestore(),
         })
         saveCheckoutSnapshot({
           quizInput: data,
           cities: capped,
           maxCities: streamMaxCities,
+          ...(searchId ? { searchId } : {}),
         })
         if (loggedInNow) {
           setMatches(capped)
@@ -620,12 +633,13 @@ export default function HomePageClient({
             quizInput: data,
             cities: capped,
             maxCities: streamMaxCities,
+            ...(searchId ? { searchId } : {}),
           })
           clearPendingResults()
           clearPendingAnalyze()
           clearPostAuthRestoreState()
         } else {
-          savePendingAnonymousResults(capped, streamMaxCities)
+          savePendingAnonymousResults(capped, streamMaxCities, searchId)
         }
       }
 
@@ -651,6 +665,9 @@ export default function HomePageClient({
             setMatches(capMatches(parseStreamingBufferToCities(accumulatedAi, data)))
           }
         } else if (payload.type === 'done') {
+          const rawId = payload.searchId
+          doneSearchId =
+            typeof rawId === 'string' && rawId.trim() ? rawId.trim() : undefined
           await finishWithCities(payload.cities)
           finished = true
         } else if (payload.type === 'error') {
@@ -803,6 +820,114 @@ export default function HomePageClient({
   const savedPlanAttemptedRef = useRef(false)
   const compareReturnAttemptedRef = useRef(false)
   const purchaseTrackedRef = useRef(false)
+  const snapshotRevealAttemptedRef = useRef(false)
+
+  // Paywall-v2: after Stripe, hydrate Top 3 from persisted snapshot instead of re-running analyze.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (snapshotRevealAttemptedRef.current) return
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('reveal') !== 'snapshot') return
+    snapshotRevealAttemptedRef.current = true
+
+    const stripRevealParam = () => {
+      params.delete('reveal')
+      const remaining = params.toString()
+      window.history.replaceState(null, '', remaining ? `/?${remaining}` : '/')
+    }
+
+    if (!paywallV2Enabled) {
+      stripRevealParam()
+      return
+    }
+
+    void (async () => {
+      const checkout = loadCheckoutSnapshot()
+      const pending = loadPendingResults()
+      const searchId = (checkout?.searchId || pending?.searchId || '').trim()
+      const quiz = checkout?.quizInput ?? loadPendingAnalyze()
+
+      const fallbackAnalyze = async (reason: string, extra?: Record<string, unknown>) => {
+        console.warn('[paywall-v2] snapshot reveal failed, falling back to analyze', {
+          searchId: searchId || null,
+          reason,
+          ...extra,
+        })
+        stripRevealParam()
+        if (quiz) {
+          await runAnalyzeRef.current(quiz, { isRestoreRefetch: true })
+        }
+      }
+
+      if (!searchId) {
+        await fallbackAnalyze('missing_searchId')
+        return
+      }
+
+      const sessionRead = await getAuthSessionWithTimeout()
+      const token = sessionRead.ok ? sessionRead.session?.access_token : undefined
+      if (!sessionRead.ok || !sessionRead.session?.user) {
+        await fallbackAnalyze('not_logged_in')
+        return
+      }
+
+      const maxAttempts = 6
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const headers: Record<string, string> = {}
+          if (token) headers.Authorization = `Bearer ${token}`
+          const res = await fetch(
+            `/api/analyze/snapshot?searchId=${encodeURIComponent(searchId)}`,
+            { credentials: 'include', headers },
+          )
+
+          if (res.status === 403 && attempt < maxAttempts) {
+            await new Promise((r) => window.setTimeout(r, 1000))
+            continue
+          }
+
+          if (!res.ok) {
+            await fallbackAnalyze('http_error', { status: res.status, attempt })
+            return
+          }
+
+          const body = (await res.json()) as {
+            snapshot?: { cities?: CityResult[]; quizInput?: AnalyzeRequest | null } | null
+          }
+          const cities = body.snapshot?.cities
+          if (!Array.isArray(cities) || cities.length === 0) {
+            await fallbackAnalyze('empty_snapshot', { status: res.status, attempt })
+            return
+          }
+
+          const unlocked = cities.map((c) => ({ ...c, locked: false }))
+          const quizInput = body.snapshot?.quizInput ?? quiz ?? null
+          if (quizInput) setQuizData(quizInput)
+          setMatches(unlocked)
+          setResultMaxCities(unlocked.length)
+          setError(null)
+          setAwaitingAuthToView(false)
+          if (quizInput) {
+            saveCheckoutSnapshot({
+              quizInput,
+              cities: unlocked,
+              maxCities: unlocked.length,
+              searchId,
+            })
+          }
+          stripRevealParam()
+          return
+        } catch (err) {
+          await fallbackAnalyze('network_error', {
+            attempt,
+            error: err instanceof Error ? err.message : String(err),
+          })
+          return
+        }
+      }
+    })()
+  }, [paywallV2Enabled])
 
   // Fallback if an old Stripe success_url still lands on /?upgraded=true.
   // New checkouts go to /thank-you. trackPurchaseCompleted is one-shot per session_id.
@@ -1281,7 +1406,7 @@ export default function HomePageClient({
               score: c.score,
             }))
             const teaserCopy = paywallV2Enabled
-              ? 'Here are a few cities that fit your quiz. Sign in to see all 9 free matches.'
+              ? 'Your matches: 12 cities ranked, 9 free to see right now. Sign in to unlock them — 100% free, no card required.'
               : 'See your 3 best-matching cities — completely free. Sign in to view.'
             return previewCities.length > 0 ? (
               <>

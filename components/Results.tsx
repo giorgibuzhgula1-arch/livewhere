@@ -154,6 +154,12 @@ const lockedPreviewBlur: React.CSSProperties = {
   opacity: 0.85,
 }
 
+const LOCKED_HERO_PLACEHOLDER_FLAG = '🏳️'
+const LOCKED_HERO_PLACEHOLDER_NAME = 'Your top city'
+const LOCKED_HERO_PLACEHOLDER_COUNTRY = 'Hidden destination'
+const LOCKED_HERO_PLACEHOLDER_INSIGHT =
+  'This city is your strongest overall match on the priorities you selected. The full write-up covers tax treatment, visa path, healthcare quality, and 10-year savings.'
+
 /**
  * Split aiInsight for paywall teaser: first sentence clear, remainder blurred.
  * Falls back to first ~40% when there is only one sentence (no period with trailing text).
@@ -320,7 +326,8 @@ export default function Results({
   const paid = isPaidPlan(plan)
   const isBlueprint = isBlueprintPlan(plan)
   const locked = !paid
-  const isUnlocked = (city: CityResult) => paid || !city.locked
+  const isUnlocked = (city: CityResult) =>
+    paywallV2Enabled && paid ? !city.locked : paid || !city.locked
   const useV2FreeLayout = paywallV2Enabled && !paid
   const visaMonthlyBudget = typeof monthlyBudget === 'number' && monthlyBudget > 0 ? Math.round(monthlyBudget) : undefined
 
@@ -348,9 +355,14 @@ export default function Results({
         return b.score - a.score
       })
   const v2UnlockedCount = useV2FreeLayout ? ordered.filter((c) => !c.locked).length : 0
+  const v2Top1 = useV2FreeLayout
+    ? ordered.filter((c) => c.locked).at(-1) ?? null
+    : null
 
   const filtered = filter === 'all' ? ordered : ordered.filter(c => c.continent === filter)
   const top = useV2FreeLayout ? null : ordered[0]
+  const heroCity = useV2FreeLayout ? v2Top1 : (top && isUnlocked(top) ? top : null)
+  const heroObscured = Boolean(useV2FreeLayout && heroCity?.locked)
   const shareLine = top ? buildShareLine(top) : ''
   const siteUrl = getSiteUrl()
 
@@ -583,8 +595,8 @@ export default function Results({
         </div>
       </div>
 
-      {/* #1 match score + key metrics (free + paid) */}
-      {top && isUnlocked(top) && (
+      {/* #1 match score + key metrics (free + paid). V2 free: locked Top 1, no sub-score tiles. */}
+      {heroCity && (
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           style={{
@@ -601,7 +613,7 @@ export default function Results({
             marginBottom: 16,
             fontFamily: "'DM Sans', sans-serif",
           }}>
-            Your #1 match
+            {heroObscured ? 'Your Top 1 match' : 'Your #1 match'}
           </div>
           <div style={{
             display: 'flex',
@@ -612,24 +624,28 @@ export default function Results({
             flexWrap: 'wrap',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 36 }}>{top.flag}</span>
-              <div>
-                <div style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: '#f0ede8',
-                  lineHeight: 1.2,
-                }}>
-                  {top.name}
-                </div>
-                <div style={{
-                  fontSize: 13,
-                  color: 'rgba(240,237,232,0.45)',
-                  fontFamily: "'DM Sans', sans-serif",
-                  marginTop: 2,
-                }}>
-                  {top.country}
+              <div style={heroObscured ? lockedPreviewBlur : undefined}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 36 }}>{heroObscured ? LOCKED_HERO_PLACEHOLDER_FLAG : heroCity.flag}</span>
+                  <div>
+                    <div style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: '#f0ede8',
+                      lineHeight: 1.2,
+                    }}>
+                      {heroObscured ? LOCKED_HERO_PLACEHOLDER_NAME : heroCity.name}
+                    </div>
+                    <div style={{
+                      fontSize: 13,
+                      color: 'rgba(240,237,232,0.45)',
+                      fontFamily: "'DM Sans', sans-serif",
+                      marginTop: 2,
+                    }}>
+                      {heroObscured ? LOCKED_HERO_PLACEHOLDER_COUNTRY : heroCity.country}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -638,10 +654,10 @@ export default function Results({
                 fontFamily: "'Playfair Display', serif",
                 fontSize: 48,
                 fontWeight: 900,
-                color: getScoreColor(top.score),
+                color: getScoreColor(heroCity.score),
                 lineHeight: 1,
               }}>
-                {top.score}
+                {heroCity.score}
               </div>
               <div style={{
                 fontSize: 11,
@@ -653,25 +669,38 @@ export default function Results({
               }}>
                 match score
               </div>
+              {heroObscured && (
+                <div style={{
+                  fontSize: 13,
+                  color: 'rgba(240,237,232,0.7)',
+                  fontFamily: "'DM Sans', sans-serif",
+                  marginTop: 8,
+                }}>
+                  {heroCity.continent && heroCity.continent !== 'Other' ? heroCity.continent : 'Another region'}
+                </div>
+              )}
             </div>
           </div>
-          <p
-            style={{
-              fontSize: 13,
-              color: 'rgba(240,237,232,0.45)',
-              fontFamily: "'DM Sans', sans-serif",
-              margin: '0 0 16px',
-              lineHeight: 1.5,
-            }}
-          >
-            We eliminate bad options before recommending good ones.
-          </p>
+          {!heroObscured && (
+            <p
+              style={{
+                fontSize: 13,
+                color: 'rgba(240,237,232,0.45)',
+                fontFamily: "'DM Sans', sans-serif",
+                margin: '0 0 16px',
+                lineHeight: 1.5,
+              }}
+            >
+              We eliminate bad options before recommending good ones.
+            </p>
+          )}
+          {!heroObscured && (
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
             gap: 10,
           }}>
-            {topMatchMetrics(top).map(({ label, score, kind }) => (
+            {topMatchMetrics(heroCity).map(({ label, score, kind }) => (
               <div
                 key={label}
                 style={{
@@ -722,15 +751,71 @@ export default function Results({
               </div>
             ))}
           </div>
+          )}
 
-          {effectiveQuizInput && (
+          {!heroObscured && effectiveQuizInput && (
             <WhyNotFitBlock
-              reason={buildAvoidReason(top, effectiveQuizInput.priorities)}
+              reason={buildAvoidReason(heroCity, effectiveQuizInput.priorities)}
             />
           )}
 
           {locked && (() => {
-            const insightParts = splitAiInsightPreview(top.aiInsight)
+            if (heroObscured) {
+              return (
+                <div
+                  style={{
+                    marginTop: 20,
+                    paddingTop: 20,
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: 1.5,
+                      textTransform: 'uppercase',
+                      color: '#c8f05a',
+                      fontWeight: 600,
+                      marginBottom: 12,
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    Why This City
+                  </div>
+                  <p
+                    aria-hidden
+                    style={{
+                      ...lockedPreviewBlur,
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      color: 'rgba(240,237,232,0.88)',
+                      fontFamily: "'DM Sans', sans-serif",
+                      margin: '0 0 16px',
+                    }}
+                  >
+                    {LOCKED_HERO_PLACEHOLDER_INSIGHT}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onUnlockPro?.()}
+                    style={{
+                      background: '#c8f05a',
+                      color: '#0a0a0f',
+                      border: 'none',
+                      padding: '10px 18px',
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    Unlock My Complete Relocation Blueprint
+                  </button>
+                </div>
+              )
+            }
+            const insightParts = splitAiInsightPreview(heroCity.aiInsight)
             if (!insightParts) return null
             return (
               <div
@@ -800,7 +885,7 @@ export default function Results({
           color: 'rgba(240,237,232,0.7)',
         }}>
           {useV2FreeLayout
-            ? 'Your 9 free matches are below. The true Top 3 stay locked until you upgrade.'
+            ? "You're looking at matches #12 through #4. Your true Top 3 scored higher than every city on this page — they're locked until you upgrade."
             : 'Your Top 3 matches are 100% free — no payment required. You\'re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.'}
         </div>
       )}
@@ -943,6 +1028,7 @@ export default function Results({
               rank={cardRank}
               rankLabel={cardRankLabel}
               locked={!isUnlocked(city)}
+              fullLockedLayout={useV2FreeLayout && city.locked}
               onUnlock={onUnlockPro}
               showCompareLink={isUnlocked(city)}
               onClick={() => {
