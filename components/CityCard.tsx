@@ -394,8 +394,22 @@ export default function CityCard({ city, rank, onClick, locked = false, onUnlock
               color: 'rgba(240,237,232,0.55)', background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: 6,
             }}>
-              {rankLabel ? `🔒 ${rankLabel}` : '🔒 Locked'}
+              🔒 Locked
             </span>
+            {rankLabel ? (
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 28,
+                fontWeight: 800,
+                color: '#c8f05a',
+                lineHeight: 1,
+                letterSpacing: 0.5,
+                textTransform: 'uppercase',
+                marginTop: 10,
+              }}>
+                {rankLabel}
+              </div>
+            ) : null}
             <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', marginTop: 10, lineHeight: 1.2 }}>
               City in {region}
             </div>
