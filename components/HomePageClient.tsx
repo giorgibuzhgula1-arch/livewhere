@@ -872,8 +872,13 @@ export default function HomePageClient({
         return
       }
 
-      const maxAttempts = 6
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const delay = (ms: number) => new Promise((r) => window.setTimeout(r, ms))
+
+      type SnapshotFetch =
+        | { ok: true; cities: CityResult[]; quizInput?: AnalyzeRequest | null }
+        | { ok: false; retryable: boolean; reason: string; status?: number; error?: string }
+
+      const fetchSnapshot = async (): Promise<SnapshotFetch> => {
         try {
           const headers: Record<string, string> = {}
           if (token) headers.Authorization = `Bearer ${token}`
@@ -881,50 +886,79 @@ export default function HomePageClient({
             `/api/analyze/snapshot?searchId=${encodeURIComponent(searchId)}`,
             { credentials: 'include', headers },
           )
-
-          if (res.status === 403 && attempt < maxAttempts) {
-            await new Promise((r) => window.setTimeout(r, 1000))
-            continue
+          if (res.status === 403) {
+            return { ok: false, retryable: true, reason: 'http_error', status: 403 }
           }
-
           if (!res.ok) {
-            await fallbackAnalyze('http_error', { status: res.status, attempt })
-            return
+            return { ok: false, retryable: false, reason: 'http_error', status: res.status }
           }
-
           const body = (await res.json()) as {
             snapshot?: { cities?: CityResult[]; quizInput?: AnalyzeRequest | null } | null
           }
           const cities = body.snapshot?.cities
           if (!Array.isArray(cities) || cities.length === 0) {
-            await fallbackAnalyze('empty_snapshot', { status: res.status, attempt })
-            return
+            return { ok: false, retryable: true, reason: 'empty_snapshot', status: res.status }
           }
-
-          const unlocked = cities.map((c) => ({ ...c, locked: false }))
-          const quizInput = body.snapshot?.quizInput ?? quiz ?? null
-          if (quizInput) setQuizData(quizInput)
-          setMatches(unlocked)
-          setResultMaxCities(unlocked.length)
-          setError(null)
-          setAwaitingAuthToView(false)
-          if (quizInput) {
-            saveCheckoutSnapshot({
-              quizInput,
-              cities: unlocked,
-              maxCities: unlocked.length,
-              searchId,
-            })
-          }
-          stripRevealParam()
-          return
+          return { ok: true, cities, quizInput: body.snapshot?.quizInput }
         } catch (err) {
-          await fallbackAnalyze('network_error', {
-            attempt,
+          return {
+            ok: false,
+            retryable: false,
+            reason: 'network_error',
             error: err instanceof Error ? err.message : String(err),
+          }
+        }
+      }
+
+      const hydrateFromSnapshot = (cities: CityResult[], snapshotQuiz?: AnalyzeRequest | null) => {
+        const unlocked = cities.map((c) => ({ ...c, locked: false }))
+        const quizInput = snapshotQuiz ?? quiz ?? null
+        if (quizInput) setQuizData(quizInput)
+        setMatches(unlocked)
+        setResultMaxCities(unlocked.length)
+        setError(null)
+        setAwaitingAuthToView(false)
+        if (quizInput) {
+          saveCheckoutSnapshot({
+            quizInput,
+            cities: unlocked,
+            maxCities: unlocked.length,
+            searchId,
           })
+        }
+        stripRevealParam()
+      }
+
+      const extraRetryThenFallback = async (
+        reason: string,
+        extra?: Record<string, unknown>,
+      ) => {
+        await delay(2500)
+        const extraTry = await fetchSnapshot()
+        if (extraTry.ok) {
+          hydrateFromSnapshot(extraTry.cities, extraTry.quizInput)
           return
         }
+        await fallbackAnalyze(reason, extra)
+      }
+
+      const maxAttempts = 6
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const result = await fetchSnapshot()
+        if (result.ok) {
+          hydrateFromSnapshot(result.cities, result.quizInput)
+          return
+        }
+        if (result.retryable && attempt < maxAttempts) {
+          await delay(1000)
+          continue
+        }
+        await extraRetryThenFallback(result.reason, {
+          status: result.status,
+          attempt,
+          ...(result.error ? { error: result.error } : {}),
+        })
+        return
       }
     })()
   }, [paywallV2Enabled])
