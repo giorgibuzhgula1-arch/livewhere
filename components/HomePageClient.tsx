@@ -46,7 +46,7 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import { startProCheckout } from '@/lib/start-pro-checkout'
 import { fetchSavedPlanById } from '@/lib/saved-plans'
-import { trackPremiumButtonClicked, trackPurchaseCompleted, trackSignupStarted, type PremiumPlan } from '@/lib/analytics'
+import { trackPremiumButtonClicked, trackPurchaseCompleted, trackResultsTeaserViewed, trackSignupStarted, type PremiumPlan } from '@/lib/analytics'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -268,6 +268,7 @@ export default function HomePageClient({
   const [restoringAfterOAuth, setRestoringAfterOAuth] = useState(initialPostOAuthRestore)
   const [restoreError, setRestoreError] = useState<string | null>(null)
   const [oauthSignInError, setOauthSignInError] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const unlockWallRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -1107,6 +1108,14 @@ export default function HomePageClient({
     return () => window.cancelAnimationFrame(id)
   }, [awaitingAuthToView, loading, matches, restoringAfterOAuth, restoreError])
 
+  useEffect(() => {
+    if (!awaitingAuthToView || loading || matches !== null) return
+    if (restoringAfterOAuth || restoreError) return
+    const pending = loadPendingResults()
+    if (!pending?.cities.length) return
+    trackResultsTeaserViewed({ cityCount: pending.cities.length })
+  }, [awaitingAuthToView, loading, matches, restoringAfterOAuth, restoreError])
+
   // One-shot kickoff: poll for session when landing on post-OAuth restore.
   // Strict Mode may remount; kickoff runs at most once via restoreKickoffAttemptedRef.
   useEffect(() => {
@@ -1217,6 +1226,7 @@ export default function HomePageClient({
     setQuizData(null)
     setError(null)
     setRestoreError(null)
+    setCheckoutError(null)
     setAwaitingAuthToView(false)
     setRestoringAfterOAuth(false)
     clearPostAuthRestoreState()
@@ -1238,12 +1248,21 @@ export default function HomePageClient({
 
   async function handleUnlockPro() {
     trackPremiumButtonClicked({ plan: 'pro', location: 'results' })
+    setCheckoutError(null)
     try {
       await startProCheckout('results')
-    } catch {
-      setAuthVariant('default')
-      setAuthMode('login')
-      setAuthOpen(true)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : ''
+      const signInRequired = message === 'Sign in required'
+      if (signInRequired) {
+        setAuthVariant('default')
+        setAuthMode('login')
+        setAuthOpen(true)
+        return
+      }
+      setCheckoutError(
+        message || 'Checkout couldn’t start. Please try again.',
+      )
     }
   }
 
@@ -1296,6 +1315,71 @@ export default function HomePageClient({
           >
             Try again
           </button>
+        </div>
+      )}
+
+      {checkoutError && (
+        <div
+          role="alert"
+          style={{
+            position: 'fixed',
+            top: oauthSignInError ? 148 : 72,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 250,
+            width: 'min(520px, calc(100% - 40px))',
+            padding: '14px 18px',
+            background: 'rgba(240,90,140,0.12)',
+            border: '1px solid rgba(240,90,140,0.35)',
+            borderRadius: 12,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <p style={{ margin: 0, color: '#f05a8c', fontSize: 14, lineHeight: 1.5, flex: 1 }}>
+            {checkoutError}
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => { void handleUnlockPro() }}
+              style={{
+                background: '#c8f05a',
+                color: '#0a0a0f',
+                border: 'none',
+                padding: '10px 18px',
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              onClick={() => setCheckoutError(null)}
+              style={{
+                background: 'transparent',
+                color: '#f05a8c',
+                border: '1px solid rgba(240,90,140,0.35)',
+                padding: '10px 14px',
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 

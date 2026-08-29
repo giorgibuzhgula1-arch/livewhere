@@ -97,17 +97,9 @@ function ClickToPlayVideo({ src, poster }: { src: string; poster?: string }) {
           src={src}
           poster={poster}
           playsInline
+          controls
           onEnded={() => setPlaying(false)}
-          style={videoStyle}
-        />
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 5,
-            pointerEvents: 'auto',
-          }}
+          style={{ ...videoStyle, position: 'relative', zIndex: 1 }}
         />
       </div>
     )

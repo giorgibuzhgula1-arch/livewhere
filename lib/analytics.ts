@@ -7,6 +7,7 @@ const SESSION_KEYS = {
   prioritiesCompleted: 'ga_priorities_completed',
   quizCompleted: 'ga_quiz_completed',
   resultsViewed: 'ga_results_viewed',
+  resultsTeaserViewed: 'ga_results_teaser_viewed',
   pricingViewed: 'ga_pricing_viewed',
   checkoutStarted: 'ga_checkout_started',
 } as const
@@ -94,6 +95,18 @@ export function trackResultsViewed(params?: { cityCount?: number }) {
     items_shown: params?.cityCount,
   })
   capturePostHogEvent(POSTHOG_EVENTS.VIEW_RESULTS, {
+    city_count: params?.cityCount,
+  })
+}
+
+/** Unauthenticated teaser / unlock wall — not the signed-in Results page. */
+export function trackResultsTeaserViewed(params?: { cityCount?: number }) {
+  if (!oncePerSession(SESSION_KEYS.resultsTeaserViewed)) return
+  gaEvent('view_results_teaser', {
+    item_list_name: 'city_results_teaser',
+    items_shown: params?.cityCount,
+  })
+  capturePostHogEvent(POSTHOG_EVENTS.VIEW_RESULTS_TEASER, {
     city_count: params?.cityCount,
   })
 }

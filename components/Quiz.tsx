@@ -169,6 +169,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               ))}
             </div>
             <style>{`
+              @keyframes quiz-submit-spin { to { transform: rotate(360deg) } }
               @media (max-width: 767px) {
                 .quiz-priorities-grid {
                   grid-template-columns: minmax(0, 1fr) !important;
@@ -240,15 +241,37 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             </div>
           )}
 
-          <button onClick={handleSubmit} disabled={loading}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            aria-busy={loading}
             style={{
               width: '100%', background: '#c8f05a', color: '#0a0a0f', border: 'none',
               padding: 18, borderRadius: 14, fontSize: 16, fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
+              cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.85 : 1,
               fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center',
               justifyContent: 'center', gap: 10, transition: 'all 0.2s'
             }}>
-            ✦ Analyze & Find My Countries
+            {loading ? (
+              <>
+                <span
+                  aria-hidden
+                  style={{
+                    width: 18,
+                    height: 18,
+                    border: '2px solid rgba(10,10,15,0.25)',
+                    borderTopColor: '#0a0a0f',
+                    borderRadius: '50%',
+                    animation: 'quiz-submit-spin 0.8s linear infinite',
+                    flexShrink: 0,
+                  }}
+                />
+                Analyzing your matches…
+              </>
+            ) : (
+              <>✦ Analyze & Find My Countries</>
+            )}
           </button>
         </div>
       </div>
