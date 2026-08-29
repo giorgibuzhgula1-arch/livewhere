@@ -18,8 +18,16 @@ export type PostHogEventName = (typeof POSTHOG_EVENTS)[keyof typeof POSTHOG_EVEN
 export function capturePostHogEvent(
   event: PostHogEventName,
   properties?: Record<string, unknown>,
-): void {
-  if (typeof window === 'undefined') return
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return
+): boolean {
+  if (typeof window === 'undefined') return false
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return false
+  if (!posthog.__loaded) return false
   posthog.capture(event, properties)
+  return true
+}
+
+export function isPostHogReady(): boolean {
+  if (typeof window === 'undefined') return false
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return true
+  return Boolean(posthog.__loaded)
 }

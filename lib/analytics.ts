@@ -1,5 +1,5 @@
-import { gaEvent } from '@/lib/gtag'
-import { POSTHOG_EVENTS, capturePostHogEvent } from '@/lib/posthog-events'
+import { gaEvent, isGtagReady } from '@/lib/gtag'
+import { POSTHOG_EVENTS, capturePostHogEvent, isPostHogReady } from '@/lib/posthog-events'
 
 const SESSION_KEYS = {
   quizStarted: 'ga_quiz_started',
@@ -43,10 +43,54 @@ export function trackHeroCtaClick(location = 'hero') {
   })
 }
 
+function hasSessionFlag(key: string): boolean {
+  if (typeof window === 'undefined') return true
+  return sessionStorage.getItem(key) === '1'
+}
+
+function markSessionFlag(key: string): void {
+  if (typeof window === 'undefined') return
+  sessionStorage.setItem(key, '1')
+}
+
+function isQuizStartAnalyticsReady(): boolean {
+  return isGtagReady() && isPostHogReady()
+}
+
+let quizStartFlushScheduled = false
+
+function flushQuizStart(): boolean {
+  if (hasSessionFlag(SESSION_KEYS.quizStarted)) return true
+  if (!isQuizStartAnalyticsReady()) return false
+
+  const gaOk = gaEvent('quiz_start')
+  const phOk =
+    !process.env.NEXT_PUBLIC_POSTHOG_KEY ||
+    capturePostHogEvent(POSTHOG_EVENTS.QUIZ_START)
+  if (!gaOk || !phOk) return false
+
+  markSessionFlag(SESSION_KEYS.quizStarted)
+  return true
+}
+
 export function trackQuizStarted() {
-  if (!oncePerSession(SESSION_KEYS.quizStarted)) return
-  gaEvent('quiz_start')
-  capturePostHogEvent(POSTHOG_EVENTS.QUIZ_START)
+  if (typeof window === 'undefined') return
+  if (hasSessionFlag(SESSION_KEYS.quizStarted)) return
+  if (flushQuizStart()) return
+  if (quizStartFlushScheduled) return
+
+  quizStartFlushScheduled = true
+  const startedAt = Date.now()
+  const maxWaitMs = 15_000
+
+  const tick = () => {
+    if (flushQuizStart() || Date.now() - startedAt > maxWaitMs) {
+      quizStartFlushScheduled = false
+      return
+    }
+    window.setTimeout(tick, 100)
+  }
+  window.setTimeout(tick, 100)
 }
 
 export function trackBudgetSelected(budget: number) {

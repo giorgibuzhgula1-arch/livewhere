@@ -14,6 +14,12 @@ export function gtag(...args: unknown[]) {
   window.gtag?.(...args)
 }
 
+export function isGtagReady(): boolean {
+  if (typeof window === 'undefined') return false
+  if (!GA_MEASUREMENT_ID) return true
+  return typeof window.gtag === 'function'
+}
+
 export function pageview(url: string) {
   if (!GA_MEASUREMENT_ID) return
   gtag('config', GA_MEASUREMENT_ID, {
@@ -24,13 +30,17 @@ export function pageview(url: string) {
 export function gaEvent(
   eventName: string,
   params?: Record<string, string | number | boolean | undefined>,
-) {
+): boolean {
   const cleaned = params
     ? Object.fromEntries(
         Object.entries(params).filter(([, value]) => value !== undefined),
       )
     : undefined
-  gtag('event', eventName, cleaned)
+  if (typeof window === 'undefined') return false
+  if (!GA_MEASUREMENT_ID) return true
+  if (typeof window.gtag !== 'function') return false
+  window.gtag('event', eventName, cleaned)
+  return true
 }
 
 /** @deprecated Use analytics helpers instead */
