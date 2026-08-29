@@ -21,6 +21,10 @@ function buildShareLine(city: CityResult): string {
   return `My #1 match is ${city.name} ${city.flag} Match Score: ${city.score}% — Find yours at livewhere.io`
 }
 
+function buildUnlockedShareLine(city: CityResult): string {
+  return `${city.name} ${city.flag} is one of my LiveWhere matches (${city.score}% fit) — find your cities at livewhere.io`
+}
+
 function getScoreColor(score: number) {
   if (score >= 80) return '#c8f05a'
   if (score >= 65) return '#f0c85a'
@@ -363,7 +367,12 @@ export default function Results({
   const top = useV2FreeLayout ? null : ordered[0]
   const heroCity = useV2FreeLayout ? v2Top1 : (top && isUnlocked(top) ? top : null)
   const heroObscured = Boolean(useV2FreeLayout && heroCity?.locked)
-  const shareLine = top ? buildShareLine(top) : ''
+  const shareCity = useV2FreeLayout
+    ? [...cities.filter((c) => !c.locked)].sort((a, b) => b.score - a.score)[0] ?? null
+    : top
+  const shareLine = shareCity
+    ? (useV2FreeLayout ? buildUnlockedShareLine(shareCity) : buildShareLine(shareCity))
+    : ''
   const siteUrl = getSiteUrl()
 
   function openShareUrl(url: string) {
@@ -428,7 +437,7 @@ export default function Results({
           >
             Based on everything you told us, we&apos;ve identified the cities where you&apos;ll thrive.
           </p>
-          {top && (
+          {shareCity && (
             <div
               id="share-results"
               style={{
@@ -572,7 +581,7 @@ export default function Results({
               {pdfLoading ? 'Building your blueprint…' : 'Download Your Relocation Blueprint'}
             </button>
           )}
-          {top && paid && (
+          {shareCity && (paid || useV2FreeLayout) && (
             <button
               type="button"
               onClick={() => document.getElementById('share-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
