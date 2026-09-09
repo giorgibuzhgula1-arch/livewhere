@@ -208,16 +208,6 @@ const TESTIMONIALS: Testimonial[] = [
     text: "As a physician, healthcare wasn't something I was willing to compromise on. Seeing quality care and affordability in the same place completely changed my perspective. Thailand checked more boxes than I expected.",
   },
   {
-    name: 'Susan H., 63',
-    role: 'Retired Accountant',
-    location: '🇩🇴 Dominican Republic',
-    stars: 5,
-    savings: 'up to ~$1,920/mo vs Georgia',
-    text: "The monthly breakdown was what finally made everything click. I could see exactly how far my retirement income would stretch — and Panama made the numbers work better than anywhere else I'd looked.",
-    videoUrl: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/susan-testimonial.mp4',
-    poster: 'https://pub-2c66f9226a0740a194205e63eaed682f.r2.dev/susan-poster.jpg',
-  },
-  {
     name: 'Richard & Karen B.',
     role: 'Retired Couple',
     location: '🇵🇹 Portugal',
