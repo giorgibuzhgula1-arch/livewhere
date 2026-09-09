@@ -298,7 +298,7 @@ export async function POST(req: NextRequest) {
             : FREE_DETAILED_COUNT
         const rankOffset = !paid && paywallV2 ? FREE_UNLOCKED_COUNT : 0
 
-        send({ type: 'limits', maxCities: resultCount })
+        send({ type: 'limits', maxCities: resultCount, generatedCount: detailedCount })
         send({ type: 'status', text: 'Scoring cities and writing your personalized insights…' })
 
         // Stream the #1 match unlocked the moment it parses so the free user

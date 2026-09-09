@@ -54,7 +54,7 @@ type StreamPayload =
   | { type: 'city'; city: CityResult }
   | { type: 'done'; cities: CityResult[]; searchId?: string }
   | { type: 'error'; error: string }
-  | { type: 'limits'; maxCities: number | null }
+  | { type: 'limits'; maxCities: number | null; generatedCount?: number }
 
 function mergeStreamedCity(list: CityResult[], city: CityResult): CityResult[] {
   const key = `${city.name}|${city.country}`
@@ -708,7 +708,11 @@ export default function HomePageClient({
         if (payload.type === 'limits') {
           streamMaxCities = payload.maxCities
           setResultMaxCities(payload.maxCities)
-          setAnalyzeExpectedCount(payload.maxCities)
+          setAnalyzeExpectedCount(
+            typeof payload.generatedCount === 'number' && payload.generatedCount > 0
+              ? payload.generatedCount
+              : payload.maxCities,
+          )
         } else if (payload.type === 'status') {
           usedDataEngine = true
           setAnalyzeStatusText(payload.text)
