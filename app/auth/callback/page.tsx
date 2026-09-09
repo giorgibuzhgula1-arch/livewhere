@@ -37,12 +37,20 @@ export default function AuthCallbackPage() {
 
     function trackNewGoogleSignUp(user: User) {
       if (signUpTracked) return
+      if (user.app_metadata?.provider === 'email') return
       const createdAt = new Date(user.created_at).getTime()
       if (Date.now() - createdAt < 60_000) {
         signUpTracked = true
         trackSignUp('google')
         trackSignupCompleted('google')
       }
+    }
+
+    function trackEmailConfirmSignUp(user: User) {
+      if (signUpTracked) return
+      if (user.app_metadata?.provider !== 'email') return
+      signUpTracked = true
+      trackSignupCompleted('email')
     }
 
     function redirectHome(path: string, oauthSuccess: boolean) {
@@ -98,6 +106,7 @@ export default function AuthCallbackPage() {
 
       if (session?.user) {
         trackNewGoogleSignUp(session.user)
+        trackEmailConfirmSignUp(session.user)
         setStatus('Redirecting…')
         redirectHome(next, true)
         return

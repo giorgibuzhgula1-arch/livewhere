@@ -9,6 +9,7 @@ export const POSTHOG_EVENTS = {
   VIEW_RESULTS_TEASER: 'view_results_teaser',
   RESULTS_SEEN: 'results_seen',
   SIGNUP_START: 'signup_start',
+  SIGNUP_PENDING_CONFIRMATION: 'signup_pending_confirmation',
   SIGNUP_COMPLETE: 'signup_complete',
   CHECKOUT_START: 'checkout_start',
   PURCHASE_COMPLETE: 'purchase_complete',

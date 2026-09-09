@@ -10,7 +10,7 @@ import {
 } from '@/lib/ensure-canonical-www'
 import { markPendingAuthRestore, saveOAuthNext } from '@/lib/wait-for-session'
 import { trackSignUp } from '@/lib/gtag'
-import { trackSignupCompleted, trackSignupStarted } from '@/lib/analytics'
+import { trackSignupCompleted, trackSignupPendingConfirmation, trackSignupStarted } from '@/lib/analytics'
 
 interface Props {
   isOpen: boolean
@@ -141,6 +141,7 @@ export default function AuthModal({
           return
         }
 
+        trackSignupPendingConfirmation('email')
         setCheckEmail(true)
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({

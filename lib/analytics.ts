@@ -251,3 +251,7 @@ export function trackSignupStarted(params: {
 export function trackSignupCompleted(method: 'email' | 'google' = 'email') {
   capturePostHogEvent(POSTHOG_EVENTS.SIGNUP_COMPLETE, { method })
 }
+
+export function trackSignupPendingConfirmation(method: 'email' | 'google' = 'email') {
+  capturePostHogEvent(POSTHOG_EVENTS.SIGNUP_PENDING_CONFIRMATION, { method })
+}
