@@ -95,7 +95,61 @@ const RESTORE_SESSION_MAX_ATTEMPTS = 24
 const RESTORE_SESSION_INITIAL_DELAY_MS = 250
 /** Wall-clock ceiling for durable post-OAuth restore listener (poll + late-session grace). */
 const RESTORE_GIVE_UP_MS = 90_000
-const ANALYZE_CLIENT_TIMEOUT_MS = 30_000
+/** Hard cap for the full analyze fetch+SSE. Do not raise above 45s. */
+const ANALYZE_CLIENT_TIMEOUT_MS = 45_000
+
+const ANALYZE_WAIT_MESSAGES = [
+  'Starting your personalized analysis…',
+  'Calculating what most people never compare.',
+  'Scoring cities against your priorities…',
+  'Writing your personalized insights…',
+] as const
+
+function AnalyzeWaitFeedback({
+  streamedCount,
+  expectedCount,
+  statusText,
+}: {
+  streamedCount: number
+  expectedCount: number | null
+  statusText: string | null
+}) {
+  const [tick, setTick] = useState(0)
+  const waitingForStream = streamedCount === 0 && !statusText
+
+  useEffect(() => {
+    if (!waitingForStream) return
+    const id = window.setInterval(() => setTick((n) => n + 1), 4000)
+    return () => window.clearInterval(id)
+  }, [waitingForStream])
+
+  let headline: string
+  let sub: string | null = null
+  if (streamedCount > 0) {
+    headline = expectedCount != null
+      ? `${streamedCount} of ${expectedCount} ready`
+      : `${streamedCount} ${streamedCount === 1 ? 'city' : 'cities'} ready`
+    sub = statusText || 'Writing your personalized insights…'
+  } else if (statusText) {
+    headline = statusText
+  } else {
+    headline = ANALYZE_WAIT_MESSAGES[tick % ANALYZE_WAIT_MESSAGES.length]
+    if (tick === 0) sub = ANALYZE_WAIT_MESSAGES[1]
+  }
+
+  return (
+    <>
+      <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, textAlign: 'center', margin: 0 }}>
+        {headline}
+      </p>
+      {sub && (
+        <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, textAlign: 'center', margin: 0 }}>
+          {sub}
+        </p>
+      )}
+    </>
+  )
+}
 
 type RestoreRevealState = 'idle' | 'in_flight' | 'done'
 
@@ -258,6 +312,9 @@ export default function HomePageClient({
 }) {
   const [matches, setMatches] = useState<CityResult[] | null>(null)
   const [loading, setLoading] = useState(false)
+  const [analyzeStreamedCount, setAnalyzeStreamedCount] = useState(0)
+  const [analyzeExpectedCount, setAnalyzeExpectedCount] = useState<number | null>(null)
+  const [analyzeStatusText, setAnalyzeStatusText] = useState<string | null>(null)
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup')
   const [authVariant, setAuthVariant] = useState<'default' | 'results'>('default')
@@ -506,6 +563,9 @@ export default function HomePageClient({
       clearedOAuthReturn: !options?.isRestoreRefetch,
     })
     setLoading(true)
+    setAnalyzeStreamedCount(0)
+    setAnalyzeExpectedCount(null)
+    setAnalyzeStatusText(null)
     setError(null)
     setRestoreError(null)
     setQuizData(data)
@@ -648,10 +708,13 @@ export default function HomePageClient({
         if (payload.type === 'limits') {
           streamMaxCities = payload.maxCities
           setResultMaxCities(payload.maxCities)
+          setAnalyzeExpectedCount(payload.maxCities)
         } else if (payload.type === 'status') {
           usedDataEngine = true
+          setAnalyzeStatusText(payload.text)
         } else if (payload.type === 'city') {
           usedDataEngine = true
+          setAnalyzeStreamedCount((n) => n + 1)
           // Free-tier cities stream in as locked teasers before the server
           // knows which one is the #1 match. Painting them now would render
           // the eventual top match locked, then flash to unlocked when the
@@ -727,6 +790,9 @@ export default function HomePageClient({
     } finally {
       window.clearTimeout(timeoutId)
       setLoading(false)
+      setAnalyzeStreamedCount(0)
+      setAnalyzeExpectedCount(null)
+      setAnalyzeStatusText(null)
       logQuizAuthDebug('runAnalyze FINALLY — loading=false', {
         isPostOAuthRestore: isPostOAuthRestore(),
       })
@@ -1433,12 +1499,11 @@ export default function HomePageClient({
             animation: 'spin 1s linear infinite'
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-          <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, textAlign: 'center' }}>
-            Starting your personalized analysis…
-          </p>
-          <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: 14, textAlign: 'center' }}>
-            Calculating what most people never compare.
-          </p>
+          <AnalyzeWaitFeedback
+            streamedCount={analyzeStreamedCount}
+            expectedCount={analyzeExpectedCount}
+            statusText={analyzeStatusText}
+          />
         </div>
       )}
 
