@@ -83,12 +83,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   const prioritiesTracked = useRef(false)
 
   useEffect(() => {
-    if (tracked.current) return
-    tracked.current = true
-    trackQuizStarted()
-  }, [])
-
-  useEffect(() => {
     try {
       const raw = sessionStorage.getItem(QUIZ_DRAFT_KEY)
       if (!raw) return
@@ -108,12 +102,20 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }, [])
 
   function handleBudgetChange(value: number) {
+    if (!tracked.current) {
+      tracked.current = true
+      trackQuizStarted()
+    }
     setMonthlyBudget(value)
     persistQuizDraft(value, priorities, lifestyle)
     trackBudgetSelected(value)
   }
 
   function handlePriorityChange(key: keyof UserPriorities, value: number) {
+    if (!tracked.current) {
+      tracked.current = true
+      trackQuizStarted()
+    }
     setPriorities((p) => {
       const next = { ...p, [key]: value }
       persistQuizDraft(monthlyBudget, next, lifestyle)
@@ -126,6 +128,10 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   function toggleLifestyle(key: string) {
+    if (!tracked.current) {
+      tracked.current = true
+      trackQuizStarted()
+    }
     setLifestyle(prev => {
       const next = prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]
       persistQuizDraft(monthlyBudget, priorities, next)
