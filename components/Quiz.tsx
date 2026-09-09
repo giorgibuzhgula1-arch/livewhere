@@ -114,7 +114,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         <div style={{ padding: '32px 40px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 18, fontWeight: 600 }}>Tell us about yourself</div>
           <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', background: '#1a1a26', padding: '6px 14px', borderRadius: 20 }}>
-            Step 1 of 1
+            Takes about a minute
           </div>
         </div>
 
