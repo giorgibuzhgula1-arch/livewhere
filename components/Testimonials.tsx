@@ -440,8 +440,8 @@ export default function Testimonials() {
               gap: 16,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ color: '#c8f05a', fontSize: 14, letterSpacing: 2 }}>{'★'.repeat(t.stars)}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ color: '#c8f05a', fontSize: 14, letterSpacing: 2, flexShrink: 0 }}>{'★'.repeat(t.stars)}</div>
               {/* Savings badge */}
               <div style={{
                 background: 'rgba(200,240,90,0.12)',
@@ -451,7 +451,9 @@ export default function Testimonials() {
                 fontSize: 11,
                 fontWeight: 600,
                 color: '#c8f05a',
-                whiteSpace: 'nowrap',
+                lineHeight: 1.35,
+                textAlign: 'right',
+                maxWidth: '100%',
               }}>
                 {t.savings}
               </div>
