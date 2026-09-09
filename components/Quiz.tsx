@@ -194,8 +194,10 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               </span>
               <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>$10,000</span>
             </div>
+            <div className="quiz-slider-hit">
             <input
               type="range"
+              className="quiz-budget-slider"
               min={500}
               max={10000}
               step={100}
@@ -203,6 +205,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               onChange={e => handleBudgetChange(Number(e.target.value))}
               style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
             />
+            </div>
           </div>
 
           {/* Priorities */}
@@ -219,12 +222,14 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                       {LABELS[priorities[key as keyof UserPriorities]]}
                     </span>
                   </div>
+                  <div className="quiz-slider-hit">
                   <input type="range" min={1} max={5}
                     className="quiz-priority-slider"
                     value={priorities[key as keyof UserPriorities]}
                     onChange={e => handlePriorityChange(key as keyof UserPriorities, Number(e.target.value))}
                     style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
                   />
+                  </div>
                 </div>
               ))}
             </div>
@@ -264,11 +269,57 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                   text-align: right !important;
                   margin-left: auto !important;
                 }
+                .quiz-slider-hit {
+                  display: flex;
+                  align-items: center;
+                  min-height: 44px;
+                }
+                .quiz-budget-slider,
                 .quiz-priority-slider {
                   display: block !important;
                   width: 100% !important;
                   max-width: 100% !important;
                   box-sizing: border-box !important;
+                  height: 44px;
+                  margin: 0;
+                  -webkit-appearance: none;
+                  appearance: none;
+                  background: transparent;
+                }
+                .quiz-budget-slider::-webkit-slider-runnable-track,
+                .quiz-priority-slider::-webkit-slider-runnable-track {
+                  width: 100%;
+                  height: 4px;
+                  background: rgba(255,255,255,0.15);
+                  border-radius: 999px;
+                }
+                .quiz-budget-slider::-moz-range-track,
+                .quiz-priority-slider::-moz-range-track {
+                  width: 100%;
+                  height: 4px;
+                  background: rgba(255,255,255,0.15);
+                  border-radius: 999px;
+                }
+                .quiz-budget-slider::-webkit-slider-thumb,
+                .quiz-priority-slider::-webkit-slider-thumb {
+                  -webkit-appearance: none;
+                  appearance: none;
+                  width: 28px;
+                  height: 28px;
+                  margin-top: -12px;
+                  border-radius: 50%;
+                  background: #c8f05a;
+                  border: none;
+                  cursor: pointer;
+                }
+                .quiz-budget-slider::-moz-range-thumb,
+                .quiz-priority-slider::-moz-range-thumb {
+                  width: 28px;
+                  height: 28px;
+                  border-radius: 50%;
+                  background: #c8f05a;
+                  border: none;
+                  cursor: pointer;
                 }
               }
             `}</style>
