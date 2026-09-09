@@ -46,6 +46,31 @@ const LIFESTYLES: { key: string; label: string }[] = [
   { key: 'warm_climate_year_round', label: '☀️ Warm climate year-round' },
 ]
 
+const QUIZ_DRAFT_KEY = 'livewhere_quiz_draft'
+
+function persistQuizDraft(
+  monthlyBudget: number,
+  priorities: UserPriorities,
+  lifestyle: string[],
+) {
+  try {
+    sessionStorage.setItem(
+      QUIZ_DRAFT_KEY,
+      JSON.stringify({ monthlyBudget, priorities, lifestyle }),
+    )
+  } catch {
+    /* private browsing / storage disabled */
+  }
+}
+
+function clearQuizDraft() {
+  try {
+    sessionStorage.removeItem(QUIZ_DRAFT_KEY)
+  } catch {
+    /* private browsing / storage disabled */
+  }
+}
+
 export default function Quiz({ onSubmit, loading, error }: Props) {
   const tracked = useRef(false)
   const [monthlyBudget, setMonthlyBudget] = useState(2500)
@@ -63,13 +88,37 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     trackQuizStarted()
   }, [])
 
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(QUIZ_DRAFT_KEY)
+      if (!raw) return
+      const draft = JSON.parse(raw) as {
+        monthlyBudget?: unknown
+        priorities?: UserPriorities
+        lifestyle?: unknown
+      }
+      if (typeof draft.monthlyBudget === 'number') setMonthlyBudget(draft.monthlyBudget)
+      if (draft.priorities && typeof draft.priorities === 'object') setPriorities(draft.priorities)
+      if (Array.isArray(draft.lifestyle) && draft.lifestyle.every((x) => typeof x === 'string')) {
+        setLifestyle(draft.lifestyle)
+      }
+    } catch {
+      /* private browsing / storage disabled / bad JSON */
+    }
+  }, [])
+
   function handleBudgetChange(value: number) {
     setMonthlyBudget(value)
+    persistQuizDraft(value, priorities, lifestyle)
     trackBudgetSelected(value)
   }
 
   function handlePriorityChange(key: keyof UserPriorities, value: number) {
-    setPriorities((p) => ({ ...p, [key]: value }))
+    setPriorities((p) => {
+      const next = { ...p, [key]: value }
+      persistQuizDraft(monthlyBudget, next, lifestyle)
+      return next
+    })
     if (!prioritiesTracked.current) {
       prioritiesTracked.current = true
       trackPrioritiesCompleted()
@@ -77,7 +126,11 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   function toggleLifestyle(key: string) {
-    setLifestyle(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])
+    setLifestyle(prev => {
+      const next = prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]
+      persistQuizDraft(monthlyBudget, priorities, next)
+      return next
+    })
     if (!prioritiesTracked.current) {
       prioritiesTracked.current = true
       trackPrioritiesCompleted()
@@ -97,6 +150,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
       }, 0)
     }
     trackQuizCompleted({ budget: monthlyBudget, lifestyleCount: lifestyle.length })
+    clearQuizDraft()
     onSubmit({ monthlyBudget, currency: 'USD', priorities, lifestyle })
   }
 
