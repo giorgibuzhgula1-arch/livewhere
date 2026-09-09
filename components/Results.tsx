@@ -324,7 +324,7 @@ export default function Results({
   useEffect(() => {
     if (resultsTracked.current || streaming || cities.length === 0) return
     resultsTracked.current = true
-    trackResultsViewed({ cityCount: cities.length })
+    trackResultsViewed({ cityCount: cities.length, authenticated: true })
   }, [cities.length, streaming])
 
   const paid = isPaidPlan(plan)

@@ -132,25 +132,47 @@ export function trackQuizCompleted(params?: { budget?: number; lifestyleCount?: 
   })
 }
 
-export function trackResultsViewed(params?: { cityCount?: number }) {
+export function trackResultsViewed(params?: { cityCount?: number; authenticated?: boolean }) {
   if (!oncePerSession(SESSION_KEYS.resultsViewed)) return
+  const authenticated = params?.authenticated ?? true
   gaEvent('view_item_list', {
     item_list_name: 'city_results',
     items_shown: params?.cityCount,
+    authenticated,
   })
   capturePostHogEvent(POSTHOG_EVENTS.VIEW_RESULTS, {
+    city_count: params?.cityCount,
+    authenticated,
+  })
+  gaEvent('results_seen', {
+    authenticated,
+    items_shown: params?.cityCount,
+  })
+  capturePostHogEvent(POSTHOG_EVENTS.RESULTS_SEEN, {
+    authenticated,
     city_count: params?.cityCount,
   })
 }
 
 /** Unauthenticated teaser / unlock wall — not the signed-in Results page. */
-export function trackResultsTeaserViewed(params?: { cityCount?: number }) {
+export function trackResultsTeaserViewed(params?: { cityCount?: number; authenticated?: boolean }) {
   if (!oncePerSession(SESSION_KEYS.resultsTeaserViewed)) return
+  const authenticated = params?.authenticated ?? false
   gaEvent('view_results_teaser', {
     item_list_name: 'city_results_teaser',
     items_shown: params?.cityCount,
+    authenticated,
   })
   capturePostHogEvent(POSTHOG_EVENTS.VIEW_RESULTS_TEASER, {
+    city_count: params?.cityCount,
+    authenticated,
+  })
+  gaEvent('results_seen', {
+    authenticated,
+    items_shown: params?.cityCount,
+  })
+  capturePostHogEvent(POSTHOG_EVENTS.RESULTS_SEEN, {
+    authenticated,
     city_count: params?.cityCount,
   })
 }

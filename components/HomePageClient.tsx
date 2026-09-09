@@ -1113,7 +1113,7 @@ export default function HomePageClient({
     if (restoringAfterOAuth || restoreError) return
     const pending = loadPendingResults()
     if (!pending?.cities.length) return
-    trackResultsTeaserViewed({ cityCount: pending.cities.length })
+    trackResultsTeaserViewed({ cityCount: pending.cities.length, authenticated: false })
   }, [awaitingAuthToView, loading, matches, restoringAfterOAuth, restoreError])
 
   // One-shot kickoff: poll for session when landing on post-OAuth restore.
