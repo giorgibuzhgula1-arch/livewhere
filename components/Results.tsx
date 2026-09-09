@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import CityCard from './CityCard'
@@ -312,6 +312,39 @@ export default function Results({
   const [savePlanOpen, setSavePlanOpen] = useState(false)
 
   const resultsTracked = useRef(false)
+  const selectedCityRef = useRef<CityResult | null>(null)
+  const ignoreNextPopstateRef = useRef(false)
+  selectedCityRef.current = selectedCity
+
+  const closeCityModal = useCallback(() => {
+    if (!selectedCityRef.current) return
+    selectedCityRef.current = null
+    setSelectedCity(null)
+    if (window.history.state?.cityModal) {
+      ignoreNextPopstateRef.current = true
+      history.back()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selectedCity) return
+    if (window.history.state?.cityModal) return
+    history.pushState({ cityModal: true }, '', window.location.href)
+  }, [selectedCity])
+
+  useEffect(() => {
+    const onPopState = () => {
+      if (ignoreNextPopstateRef.current) {
+        ignoreNextPopstateRef.current = false
+        return
+      }
+      if (!selectedCityRef.current) return
+      selectedCityRef.current = null
+      setSelectedCity(null)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -1428,7 +1461,7 @@ export default function Results({
           lifestyle={lifestyle}
           plan={plan}
           onUnlock={onUnlockPro}
-          onClose={() => setSelectedCity(null)}
+          onClose={closeCityModal}
         />
       )}
 
