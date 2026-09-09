@@ -319,7 +319,7 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
 
           <div style={{ padding: 32 }}>
             {/* Scores */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
+            <div className="city-modal-scores" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
               {[
                 { num: city.score, label: 'Match', color: getColor(city.score), kind: 'match' as ScoreMetricKind },
                 { num: scores?.climate ?? 0, label: 'Climate', color: getColor(scores?.climate ?? 0), kind: 'climate' as ScoreMetricKind },
@@ -330,6 +330,7 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color }}>{num}</div>
                   <div style={{ fontSize: 11, color: 'rgba(240,237,232,0.45)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 }}>{label}</div>
                   <p
+                    className="city-modal-score-explain"
                     style={{
                       fontSize: 10,
                       lineHeight: 1.45,
@@ -344,6 +345,16 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
                 </div>
               ))}
             </div>
+            <style>{`
+              @media (max-width: 640px) {
+                .city-modal-scores {
+                  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                }
+                .city-modal-score-explain {
+                  font-size: 12px !important;
+                }
+              }
+            `}</style>
 
             {/* AI Insight */}
             <div style={{
