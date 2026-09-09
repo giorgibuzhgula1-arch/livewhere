@@ -171,7 +171,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
 
       <div style={{ background: '#12121a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ padding: '32px 40px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="quiz-card-header" style={{ padding: '32px 40px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 18, fontWeight: 600 }}>Tell us about yourself</div>
           <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', background: '#1a1a26', padding: '6px 14px', borderRadius: 20 }}>
             Takes about a minute
@@ -236,6 +236,12 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             <style>{`
               @keyframes quiz-submit-spin { to { transform: rotate(360deg) } }
               @media (max-width: 767px) {
+                .quiz-card-header {
+                  flex-direction: column !important;
+                  align-items: flex-start !important;
+                  gap: 10px !important;
+                  padding: 16px 20px !important;
+                }
                 .quiz-priorities-grid {
                   grid-template-columns: minmax(0, 1fr) !important;
                   gap: 16px !important;
