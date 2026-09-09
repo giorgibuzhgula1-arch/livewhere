@@ -133,9 +133,9 @@ export default function AuthModal({
         if (signUpError) throw signUpError
 
         trackSignUp('email')
-        trackSignupCompleted('email')
 
         if (data.session) {
+          trackSignupCompleted('email')
           onAuthSuccess?.()
           onClose()
           return
