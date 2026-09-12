@@ -46,7 +46,8 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import { startProCheckout } from '@/lib/start-pro-checkout'
 import { fetchSavedPlanById } from '@/lib/saved-plans'
-import { trackPremiumButtonClicked, trackPurchaseCompleted, trackResultsTeaserViewed, trackSignupStarted, type PremiumPlan } from '@/lib/analytics'
+import { trackPremiumButtonClicked, trackResultsTeaserViewed, trackSignupStarted, type PremiumPlan } from '@/lib/analytics'
+import { confirmAndTrackPurchase } from '@/lib/confirm-purchase'
 
 type StreamPayload =
   | { type: 'delta'; text: string }
@@ -489,7 +490,9 @@ export default function HomePageClient({
       isPostOAuthRestore: isPostOAuthRestore(),
     })
     savePendingResults(cities, maxCities, searchId)
-    setMatches(null)
+    setMatches(cities)
+    setAwaitingAuthToView(false)
+    setAuthOpen(false)
   }, [])
 
   const runAnalyze = useCallback(async (
@@ -537,10 +540,10 @@ export default function HomePageClient({
           setAwaitingAuthToView(false)
         } else {
           anonymousAuthGate = true
-          setAwaitingAuthToView(true)
-          // AuthModal deferred until unlock-wall CTA (openSignInToView → openAuthForResults).
-          // Analytics: signup_start (trackSignupStarted) now fires on that CTA, not at analyze start.
-          logQuizAuthDebug('runAnalyze — awaiting auth; AuthModal deferred until preview CTA')
+          // Free cities render as soon as analyze finishes. Auth is only required
+          // for save / Pro checkout — not for viewing the 9 free matches.
+          setAwaitingAuthToView(false)
+          logQuizAuthDebug('runAnalyze — anonymous; free results will render without auth wall')
         }
       }
 
@@ -977,7 +980,7 @@ export default function HomePageClient({
     if (!sessionId) return
 
     purchaseTrackedRef.current = true
-    trackPurchaseCompleted({ transactionId: sessionId, plan })
+    void confirmAndTrackPurchase({ sessionId, plan })
 
     params.delete('upgraded')
     params.delete('session_id')
@@ -1073,8 +1076,7 @@ export default function HomePageClient({
     if (pending) setQuizData(pending)
   }, [matches, quizData])
 
-  // Refresh rehydration: anonymous user with pending cities → restore preview wall
-  // (matches stay null; AuthModal still opens only via CTA).
+  // Refresh rehydration: anonymous user with pending cities → restore free results.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
@@ -1086,9 +1088,12 @@ export default function HomePageClient({
     let cancelled = false
     void supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled || session?.user) return
-      setAwaitingAuthToView(true)
+      const pendingRequest = loadPendingAnalyze()
+      if (pendingRequest) setQuizData(pendingRequest)
+      setMatches(pending.cities)
       setResultMaxCities(pending.maxCities)
-      logQuizAuthDebug('anonymous pending rehydrate — preview wall armed')
+      setAwaitingAuthToView(false)
+      logQuizAuthDebug('anonymous pending rehydrate — free results restored')
     })
     return () => {
       cancelled = true

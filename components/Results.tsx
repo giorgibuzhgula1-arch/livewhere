@@ -14,6 +14,7 @@ import { CityResult, type AnalyzeRequest } from '@/lib/types'
 import { loadPendingAnalyze } from '@/lib/pending-analyze'
 import { getSiteUrl } from '@/lib/site-url'
 import { fetchUserPlan, isBlueprintPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
+import { supabase } from '@/lib/supabase'
 import { exportRetirementReport } from '@/lib/export-pdf'
 import { trackResultsViewed } from '@/lib/analytics'
 
@@ -357,7 +358,12 @@ export default function Results({
   useEffect(() => {
     if (resultsTracked.current || streaming || cities.length === 0) return
     resultsTracked.current = true
-    trackResultsViewed({ cityCount: cities.length, authenticated: true })
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      trackResultsViewed({
+        cityCount: cities.length,
+        authenticated: Boolean(session?.user),
+      })
+    })
   }, [cities.length, streaming])
 
   const paid = isPaidPlan(plan)

@@ -3,7 +3,8 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { trackPurchaseCompleted, type PremiumPlan } from '@/lib/analytics'
+import { type PremiumPlan } from '@/lib/analytics'
+import { confirmAndTrackPurchase } from '@/lib/confirm-purchase'
 import { fontFamilySans, fontFamilySerif } from '@/lib/fonts'
 
 const PLAN_UNLOCKS: Record<PremiumPlan, string[]> = {
@@ -60,7 +61,7 @@ export default function ThankYouClient() {
     if (!sessionId) return
 
     purchaseTrackedRef.current = true
-    trackPurchaseCompleted({ transactionId: sessionId, plan: trackedPlan })
+    void confirmAndTrackPurchase({ sessionId, plan: trackedPlan })
 
     params.delete('upgraded')
     params.delete('session_id')
