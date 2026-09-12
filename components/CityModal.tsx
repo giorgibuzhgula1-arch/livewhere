@@ -207,6 +207,9 @@ function FinancialBreakdown({ city }: { city: CityResult }) {
           <span style={{ fontWeight: 600, color: vc }}>{val}</span>
         </div>
       ))}
+      <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', margin: '14px 0 0', lineHeight: 1.5 }}>
+        Estimates based on average rates — not personalized tax or financial advice.
+      </p>
     </div>
   )
 }

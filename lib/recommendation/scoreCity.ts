@@ -224,6 +224,17 @@ export function estimatedMonthlyCost(rentUsd: number): number {
   return Math.round(rentUsd * RENT_TO_LIVING_MULTIPLIER)
 }
 
+/** Post-tax monthly budget using the city's existing country-level tax_rate stub. */
+export function estimatedTakeHomeMonthly(monthlyBudget: number, taxRate: number): number {
+  const budget = Number.isFinite(monthlyBudget) ? monthlyBudget : 0
+  const rate = Number.isFinite(taxRate) ? Math.max(0, Math.min(100, taxRate)) : 0
+  return Math.round(budget * (1 - rate / 100))
+}
+
+export function estimatedMonthlySavings(takeHomeMonthly: number, monthlyCost: number): number {
+  return takeHomeMonthly - monthlyCost
+}
+
 export function effectiveVisaScore(country: string): number {
   return visaScoreForCountry(country) ?? FALLBACK_VISA_SCORE[country] ?? 52
 }

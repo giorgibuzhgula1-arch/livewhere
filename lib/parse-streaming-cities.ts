@@ -1,4 +1,5 @@
 import { AnalyzeRequest, CityResult } from '@/lib/types'
+import { estimatedMonthlySavings, estimatedTakeHomeMonthly } from '@/lib/recommendation/scoreCity'
 
 function stripForJsonPeel(raw: string): string {
   return raw.replace(/^\uFEFF/, '').replace(/```json|```/gi, '').trim()
@@ -122,8 +123,8 @@ export function normalizePeeledCity(raw: unknown, monthlyBudget: number): CityRe
   const monthlyCost = asNum(o.monthlyCost)
   const score = scale100(asNum(o.score, 50))
 
-  const takeHomeMonthly = Math.round(asNum(o.takeHomeMonthly, monthlyBudget))
-  const monthlySavings = takeHomeMonthly - monthlyCost
+  const takeHomeMonthly = estimatedTakeHomeMonthly(monthlyBudget, taxRate)
+  const monthlySavings = estimatedMonthlySavings(takeHomeMonthly, monthlyCost)
 
   const pros = Array.isArray(o.pros) ? o.pros.filter((x): x is string => typeof x === 'string') : []
   const cons = Array.isArray(o.cons) ? o.cons.filter((x): x is string => typeof x === 'string') : []

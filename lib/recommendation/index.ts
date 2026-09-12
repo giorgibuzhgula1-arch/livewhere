@@ -10,7 +10,7 @@
 import type { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 import { peelCompleteObjectsFromJsonArray } from '@/lib/parse-streaming-cities'
 import { getVisaInfoForCountry } from '@/lib/visa-data'
-import { rankCities, climateTargetTemp, climateWeightPercent, hasWarmClimateYearRound, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
+import { rankCities, climateTargetTemp, climateWeightPercent, hasWarmClimateYearRound, estimatedTakeHomeMonthly, estimatedMonthlySavings, type ScoreCityResult } from '@/lib/recommendation/scoreCity'
 
 export type CityRow = {
   name: string
@@ -427,6 +427,7 @@ function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: n
   const meta = metaFor(row)
   const sub = ranked.subScores!
   const monthlyCost = ranked.costOfLiving
+  const takeHomeMonthly = estimatedTakeHomeMonthly(monthlyBudget, row.tax_rate)
 
   return {
     name: row.name,
@@ -437,8 +438,8 @@ function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: n
     taxRate: row.tax_rate,
     monthlyRent: row.rent_usd,
     monthlyCost,
-    takeHomeMonthly: monthlyBudget,
-    monthlySavings: monthlyBudget - monthlyCost,
+    takeHomeMonthly,
+    monthlySavings: estimatedMonthlySavings(takeHomeMonthly, monthlyCost),
     pros: ["Strong fit for your selected priorities."],
     cons: ["Verify tax and visa rules for your passport."],
     tags: [meta.continent],

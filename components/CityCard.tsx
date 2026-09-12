@@ -95,7 +95,7 @@ function CityDetails({ city, color, showCompareLink = false, rankLabel }: { city
       <div style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16 }}>
         {city.country} · {city.continent}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
         {[
           { label: 'Take-home/mo', val: fmt(city.takeHomeMonthly) },
           { label: 'Monthly cost', val: fmt(city.monthlyCost) },
@@ -108,6 +108,9 @@ function CityDetails({ city, color, showCompareLink = false, rankLabel }: { city
           </div>
         ))}
       </div>
+      <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', margin: '0 0 16px', lineHeight: 1.5 }}>
+        Estimates based on average rates — not personalized tax or financial advice.
+      </p>
       {showCompareLink && (
         <Link
           href={compareHrefForCity(city.name)}
