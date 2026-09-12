@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CityResult } from '@/lib/types'
 import { isPaidPlan, type UserPlan } from '@/lib/plan'
+import { negativeSavingsExplanation } from '@/lib/negative-savings-copy'
 import VisaAnalysis from './VisaAnalysis'
 
 type ScoreMetricKind =
@@ -191,6 +192,7 @@ function fmt(n: number) { return '$' + n.toLocaleString() }
 function getColor(s: number) { return s >= 80 ? '#c8f05a' : s >= 65 ? '#f0c85a' : '#f05a8c' }
 
 function FinancialBreakdown({ city }: { city: CityResult }) {
+  const savingsNote = negativeSavingsExplanation(city)
   return (
     <div style={narrativeCardStyle}>
       <div style={narrativeTitleStyle}>
@@ -210,6 +212,11 @@ function FinancialBreakdown({ city }: { city: CityResult }) {
       <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', margin: '14px 0 0', lineHeight: 1.5 }}>
         Estimates based on average rates — not personalized tax or financial advice.
       </p>
+      {savingsNote ? (
+        <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', margin: '8px 0 0', lineHeight: 1.5 }}>
+          {savingsNote}
+        </p>
+      ) : null}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { CityResult } from '@/lib/types'
 import { compareHrefForCity } from '@/lib/compare'
 import { visaScoreForCountry, visaScoreColor } from '@/lib/visa-data'
+import { negativeSavingsExplanation } from '@/lib/negative-savings-copy'
 
 interface Props {
   city: CityResult
@@ -58,6 +59,7 @@ function cardShellStyle(rank: number, cursor: string) {
 }
 
 function CityDetails({ city, color, showCompareLink = false, rankLabel }: { city: CityResult; color: string; showCompareLink?: boolean; rankLabel?: string }) {
+  const savingsNote = negativeSavingsExplanation(city)
   return (
     <>
       <div style={{
@@ -108,9 +110,14 @@ function CityDetails({ city, color, showCompareLink = false, rankLabel }: { city
           </div>
         ))}
       </div>
-      <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', margin: '0 0 16px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', margin: savingsNote ? '0 0 8px' : '0 0 16px', lineHeight: 1.5 }}>
         Estimates based on average rates — not personalized tax or financial advice.
       </p>
+      {savingsNote ? (
+        <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)', margin: '0 0 16px', lineHeight: 1.5 }}>
+          {savingsNote}
+        </p>
+      ) : null}
       {showCompareLink && (
         <Link
           href={compareHrefForCity(city.name)}
