@@ -552,6 +552,12 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                 touch-action: manipulation;
                 pointer-events: auto;
               }
+              .quiz-lifestyle-chip {
+                font-size: 16px !important;
+                font-weight: 700 !important;
+                padding: 12px 20px !important;
+                min-height: 48px !important;
+              }
             }
           `}</style>
 
