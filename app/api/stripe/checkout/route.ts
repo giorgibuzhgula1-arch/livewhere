@@ -162,10 +162,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid checkout type' }, { status: 400 })
     }
 
+    // No payment_method_types: ['card'] — omitting it lets Stripe enable wallets
+    // (Apple Pay / Google Pay) when the Checkout domain is verified in the Dashboard.
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode,
-      payment_method_types: ['card'],
       allow_promotion_codes: true,
       line_items: lineItems,
       success_url: `${appUrl}/thank-you?upgraded=true&session_id={CHECKOUT_SESSION_ID}&plan=${checkoutType}`,
