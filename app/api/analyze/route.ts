@@ -20,6 +20,8 @@ import {
 import { AnalyzeRequest, CityResult, UserPriorities } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
+/** Streaming LLM analyze. Keep in sync with ANALYZE_CLIENT_TIMEOUT_MS in HomePageClient. */
+export const maxDuration = 60
 
 /**
  * For free users, every city past the unlocked preview is rendered as a

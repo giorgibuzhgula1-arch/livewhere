@@ -96,7 +96,8 @@ const RESTORE_SESSION_MAX_ATTEMPTS = 24
 const RESTORE_SESSION_INITIAL_DELAY_MS = 250
 /** Wall-clock ceiling for durable post-OAuth restore listener (poll + late-session grace). */
 const RESTORE_GIVE_UP_MS = 90_000
-const ANALYZE_CLIENT_TIMEOUT_MS = 30_000
+/** Must stay in sync with `maxDuration` seconds on `app/api/analyze/route.ts`. */
+const ANALYZE_CLIENT_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_ANALYZE_TIMEOUT_MS) || 60_000
 
 type RestoreRevealState = 'idle' | 'in_flight' | 'done'
 
