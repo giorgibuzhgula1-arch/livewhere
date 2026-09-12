@@ -47,13 +47,28 @@ const LIFESTYLES: { key: string; label: string }[] = [
   { key: 'warm_climate_year_round', label: '☀️ Warm climate year-round' },
 ]
 
+const PRIORITY_LEVELS = [1, 2, 3, 4, 5] as const
+
 const QUIZ_STEPS = [
   { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'priorities', label: 'Priorities' },
+  ...PRIORITIES.map(({ key, label }) => ({ id: key, label })),
   { id: 'budget', label: 'Budget' },
 ] as const
 
 const LAST_STEP = QUIZ_STEPS.length - 1
+const BUDGET_STEP = LAST_STEP
+
+function resolveDraftStep(draft: { step?: unknown; stepId?: unknown }): number {
+  if (typeof draft.stepId === 'string') {
+    const byId = QUIZ_STEPS.findIndex((item) => item.id === draft.stepId)
+    if (byId >= 0) return byId
+  }
+  // Pre-split 3-step drafts: 0 lifestyle, 1 grouped priorities, 2 budget
+  if (draft.step === 2) return BUDGET_STEP
+  if (draft.step === 1) return 1
+  if (draft.step === 0) return 0
+  return 0
+}
 
 /**
  * Chip → monthlyBudget mapping for AnalyzeRequest / scoreCity.
@@ -81,7 +96,14 @@ function persistQuizDraft(
   step: number,
   budgetChip: BudgetChipId | null,
 ) {
-  const payload = JSON.stringify({ monthlyBudget, priorities, lifestyle, step, budgetChip })
+  const payload = JSON.stringify({
+    monthlyBudget,
+    priorities,
+    lifestyle,
+    step,
+    stepId: QUIZ_STEPS[step]?.id ?? null,
+    budgetChip,
+  })
   try {
     sessionStorage.setItem(QUIZ_DRAFT_KEY, payload)
   } catch {
@@ -124,6 +146,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         priorities?: UserPriorities
         lifestyle?: unknown
         step?: unknown
+        stepId?: unknown
         budgetChip?: unknown
       }
       if (typeof draft.monthlyBudget === 'number') setMonthlyBudget(draft.monthlyBudget)
@@ -136,14 +159,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         setBudgetChip(restoredChip.id)
         setMonthlyBudget(restoredChip.monthlyBudget)
       }
-      if (
-        typeof draft.step === 'number' &&
-        Number.isInteger(draft.step) &&
-        draft.step >= 0 &&
-        draft.step <= LAST_STEP
-      ) {
-        setStep(draft.step)
-      }
+      setStep(resolveDraftStep(draft))
     } catch {
       /* private browsing / storage disabled / bad JSON */
     }
@@ -227,6 +243,9 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     onSubmit({ monthlyBudget, currency: 'USD', priorities, lifestyle })
   }
 
+  const currentStep = QUIZ_STEPS[step] ?? QUIZ_STEPS[0]
+  const currentPriority = PRIORITIES.find((item) => item.key === currentStep.id) ?? null
+
   const navButtonBase: CSSProperties = {
     minHeight: 48,
     borderRadius: 14,
@@ -260,7 +279,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         </div>
 
         <div className="quiz-card-body" style={{ padding: 40 }}>
-          {step === 0 && (
+          {currentStep.id === 'lifestyle' && (
             <div style={{ marginBottom: 32 }}>
               <label style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 12, fontWeight: 500, display: 'block' }}>
                 Your lifestyle (select all that apply)
@@ -287,35 +306,48 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             </div>
           )}
 
-          {step === 1 && (
+          {currentPriority && (
             <div style={{ marginBottom: 32 }}>
-              <label style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, fontWeight: 500, display: 'block' }}>
-                Set your priorities
+              <label style={{ fontSize: 14, color: '#f0ede8', marginBottom: 6, fontWeight: 600, display: 'block' }}>
+                {currentPriority.emoji} {currentPriority.label}
               </label>
-              <div className="quiz-priorities-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 20 }}>
-                {PRIORITIES.map(({ key, emoji, label }) => (
-                  <div key={key} className="quiz-priority-item">
-                    <div className="quiz-priority-row-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                      <span className="quiz-priority-label" style={{ fontSize: 14, fontWeight: 500 }}>{emoji} {label}</span>
-                      <span className="quiz-priority-value" style={{ fontSize: 13, color: '#c8f05a', fontWeight: 600 }}>
-                        {LABELS[priorities[key as keyof UserPriorities]]}
-                      </span>
-                    </div>
-                    <div className="quiz-slider-hit">
-                    <input type="range" min={1} max={5}
-                      className="quiz-priority-slider"
-                      value={priorities[key as keyof UserPriorities]}
-                      onChange={e => handlePriorityChange(key as keyof UserPriorities, Number(e.target.value))}
-                      style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
-                    />
-                    </div>
-                  </div>
-                ))}
+              <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, lineHeight: 1.5 }}>
+                {LABELS[priorities[currentPriority.key as keyof UserPriorities]]}
+              </p>
+              <div className="quiz-priority-level-chips">
+                {PRIORITY_LEVELS.map((level) => {
+                  const selected = priorities[currentPriority.key as keyof UserPriorities] === level
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      className="quiz-priority-level-chip"
+                      onClick={() => handlePriorityChange(currentPriority.key as keyof UserPriorities, level)}
+                      aria-pressed={selected}
+                      style={{
+                        minHeight: 48,
+                        padding: '12px 16px',
+                        borderRadius: 14,
+                        fontSize: 15,
+                        fontWeight: 600,
+                        fontFamily: "'DM Sans', sans-serif",
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        textAlign: 'left',
+                        background: selected ? 'rgba(200,240,90,0.12)' : '#1a1a26',
+                        border: selected ? '1px solid #c8f05a' : '1px solid rgba(255,255,255,0.07)',
+                        color: selected ? '#c8f05a' : '#f0ede8',
+                      }}
+                    >
+                      {level} · {LABELS[level]}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {step === 2 && (
+          {currentStep.id === 'budget' && (
             <div style={{ marginBottom: 32 }}>
               <label style={{ fontSize: 14, color: '#f0ede8', marginBottom: 6, fontWeight: 600, display: 'block' }}>
                 Your monthly budget to live abroad
@@ -368,6 +400,14 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             .quiz-budget-chips .quiz-budget-chip:last-child {
               grid-column: 1 / -1;
             }
+            .quiz-priority-level-chips {
+              display: grid;
+              grid-template-columns: minmax(0, 1fr);
+              gap: 10px;
+            }
+            .quiz-priority-level-chip {
+              width: 100%;
+            }
             @media (max-width: 767px) {
               .quiz-card-header {
                 flex-direction: column !important;
@@ -389,86 +429,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                 margin-top: 0 !important;
                 border-top: 1px solid rgba(255,255,255,0.07);
                 z-index: 40 !important;
-              }
-              .quiz-priorities-grid {
-                grid-template-columns: minmax(0, 1fr) !important;
-                gap: 16px !important;
-                width: 100%;
-                max-width: 100%;
-              }
-              .quiz-priority-item {
-                min-width: 0;
-                max-width: 100%;
-                overflow: hidden;
-              }
-              .quiz-priority-row-header {
-                flex-wrap: wrap !important;
-                align-items: baseline !important;
-                gap: 4px 10px !important;
-                margin-bottom: 8px !important;
-              }
-              .quiz-priority-label {
-                flex: 1 1 auto !important;
-                min-width: 0 !important;
-                max-width: 100% !important;
-                line-height: 1.35 !important;
-              }
-              .quiz-priority-value {
-                flex: 0 1 auto !important;
-                min-width: 0 !important;
-                max-width: 100% !important;
-                font-size: 12px !important;
-                line-height: 1.35 !important;
-                white-space: normal !important;
-                text-align: right !important;
-                margin-left: auto !important;
-              }
-              .quiz-slider-hit {
-                display: flex;
-                align-items: center;
-                min-height: 44px;
-              }
-              .quiz-priority-slider {
-                display: block !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-                height: 44px;
-                margin: 0;
-                -webkit-appearance: none;
-                appearance: none;
-                background: transparent;
-              }
-              .quiz-priority-slider::-webkit-slider-runnable-track {
-                width: 100%;
-                height: 4px;
-                background: rgba(255,255,255,0.15);
-                border-radius: 999px;
-              }
-              .quiz-priority-slider::-moz-range-track {
-                width: 100%;
-                height: 4px;
-                background: rgba(255,255,255,0.15);
-                border-radius: 999px;
-              }
-              .quiz-priority-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 28px;
-                height: 28px;
-                margin-top: -12px;
-                border-radius: 50%;
-                background: #c8f05a;
-                border: none;
-                cursor: pointer;
-              }
-              .quiz-priority-slider::-moz-range-thumb {
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                background: #c8f05a;
-                border: none;
-                cursor: pointer;
               }
             }
           `}</style>

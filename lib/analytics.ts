@@ -114,7 +114,7 @@ export function trackBudgetSelected(budget: number) {
     currency: 'USD',
   })
   capturePostHogEvent(POSTHOG_EVENTS.QUIZ_STEP_COMPLETED, {
-    step: 3,
+    step: 9,
     step_name: 'budget',
     budget,
   })
