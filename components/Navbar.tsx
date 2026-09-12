@@ -252,9 +252,8 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 16,
-          zIndex: 100,
-          background: 'linear-gradient(to bottom, rgba(10,10,15,0.95), transparent)',
-          backdropFilter: 'blur(10px)',
+          zIndex: 210,
+          background: 'var(--bg)',
         }}
       >
         <Link
@@ -467,11 +466,11 @@ export default function Navbar({ onAuthClick, onLogoClick }: Props) {
             top: 68,
             left: 0,
             right: 0,
-            zIndex: 99,
+            zIndex: 209,
             flexDirection: 'column',
             gap: 10,
             padding: '16px 20px 24px',
-            background: 'rgba(10,10,15,0.98)',
+            background: 'var(--bg)',
             borderBottom: '1px solid rgba(200,240,90,0.15)',
             boxShadow: '0 16px 40px rgba(0,0,0,0.45)',
             maxHeight: 'calc(100vh - 68px)',

@@ -290,7 +290,8 @@ export default function CityModal({ city, onClose, monthlyBudget, lifestyle, pla
         style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
           backdropFilter: 'blur(10px)', zIndex: 200,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '80px 20px 20px',
         }}
       >
         <motion.div
