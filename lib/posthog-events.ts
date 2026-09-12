@@ -3,6 +3,7 @@ import posthog from 'posthog-js'
 /** PostHog funnel events — names align with GA events in lib/analytics.ts */
 export const POSTHOG_EVENTS = {
   QUIZ_START: 'quiz_start',
+  QUIZ_STEP_VIEW: 'quiz_step_view',
   QUIZ_STEP_COMPLETED: 'quiz_step_completed',
   QUIZ_COMPLETE: 'quiz_complete',
   VIEW_RESULTS: 'view_results',

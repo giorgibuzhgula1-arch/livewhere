@@ -7,6 +7,7 @@ import {
   trackPrioritiesCompleted,
   trackQuizCompleted,
   trackQuizStarted,
+  trackQuizStepViewed,
 } from '@/lib/analytics'
 
 interface Props {
@@ -101,7 +102,7 @@ function scrollQuizIntoView() {
 }
 
 export default function Quiz({ onSubmit, loading, error }: Props) {
-  const tracked = useRef(false)
+  const sectionRef = useRef<HTMLElement>(null)
   const [step, setStep] = useState(0)
   const [monthlyBudget, setMonthlyBudget] = useState(2500)
   const [priorities, setPriorities] = useState<UserPriorities>({
@@ -110,6 +111,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   })
   const [lifestyle, setLifestyle] = useState<string[]>([])
   const [budgetChip, setBudgetChip] = useState<BudgetChipId | null>(null)
+  const [draftReady, setDraftReady] = useState(false)
 
   const prioritiesTracked = useRef(false)
 
@@ -145,15 +147,32 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     } catch {
       /* private browsing / storage disabled / bad JSON */
     }
+    setDraftReady(true)
   }, [])
+
+  useEffect(() => {
+    if (!draftReady) return
+    const el = sectionRef.current
+    if (!el) return
+
+    const fireStepView = () => {
+      trackQuizStarted()
+      trackQuizStepViewed(step + 1, QUIZ_STEPS[step].id)
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) fireStepView()
+      },
+      { threshold: 0.35 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [step, draftReady])
 
   function handleBudgetChip(id: BudgetChipId) {
     const chip = BUDGET_CHIPS.find((item) => item.id === id)
     if (!chip) return
-    if (!tracked.current) {
-      tracked.current = true
-      trackQuizStarted()
-    }
     setBudgetChip(chip.id)
     setMonthlyBudget(chip.monthlyBudget)
     persistQuizDraft(chip.monthlyBudget, priorities, lifestyle, step, chip.id)
@@ -161,10 +180,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   function handlePriorityChange(key: keyof UserPriorities, value: number) {
-    if (!tracked.current) {
-      tracked.current = true
-      trackQuizStarted()
-    }
     setPriorities((p) => {
       const next = { ...p, [key]: value }
       persistQuizDraft(monthlyBudget, next, lifestyle, step, budgetChip)
@@ -177,10 +192,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   function toggleLifestyle(key: string) {
-    if (!tracked.current) {
-      tracked.current = true
-      trackQuizStarted()
-    }
     setLifestyle(prev => {
       const next = prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]
       persistQuizDraft(monthlyBudget, priorities, next, step, budgetChip)
@@ -232,7 +243,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   }
 
   return (
-    <section style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 20px', position: 'relative', zIndex: 1 }}>
+    <section ref={sectionRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 20px', position: 'relative', zIndex: 1 }}>
       <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#c8f05a', marginBottom: 12, fontWeight: 600 }}>
         ✦ The Tool
       </div>

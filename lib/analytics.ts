@@ -93,6 +93,18 @@ export function trackQuizStarted() {
   window.setTimeout(tick, 100)
 }
 
+export function trackQuizStepViewed(step: number, stepName: string) {
+  if (!oncePerSession(`ga_quiz_step_view_${step}`)) return
+  gaEvent('quiz_step_view', {
+    step,
+    step_name: stepName,
+  })
+  capturePostHogEvent(POSTHOG_EVENTS.QUIZ_STEP_VIEW, {
+    step,
+    step_name: stepName,
+  })
+}
+
 export function trackBudgetSelected(budget: number) {
   if (!oncePerSession(SESSION_KEYS.budgetSelected)) return
   gaEvent('select_item', {
@@ -102,7 +114,7 @@ export function trackBudgetSelected(budget: number) {
     currency: 'USD',
   })
   capturePostHogEvent(POSTHOG_EVENTS.QUIZ_STEP_COMPLETED, {
-    step: 1,
+    step: 3,
     step_name: 'budget',
     budget,
   })
