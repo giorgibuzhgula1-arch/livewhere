@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import Script from 'next/script'
 import RefClickTracker from '@/components/RefClickTracker'
 import TidioMobileOffset from '@/components/TidioMobileOffset'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { PostHogProvider } from '@/app/providers'
+import { isProductionAnalyticsHost } from '@/lib/analytics-host'
 import { getSiteUrl } from '@/lib/site-url'
 import { dmSans, playfair } from '@/lib/fonts'
 import './globals.css'
@@ -27,9 +29,13 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const host = headers().get('host')
+  const loadAnalytics = isProductionAnalyticsHost(host)
+
   return (
     <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
       <head>
+        {loadAnalytics && (
         <Script
           id="gtm"
           strategy="afterInteractive"
@@ -41,6 +47,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-5QP723VG');`,
           }}
         />
+        )}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
@@ -58,6 +65,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <TidioMobileOffset />
       </head>
       <body className={dmSans.className}>
+        {loadAnalytics && (
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-5QP723VG"
@@ -66,6 +74,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
+        )}
         <PostHogProvider>
           <GoogleAnalytics />
           <div className="orb orb1" aria-hidden />

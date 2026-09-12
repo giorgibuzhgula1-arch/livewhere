@@ -1,3 +1,5 @@
+import { browserAnalyticsHost, isProductionAnalyticsHost } from '@/lib/analytics-host'
+
 type GtagFn = (...args: unknown[]) => void
 
 declare global {
@@ -9,19 +11,23 @@ declare global {
 
 export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? ''
 
+function analyticsAllowed(): boolean {
+  return Boolean(GA_MEASUREMENT_ID) && isProductionAnalyticsHost(browserAnalyticsHost())
+}
+
 export function gtag(...args: unknown[]) {
-  if (typeof window === 'undefined' || !GA_MEASUREMENT_ID) return
+  if (typeof window === 'undefined' || !analyticsAllowed()) return
   window.gtag?.(...args)
 }
 
 export function isGtagReady(): boolean {
   if (typeof window === 'undefined') return false
-  if (!GA_MEASUREMENT_ID) return true
+  if (!analyticsAllowed()) return true
   return typeof window.gtag === 'function'
 }
 
 export function pageview(url: string) {
-  if (!GA_MEASUREMENT_ID) return
+  if (!analyticsAllowed()) return
   gtag('config', GA_MEASUREMENT_ID, {
     page_path: url,
   })
@@ -37,7 +43,7 @@ export function gaEvent(
       )
     : undefined
   if (typeof window === 'undefined') return false
-  if (!GA_MEASUREMENT_ID) return true
+  if (!analyticsAllowed()) return true
   if (typeof window.gtag !== 'function') return false
   window.gtag('event', eventName, cleaned)
   return true

@@ -1,22 +1,28 @@
 'use client'
 
 import Script from 'next/script'
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { browserAnalyticsHost, isProductionAnalyticsHost } from '@/lib/analytics-host'
 import { GA_MEASUREMENT_ID, pageview } from '@/lib/gtag'
 
 function GoogleAnalyticsInner() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [allowed, setAllowed] = useState(false)
 
   useEffect(() => {
-    if (!GA_MEASUREMENT_ID) return
+    setAllowed(isProductionAnalyticsHost(browserAnalyticsHost()))
+  }, [])
+
+  useEffect(() => {
+    if (!GA_MEASUREMENT_ID || !allowed) return
     const query = searchParams.toString()
     const url = query ? `${pathname}?${query}` : pathname
     pageview(url)
-  }, [pathname, searchParams])
+  }, [pathname, searchParams, allowed])
 
-  if (!GA_MEASUREMENT_ID) return null
+  if (!GA_MEASUREMENT_ID || !allowed) return null
 
   return (
     <>
