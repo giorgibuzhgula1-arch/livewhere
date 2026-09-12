@@ -48,6 +48,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           }}
         />
         )}
+        {loadAnalytics && (
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
@@ -57,12 +58,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");
           `}
         </Script>
+        )}
+        {loadAnalytics && (
         <Script
           src="https://code.tidio.co/epmebrwxqyubp902tcis4izbo59fnbly.js"
           strategy="afterInteractive"
           async
         />
-        <TidioMobileOffset />
+        )}
+        {loadAnalytics && <TidioMobileOffset />}
       </head>
       <body className={dmSans.className}>
         {loadAnalytics && (

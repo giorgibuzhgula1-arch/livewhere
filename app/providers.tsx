@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
+import { browserAnalyticsHost, isProductionAnalyticsHost } from '@/lib/analytics-host'
 
 function capturePageview(pathname: string, searchParams: URLSearchParams) {
   if (!posthog.__loaded) return
@@ -33,6 +34,7 @@ function PostHogPageView() {
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (!isProductionAnalyticsHost(browserAnalyticsHost())) return
 
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
     const host = process.env.NEXT_PUBLIC_POSTHOG_HOST

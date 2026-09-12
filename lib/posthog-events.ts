@@ -1,4 +1,5 @@
 import posthog from 'posthog-js'
+import { browserAnalyticsHost, isProductionAnalyticsHost } from '@/lib/analytics-host'
 
 /** PostHog funnel events — names align with GA events in lib/analytics.ts */
 export const POSTHOG_EVENTS = {
@@ -24,6 +25,7 @@ export function capturePostHogEvent(
 ): boolean {
   if (typeof window === 'undefined') return false
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return false
+  if (!isProductionAnalyticsHost(browserAnalyticsHost())) return true
   if (!posthog.__loaded) return false
   posthog.capture(event, properties)
   return true
@@ -32,5 +34,6 @@ export function capturePostHogEvent(
 export function isPostHogReady(): boolean {
   if (typeof window === 'undefined') return false
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return true
+  if (!isProductionAnalyticsHost(browserAnalyticsHost())) return true
   return Boolean(posthog.__loaded)
 }
