@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CityResult } from '@/lib/types'
 import { compareHrefForCity } from '@/lib/compare'
-import { fetchUserPlan, isPaidPlan } from '@/lib/plan'
 import { visaScoreForCountry, visaScoreColor } from '@/lib/visa-data'
 
 interface Props {
@@ -215,18 +214,9 @@ function InsightSkeleton() {
 }
 
 function WhyThisMatchesYou({ city }: { city: CityResult }) {
-  const [paid, setPaid] = useState(false)
   const [insight, setInsight] = useState<CityInsight | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    void fetchUserPlan().then((plan) => {
-      if (!cancelled) setPaid(isPaidPlan(plan))
-    })
-    return () => { cancelled = true }
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -301,78 +291,40 @@ function WhyThisMatchesYou({ city }: { city: CityResult }) {
       )}
 
       {!loading && insight && (
-        <div style={{ position: 'relative' }}>
-          <div
-            style={
-              !paid
-                ? { filter: 'blur(7px)', userSelect: 'none', pointerEvents: 'none', opacity: 0.85 }
-                : undefined
-            }
+        <div>
+          <ul
+            style={{
+              margin: '0 0 12px',
+              padding: '0 0 0 18px',
+              fontSize: 13,
+              lineHeight: 1.55,
+              color: 'rgba(240,237,232,0.78)',
+            }}
           >
-            <ul
-              style={{
-                margin: '0 0 12px',
-                padding: '0 0 0 18px',
-                fontSize: 13,
-                lineHeight: 1.55,
-                color: 'rgba(240,237,232,0.78)',
-              }}
-            >
-              <li style={{ marginBottom: 6 }}>
-                <span style={{ color: '#c8f05a', fontWeight: 600 }}>Savings:</span>{' '}
-                {insight.savingsOver10Years} over 10 years
-              </li>
-              <li style={{ marginBottom: 6 }}>
-                <span style={{ color: '#c8f05a', fontWeight: 600 }}>Healthcare:</span>{' '}
-                {insight.healthcareNote}
-              </li>
-              <li>
-                <span style={{ color: '#c8f05a', fontWeight: 600 }}>Taxes:</span>{' '}
-                {insight.taxNote}
-              </li>
-            </ul>
-            <p
-              style={{
-                fontSize: 14,
-                lineHeight: 1.55,
-                color: 'rgba(240,237,232,0.88)',
-                margin: 0,
-                fontStyle: 'italic',
-              }}
-            >
-              {insight.matchSummary}
-            </p>
-          </div>
-
-          {!paid && (
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Link
-                href="/pricing"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  background: '#c8f05a',
-                  color: '#0a0a0f',
-                  textDecoration: 'none',
-                  padding: '10px 18px',
-                  borderRadius: 10,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  fontFamily: "'DM Sans', sans-serif",
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Financial Breakdown — Pro
-              </Link>
-            </div>
-          )}
+            <li style={{ marginBottom: 6 }}>
+              <span style={{ color: '#c8f05a', fontWeight: 600 }}>Savings:</span>{' '}
+              {insight.savingsOver10Years} over 10 years
+            </li>
+            <li style={{ marginBottom: 6 }}>
+              <span style={{ color: '#c8f05a', fontWeight: 600 }}>Healthcare:</span>{' '}
+              {insight.healthcareNote}
+            </li>
+            <li>
+              <span style={{ color: '#c8f05a', fontWeight: 600 }}>Taxes:</span>{' '}
+              {insight.taxNote}
+            </li>
+          </ul>
+          <p
+            style={{
+              fontSize: 14,
+              lineHeight: 1.55,
+              color: 'rgba(240,237,232,0.88)',
+              margin: 0,
+              fontStyle: 'italic',
+            }}
+          >
+            {insight.matchSummary}
+          </p>
         </div>
       )}
     </div>
