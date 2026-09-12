@@ -423,6 +423,71 @@ function rankSurvivorsForUser(body: AnalyzeRequest, count: number): ScoreCityRes
   ).slice(0, count)
 }
 
+function cityKey(name: string, country: string): string {
+  return `${name}|${country}`
+}
+
+function monthlySavingsForRanked(ranked: ScoreCityResult, monthlyBudget: number): number {
+  const takeHome = estimatedTakeHomeMonthly(monthlyBudget, ranked.city.tax_rate)
+  return estimatedMonthlySavings(takeHome, ranked.costOfLiving)
+}
+
+export const PAYWALL_TOP_COUNT = 3
+export const PAYWALL_FREE_COUNT = 9
+
+export type PaywallSlotSets = {
+  top3: ScoreCityResult[]
+  freeList: ScoreCityResult[]
+  leastNegativeFallbackCount: number
+}
+
+/**
+ * Split ranked survivors into the paid Top 3 slot vs the free list.
+ * Top 3 prefers non-negative monthlySavings; skipped high-score cities stay
+ * in the free list at their natural score order. Least-negative fill is only
+ * used when fewer than 3 affordable survivors exist.
+ */
+export function selectPaywallSlotSets(
+  body: AnalyzeRequest,
+  topCount: number = PAYWALL_TOP_COUNT,
+  freeCount: number = PAYWALL_FREE_COUNT,
+): PaywallSlotSets {
+  const safeTop = Math.max(0, Math.round(topCount))
+  const safeFree = Math.max(0, Math.round(freeCount))
+  const pool = rankSurvivorsForUser(body, safeTop + safeFree + 24)
+  const budget = body.monthlyBudget
+
+  const withSavings = pool.map((ranked) => ({
+    ranked,
+    savings: monthlySavingsForRanked(ranked, budget),
+  }))
+  const affordable = withSavings.filter((row) => row.savings >= 0)
+  const unaffordable = withSavings.filter((row) => row.savings < 0)
+
+  const top3: ScoreCityResult[] = []
+  for (const row of affordable) {
+    if (top3.length >= safeTop) break
+    top3.push(row.ranked)
+  }
+
+  let leastNegativeFallbackCount = 0
+  if (top3.length < safeTop) {
+    const leastNegative = [...unaffordable].sort((a, b) => b.savings - a.savings)
+    for (const row of leastNegative) {
+      if (top3.length >= safeTop) break
+      top3.push(row.ranked)
+      leastNegativeFallbackCount += 1
+    }
+  }
+
+  const topKeys = new Set(top3.map((r) => cityKey(r.city.name, r.city.country)))
+  const freeList = pool
+    .filter((r) => !topKeys.has(cityKey(r.city.name, r.city.country)))
+    .slice(0, safeFree)
+
+  return { top3, freeList, leastNegativeFallbackCount }
+}
+
 function rowToCityResult(row: CityRow, ranked: ScoreCityResult, monthlyBudget: number): CityResult {
   const meta = metaFor(row)
   const sub = ranked.subScores!
@@ -467,17 +532,21 @@ export function unsanitizedCitiesForPersist(
   generated: CityResult[],
   count: number,
 ): CityResult[] {
-  const ranked = rankSurvivorsForUser(body, count)
+  const topCount = Math.min(PAYWALL_TOP_COUNT, count)
+  const { top3, freeList } = selectPaywallSlotSets(body, topCount, Math.max(0, count - topCount))
+  const ordered = [...top3, ...freeList].slice(0, count)
+  const topKeys = new Set(top3.map((r) => cityKey(r.city.name, r.city.country)))
   const generatedByKey = new Map(
-    generated.map((c) => [`${c.name}|${c.country}`, c] as const),
+    generated.map((c) => [cityKey(c.name, c.country), c] as const),
   )
-  return ranked.map((r) => {
-    const generatedCity = generatedByKey.get(`${r.city.name}|${r.city.country}`)
+  return ordered.map((r) => {
+    const generatedCity = generatedByKey.get(cityKey(r.city.name, r.city.country))
+    const topMatch = topKeys.has(cityKey(r.city.name, r.city.country))
     if (!generatedCity) {
-      return rowToCityResult(r.city, r, body.monthlyBudget)
+      return { ...rowToCityResult(r.city, r, body.monthlyBudget), topMatch }
     }
     const { locked: _locked, ...unsanitized } = generatedCity
-    return unsanitized
+    return { ...unsanitized, topMatch }
   })
 }
 
@@ -489,7 +558,17 @@ export function buildLockedScoreContinentStubs(
   body: AnalyzeRequest,
   count: number,
 ): CityResult[] {
-  return rankSurvivorsForUser(body, count).map((ranked, i) => {
+  const { top3, leastNegativeFallbackCount } = selectPaywallSlotSets(
+    body,
+    count,
+    PAYWALL_FREE_COUNT,
+  )
+  if (leastNegativeFallbackCount > 0) {
+    console.warn(
+      `[paywall-slots] filled ${leastNegativeFallbackCount} Top 3 slot(s) with least-negative savings`,
+    )
+  }
+  return top3.slice(0, count).map((ranked, i) => {
     const meta = metaFor(ranked.city)
     return {
       name: "\u200B".repeat(i + 1),
@@ -510,6 +589,7 @@ export function buildLockedScoreContinentStubs(
       scores: { tax: 0, housing: 0, climate: 0, health: 0, stability: 0, safety: 0 },
       aiInsight: "",
       locked: true,
+      topMatch: true,
     }
   })
 }
@@ -887,6 +967,8 @@ export type RecommendStreamHandlers = {
   onCity?: (city: CityResult) => void
   /** Skip this many top-ranked cities before LLM generation. Paywall-v2 free path uses 3 → engine #4–#12. */
   rankOffset?: number
+  /** When set, generate narratives for this slice instead of rank+offset. */
+  preselected?: ScoreCityResult[]
 }
 
 function emitNarrativesFromBuffer(
@@ -980,7 +1062,10 @@ export async function streamRecommendCities(
   }
 
   const priorities = normPrioritiesFromBody(body)
-  const ranked = rankSurvivorsForUser(body, offset + resultCount).slice(offset)
+  const ranked =
+    handlers.preselected && handlers.preselected.length > 0
+      ? handlers.preselected
+      : rankSurvivorsForUser(body, offset + resultCount).slice(offset)
   if (ranked.length === 0) {
     throw new Error("No cities matched your budget and priority filters")
   }

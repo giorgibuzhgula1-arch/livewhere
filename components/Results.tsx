@@ -386,12 +386,20 @@ export default function Results({
   }
 
   // Flag off: unlocked first, then descending score. Flag-on free: #12…#4 then Top 3/2/1.
+  // Paid + v2: designated Top 3 (topMatch) stay first so unlock doesn't re-sort
+  // a high-score negative-savings city back into the paid slot.
   const ordered = useV2FreeLayout
     ? [
         ...cities.filter((c) => !c.locked).sort((a, b) => a.score - b.score),
         ...cities.filter((c) => c.locked).sort((a, b) => a.score - b.score),
       ]
     : [...cities].sort((a, b) => {
+        if (paywallV2Enabled && paid) {
+          const at = a.topMatch ? 1 : 0
+          const bt = b.topMatch ? 1 : 0
+          if (at !== bt) return bt - at
+          return b.score - a.score
+        }
         const au = isUnlocked(a) ? 1 : 0
         const bu = isUnlocked(b) ? 1 : 0
         if (au !== bu) return bu - au

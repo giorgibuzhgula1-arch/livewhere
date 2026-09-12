@@ -27,6 +27,8 @@ export interface CityResult {
   aiInsight: string;
   /** Set by the server: true when this card is locked (free tier, not the #1 match). */
   locked?: boolean;
+  /** Paywall Top 3 slot — the paid unlock set. Not the raw engine #1–#3. */
+  topMatch?: boolean;
 }
 
 export interface UserPriorities {
