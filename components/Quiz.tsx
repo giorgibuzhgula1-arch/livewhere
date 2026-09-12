@@ -140,6 +140,8 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   const [budgetChip, setBudgetChip] = useState<BudgetChipId | null>(null)
   const [draftReady, setDraftReady] = useState(false)
   const [mobileNav, setMobileNav] = useState(false)
+  const [quizInView, setQuizInView] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   const prioritiesTracked = useRef(false)
 
@@ -178,6 +180,17 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     sync()
     mq.addEventListener('change', sync)
     return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    const el = cardRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setQuizInView(entry.isIntersecting),
+      { threshold: 0.2 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
@@ -371,7 +384,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         Your personalized<br />country score
       </h2>
 
-      <div style={{ background: '#12121a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24 }}>
+      <div ref={cardRef} style={{ background: '#12121a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24 }}>
         <div className="quiz-card-header" style={{ padding: '32px 40px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 18, fontWeight: 600 }}>Tell us about yourself</div>
           <div className="quiz-step-badge" style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', background: '#1a1a26', padding: '6px 14px', borderRadius: 20, whiteSpace: 'nowrap' }}>
@@ -548,7 +561,9 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             </div>
           )}
 
-          {mobileNav ? createPortal(stepNav, document.body) : stepNav}
+          {mobileNav
+            ? (quizInView ? createPortal(stepNav, document.body) : null)
+            : stepNav}
         </div>
       </div>
     </section>
