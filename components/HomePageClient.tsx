@@ -582,13 +582,6 @@ export default function HomePageClient({
         return
       }
 
-      if (typeof window !== 'undefined') {
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          event: 'lead_form_submitted'
-        });
-      }
-
       const reader = res.body?.getReader()
       if (!reader) {
         setMatches(null)
@@ -608,6 +601,15 @@ export default function HomePageClient({
         streamMaxCities != null && list.length > streamMaxCities
           ? list.slice(0, streamMaxCities)
           : list
+
+      let leadTracked = false
+      const trackLeadWhenResultsVisible = (cityCount: number) => {
+        if (leadTracked || options?.isRestoreRefetch || cityCount === 0) return
+        if (typeof window === 'undefined') return
+        leadTracked = true
+        window.dataLayer = window.dataLayer || []
+        window.dataLayer.push({ event: 'lead_form_submitted' })
+      }
 
       const finishWithCities = async (cities: CityResult[]) => {
         const capped = capMatches(cities)
@@ -642,8 +644,10 @@ export default function HomePageClient({
           clearPendingResults()
           clearPendingAnalyze()
           clearPostAuthRestoreState()
+          trackLeadWhenResultsVisible(capped.length)
         } else {
           savePendingAnonymousResults(capped, streamMaxCities, searchId)
+          trackLeadWhenResultsVisible(capped.length)
         }
       }
 
@@ -1247,7 +1251,8 @@ export default function HomePageClient({
 
   function openSignInToView() {
     // Analytics note (Ads attribution): trackSignupStarted inside openAuthForResults
-    // fires on this CTA click, not at analyze start. lead_form_submitted timing is unchanged.
+    // fires on this CTA click, not at analyze start. lead_form_submitted fires when
+    // finishWithCities makes city results visible (same point as anonymous free results).
     openAuthForResults()
   }
 
