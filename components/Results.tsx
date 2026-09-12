@@ -1421,13 +1421,14 @@ export default function Results({
 
       {canSavePlan && (
         <div
+          className="results-sticky-bar"
           style={{
             position: 'fixed',
             bottom: 0,
             left: 0,
             right: 0,
             zIndex: 90,
-            padding: '12px 20px calc(12px + env(safe-area-inset-bottom))',
+            padding: '12px 16px calc(12px + env(safe-area-inset-bottom))',
             background: 'linear-gradient(to top, rgba(10,10,15,0.98) 70%, transparent)',
             backdropFilter: 'blur(12px)',
             display: 'flex',
@@ -1435,27 +1436,59 @@ export default function Results({
             pointerEvents: 'none',
           }}
         >
-          <button
-            type="button"
-            onClick={handleSavePlanClick}
+          <div
             style={{
               pointerEvents: 'auto',
-              background: '#c8f05a',
-              color: '#0a0a0f',
-              border: 'none',
-              padding: '14px 32px',
-              borderRadius: 14,
-              fontSize: 15,
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
-              boxShadow: '0 8px 32px rgba(200,240,90,0.25)',
-              maxWidth: 420,
+              display: 'flex',
+              gap: 10,
               width: '100%',
+              maxWidth: 480,
+              alignItems: 'stretch',
             }}
           >
-            Save this Plan
-          </button>
+            <button
+              type="button"
+              onClick={handleSavePlanClick}
+              style={{
+                flex: locked && onUnlockPro ? '0 1 auto' : 1,
+                background: locked && onUnlockPro ? '#1a1a26' : '#c8f05a',
+                color: locked && onUnlockPro ? '#f0ede8' : '#0a0a0f',
+                border: locked && onUnlockPro ? '1px solid rgba(255,255,255,0.12)' : 'none',
+                padding: locked && onUnlockPro ? '14px 16px' : '14px 32px',
+                borderRadius: 14,
+                fontSize: locked && onUnlockPro ? 14 : 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                boxShadow: locked && onUnlockPro ? 'none' : '0 8px 32px rgba(200,240,90,0.25)',
+                minHeight: 48,
+              }}
+            >
+              {locked && onUnlockPro ? 'Save' : 'Save this Plan'}
+            </button>
+            {locked && onUnlockPro && (
+              <button
+                type="button"
+                onClick={() => onUnlockPro()}
+                style={{
+                  flex: 1,
+                  background: '#c8f05a',
+                  color: '#0a0a0f',
+                  border: 'none',
+                  padding: '14px 16px',
+                  borderRadius: 14,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                  boxShadow: '0 8px 32px rgba(200,240,90,0.25)',
+                  minHeight: 48,
+                }}
+              >
+                Unlock Top 3
+              </button>
+            )}
+          </div>
         </div>
       )}
 
