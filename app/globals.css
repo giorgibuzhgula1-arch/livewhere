@@ -47,7 +47,31 @@ body::before {
 .orb1 { width: 600px; height: 600px; background: rgba(200,240,90,0.06); top: -200px; right: -200px; }
 .orb2 { width: 400px; height: 400px; background: rgba(90,240,200,0.05); bottom: 100px; left: -150px; }
 
-/* Scrollbar */
+/* Native scrollbar — Chrome / Edge / Android. iOS Safari ignores these. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg);
+}
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+/* Page scroll progress — visible on iOS Safari where native thumbs hide. */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  z-index: 50;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.06);
+}
+.scroll-progress-fill {
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: top;
+  transform: scaleY(0);
+  will-change: transform;
+}

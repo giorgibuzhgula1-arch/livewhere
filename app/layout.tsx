@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import Script from 'next/script'
 import RefClickTracker from '@/components/RefClickTracker'
+import ScrollProgress from '@/components/ScrollProgress'
 import TidioMobileOffset from '@/components/TidioMobileOffset'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { PostHogProvider } from '@/app/providers'
@@ -84,7 +85,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <div className="orb orb1" aria-hidden />
           <div className="orb orb2" aria-hidden />
           <RefClickTracker />
-          <div className="app-shell">{children}</div>
+          <div className="app-shell">
+            <ScrollProgress />
+            {children}
+          </div>
         </PostHogProvider>
       </body>
     </html>
