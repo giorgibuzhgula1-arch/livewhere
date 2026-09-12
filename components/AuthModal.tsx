@@ -11,6 +11,7 @@ import {
 import { markPendingAuthRestore, saveOAuthNext } from '@/lib/wait-for-session'
 import { trackSignUp } from '@/lib/gtag'
 import { trackSignupCompleted, trackSignupPendingConfirmation, trackSignupStarted } from '@/lib/analytics'
+import { isInAppBrowser } from '@/lib/in-app-browser'
 
 interface Props {
   isOpen: boolean
@@ -39,8 +40,13 @@ export default function AuthModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checkEmail, setCheckEmail] = useState(false)
+  const [inAppBrowser, setInAppBrowser] = useState(false)
 
   const restoreResults = variant === 'results' || googleOnly
+
+  useEffect(() => {
+    setInAppBrowser(isInAppBrowser())
+  }, [])
 
   useEffect(() => {
     if (!isOpen) {
@@ -269,6 +275,21 @@ export default function AuthModal({
                   </div>
                 )}
 
+                {inAppBrowser && (
+                  <p
+                    style={{
+                      margin: '0 0 14px',
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                      color: 'rgba(240,237,232,0.7)',
+                    }}
+                  >
+                    Google sign-in often fails in Instagram, Facebook, and TikTok.
+                    Use email below, or open livewhere.io in Safari or Chrome.
+                  </p>
+                )}
+
+                {!inAppBrowser && (
                 <button
                   type="button"
                   onClick={signInWithGoogle}
@@ -295,6 +316,7 @@ export default function AuthModal({
                   <GoogleIcon />
                   Continue with Google
                 </button>
+                )}
 
                 <div
                   style={{
@@ -307,7 +329,7 @@ export default function AuthModal({
                   }}
                 >
                   <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                  or email
+                  {inAppBrowser ? 'sign in with email' : 'or email'}
                   <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
                 </div>
 
@@ -375,6 +397,35 @@ export default function AuthModal({
                     {loading ? 'Please wait…' : mode === 'signup' ? 'Sign up' : 'Sign in'}
                   </button>
                 </form>
+
+                {inAppBrowser && (
+                  <button
+                    type="button"
+                    onClick={signInWithGoogle}
+                    disabled={loading}
+                    style={{
+                      width: '100%',
+                      background: 'transparent',
+                      color: 'rgba(240,237,232,0.75)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.7 : 1,
+                      fontFamily: "'DM Sans', sans-serif",
+                      marginTop: 14,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <GoogleIcon />
+                    Continue with Google
+                  </button>
+                )}
 
                 <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(240,237,232,0.45)', marginTop: 14, marginBottom: 0 }}>
                   {mode === 'login' ? 'New here? ' : 'Have an account? '}
