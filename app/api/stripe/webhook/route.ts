@@ -12,6 +12,7 @@ import {
   type CheckoutType,
 } from '@/lib/stripe-prices'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { isExcludedTestPurchase } from '@/lib/founder-test'
 import { markWebhookE2eProcessed } from '@/lib/webhook-e2e-ack'
 import type { AnalyzeRequest, CityResult } from '@/lib/types'
 import Stripe from 'stripe'
@@ -19,7 +20,8 @@ import Stripe from 'stripe'
 // jsPDF + Stripe require Node.js — do not switch to Edge runtime.
 export const runtime = 'nodejs'
 
-// Background work (PDF, Supabase, Stripe API) runs via waitUntil after 200 is returned.
+// Entitlement writes are awaited before 200 so Stripe retries on failure.
+// PDF generation stays in waitUntil (non-critical).
 export const maxDuration = 60
 
 async function grantMonitorSubscription(
@@ -38,6 +40,85 @@ async function grantMonitorSubscription(
   } catch (err) {
     console.error('[webhook] Failed to create monitor subscription:', err)
     return null
+  }
+}
+
+async function runBlueprintPdfSideEffect(session: Stripe.Checkout.Session): Promise<void> {
+  const userId = session.metadata?.userId
+  const checkoutType = session.metadata?.checkoutType as CheckoutType | undefined
+  const planId = session.metadata?.plan_id
+  if (!userId || !planId) return
+  if (checkoutType !== 'blueprint' && checkoutType !== 'blueprint_upgrade') return
+
+  const { data: savedPlan, error: planError } = await supabaseAdmin
+    .from('saved_retirement_plans')
+    .select('id, user_id, name, quiz_input, city_results, max_cities, created_at')
+    .eq('id', planId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (planError) {
+    console.error('[webhook] Failed to fetch saved plan for Blueprint checkout:', planError)
+    return
+  }
+  if (!savedPlan) {
+    console.warn('[webhook] Blueprint checkout plan_id not found for user:', { planId, userId })
+    return
+  }
+
+  console.log('[webhook] Blueprint checkout saved plan retrieved:', {
+    planId: savedPlan.id,
+    userId: savedPlan.user_id,
+    planName: savedPlan.name,
+    cityCount: Array.isArray(savedPlan.city_results) ? savedPlan.city_results.length : 0,
+    monthlyBudget: (savedPlan.quiz_input as { monthlyBudget?: number })?.monthlyBudget,
+    createdAt: savedPlan.created_at,
+  })
+
+  const quizInput = savedPlan.quiz_input as AnalyzeRequest
+  const cityResults = (savedPlan.city_results as CityResult[]) ?? []
+  const exportCities = cityResults.filter((city) => !city.locked)
+  const budget =
+    typeof quizInput?.monthlyBudget === 'number' && quizInput.monthlyBudget > 0
+      ? quizInput.monthlyBudget
+      : 0
+
+  try {
+    const pdf = generateRetirementReportPdf(exportCities, budget, { lifetime: true })
+    console.log('[webhook] Blueprint retirement PDF generated:', {
+      planId: savedPlan.id,
+      byteLength: pdf.byteLength,
+      exportCityCount: exportCities.length,
+    })
+
+    const filePath = `${savedPlan.user_id}/${savedPlan.id}/blueprint-report.pdf`
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('blueprint-reports')
+      .upload(filePath, pdf, {
+        contentType: 'application/pdf',
+        upsert: true,
+      })
+
+    if (uploadError) {
+      console.error('[webhook] Blueprint PDF upload failed:', uploadError)
+      return
+    }
+
+    console.log('[webhook] Blueprint PDF uploaded:', filePath)
+    const { data: signedData, error: signedUrlError } = await supabaseAdmin.storage
+      .from('blueprint-reports')
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7)
+
+    if (signedUrlError) {
+      console.error('[webhook] Signed URL creation failed:', signedUrlError)
+      return
+    }
+    console.log('[webhook] Blueprint PDF signed URL created:', {
+      planId: savedPlan.id,
+      hasUrl: !!signedData.signedUrl,
+    })
+  } catch (pdfError) {
+    console.error('[webhook] Blueprint retirement PDF generation failed:', pdfError)
   }
 }
 
@@ -64,13 +145,20 @@ async function processStripeEvent(event: Stripe.Event): Promise<void> {
     const userId = session.metadata?.userId
     const checkoutType = session.metadata?.checkoutType as CheckoutType | undefined
 
+    const excludeConversion = isExcludedTestPurchase({
+      sessionId: session.id,
+      livemode: session.livemode,
+      email: session.customer_details?.email ?? session.customer_email,
+      userId: session.metadata?.userId,
+    })
+
     const affiliateInput = conversionFromCheckoutSession({
       id: session.id,
       metadata: session.metadata ?? null,
       amount_total: session.amount_total,
       payment_intent: session.payment_intent,
     })
-    if (affiliateInput) {
+    if (affiliateInput && !excludeConversion) {
       await recordAffiliateConversion(affiliateInput)
     }
 
@@ -116,82 +204,6 @@ async function processStripeEvent(event: Stripe.Event): Promise<void> {
           ...(monitorSubId ? { stripe_monitor_subscription_id: monitorSubId } : {}),
         })
         .eq('id', userId)
-
-      const planId = session.metadata?.plan_id
-      if (planId) {
-        const { data: savedPlan, error: planError } = await supabaseAdmin
-          .from('saved_retirement_plans')
-          .select('id, user_id, name, quiz_input, city_results, max_cities, created_at')
-          .eq('id', planId)
-          .eq('user_id', userId)
-          .maybeSingle()
-
-        if (planError) {
-          console.error('[webhook] Failed to fetch saved plan for Blueprint checkout:', planError)
-        } else if (savedPlan) {
-          console.log('[webhook] Blueprint checkout saved plan retrieved:', {
-            planId: savedPlan.id,
-            userId: savedPlan.user_id,
-            planName: savedPlan.name,
-            cityCount: Array.isArray(savedPlan.city_results) ? savedPlan.city_results.length : 0,
-            monthlyBudget: (savedPlan.quiz_input as { monthlyBudget?: number })?.monthlyBudget,
-            createdAt: savedPlan.created_at,
-          })
-
-          const quizInput = savedPlan.quiz_input as AnalyzeRequest
-          const cityResults = (savedPlan.city_results as CityResult[]) ?? []
-          const exportCities = cityResults.filter((city) => !city.locked)
-          const budget =
-            typeof quizInput?.monthlyBudget === 'number' && quizInput.monthlyBudget > 0
-              ? quizInput.monthlyBudget
-              : 0
-
-          let downloadUrl: string | null = null
-
-          try {
-            const pdf = generateRetirementReportPdf(exportCities, budget, { lifetime: true })
-            console.log('[webhook] Blueprint retirement PDF generated:', {
-              planId: savedPlan.id,
-              byteLength: pdf.byteLength,
-              exportCityCount: exportCities.length,
-            })
-
-            const filePath = `${savedPlan.user_id}/${savedPlan.id}/blueprint-report.pdf`
-            const { error: uploadError } = await supabaseAdmin.storage
-              .from('blueprint-reports')
-              .upload(filePath, pdf, {
-                contentType: 'application/pdf',
-                upsert: true,
-              })
-
-            if (uploadError) {
-              console.error('[webhook] Blueprint PDF upload failed:', uploadError)
-            } else {
-              console.log('[webhook] Blueprint PDF uploaded:', filePath)
-
-              const { data: signedData, error: signedUrlError } = await supabaseAdmin.storage
-                .from('blueprint-reports')
-                .createSignedUrl(filePath, 60 * 60 * 24 * 7)
-
-              if (signedUrlError) {
-                console.error('[webhook] Signed URL creation failed:', signedUrlError)
-              } else {
-                downloadUrl = signedData.signedUrl
-                console.log('[webhook] Blueprint PDF signed URL created:', {
-                  planId: savedPlan.id,
-                  hasUrl: !!downloadUrl,
-                })
-              }
-            }
-          } catch (pdfError) {
-            console.error('[webhook] Blueprint retirement PDF generation failed:', pdfError)
-          }
-        } else {
-          console.warn('[webhook] Blueprint checkout plan_id not found for user:', { planId, userId })
-        }
-      } else {
-        console.warn('[webhook] Blueprint checkout completed without plan_id metadata:', { userId })
-      }
     } else if (checkoutType === 'pro') {
       await supabaseAdmin
         .from('profiles')
@@ -259,11 +271,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Webhook signature failed' }, { status: 400 })
   }
 
-  waitUntil(
-    processStripeEvent(event).catch((err) => {
-      console.error('[webhook] Background processing failed:', err)
-    }),
-  )
+  // E2E lite is CPU-only PDF work — keep it off the request path so the
+  // regression test can still assert a fast 200 + background ack.
+  if (process.env.WEBHOOK_E2E_LITE === 'true') {
+    waitUntil(
+      processStripeEvent(event).catch((err) => {
+        console.error('[webhook] Background processing failed:', err)
+      }),
+    )
+    return NextResponse.json({ received: true }, { status: 200 })
+  }
+
+  try {
+    await processStripeEvent(event)
+  } catch (err) {
+    console.error('[webhook] Entitlement processing failed:', err)
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session
+    waitUntil(
+      runBlueprintPdfSideEffect(session).catch((err) => {
+        console.error('[webhook] Background PDF failed:', err)
+      }),
+    )
+  }
 
   return NextResponse.json({ received: true }, { status: 200 })
 }
