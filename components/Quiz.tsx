@@ -384,7 +384,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         Your personalized<br />country score
       </h2>
 
-      <div ref={cardRef} style={{ background: '#12121a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24 }}>
+      <div ref={cardRef} className="quiz-card-shell" style={{ background: '#12121a', border: '1px solid rgba(200,240,90,0.55)', borderRadius: 24 }}>
         <div className="quiz-card-header" style={{ padding: '32px 40px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 18, fontWeight: 600 }}>Tell us about yourself</div>
           <div className="quiz-step-badge" style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', background: '#1a1a26', padding: '6px 14px', borderRadius: 20, whiteSpace: 'nowrap' }}>
@@ -395,7 +395,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         <div className="quiz-card-body" style={{ padding: 40 }}>
           {currentStep.id === 'lifestyle' && (
             <div style={{ marginBottom: 32 }}>
-              <label style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 12, fontWeight: 500, display: 'block' }}>
+              <label className="quiz-question-label" style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 12, fontWeight: 500, display: 'block' }}>
                 Your lifestyle (select all that apply)
               </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -422,7 +422,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
 
           {currentPriority && (
             <div style={{ marginBottom: 32 }}>
-              <label style={{ fontSize: 14, color: '#f0ede8', marginBottom: 6, fontWeight: 600, display: 'block' }}>
+              <label className="quiz-question-label" style={{ fontSize: 14, color: 'var(--accent)', marginBottom: 6, fontWeight: 600, display: 'block' }}>
                 {currentPriority.emoji} {currentPriority.label}
               </label>
               <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, lineHeight: 1.5 }}>
@@ -465,7 +465,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
 
           {currentStep.id === 'budget' && (
             <div style={{ marginBottom: 32 }}>
-              <label style={{ fontSize: 14, color: '#f0ede8', marginBottom: 6, fontWeight: 600, display: 'block' }}>
+              <label className="quiz-question-label" style={{ fontSize: 14, color: 'var(--accent)', marginBottom: 6, fontWeight: 600, display: 'block' }}>
                 Your monthly budget to live abroad
               </label>
               <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, lineHeight: 1.5 }}>
