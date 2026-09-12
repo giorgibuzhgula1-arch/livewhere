@@ -660,12 +660,10 @@ export default function HomePageClient({
           usedDataEngine = true
         } else if (payload.type === 'city') {
           usedDataEngine = true
-          // Free-tier cities stream in as locked teasers before the server
-          // knows which one is the #1 match. Painting them now would render
-          // the eventual top match locked, then flash to unlocked when the
-          // authoritative `done` payload arrives. So only paint streamed
-          // cities that are already unlocked; free tier waits for `done`.
-          if (loggedIn && !payload.city.locked) {
+          // Paint unlocked (free-list) cities as they arrive. Locked Top 3
+          // stubs only exist on the authoritative `done` payload — do not
+          // render partial locked cards here or the teaser will flash.
+          if (!payload.city.locked) {
             setMatches((prev) => capMatches(mergeStreamedCity(prev ?? [], payload.city)))
           }
         } else if (payload.type === 'delta') {

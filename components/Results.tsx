@@ -13,7 +13,7 @@ const SavePlanModal = dynamic(() => import('./SavePlanModal'), { ssr: false })
 import { CityResult, type AnalyzeRequest } from '@/lib/types'
 import { loadPendingAnalyze } from '@/lib/pending-analyze'
 import { getSiteUrl } from '@/lib/site-url'
-import { fetchUserPlan, isBlueprintPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
+import { fetchUserPlan, FREE_RESULT_COUNT, FREE_UNLOCKED_COUNT, isBlueprintPlan, isPaidPlan, type UserPlan } from '@/lib/plan'
 import { supabase } from '@/lib/supabase'
 import { exportRetirementReport } from '@/lib/export-pdf'
 import { trackResultsViewed } from '@/lib/analytics'
@@ -401,9 +401,17 @@ export default function Results({
   const v2LockedTop3 = useV2FreeLayout
     ? [...ordered.filter((c) => c.locked)].sort((a, b) => b.score - a.score).slice(0, 3)
     : []
-  const v2Top1 = useV2FreeLayout
+  const top3Ready = !useV2FreeLayout || !streaming || v2LockedTop3.length >= 3
+  const v2Top1 = useV2FreeLayout && top3Ready
     ? v2LockedTop3[0] ?? null
     : null
+  const expectedFreeCount = useV2FreeLayout
+    ? Math.max(0, (maxCities ?? FREE_RESULT_COUNT) - FREE_UNLOCKED_COUNT)
+    : FREE_UNLOCKED_COUNT
+  const freeSkeletonCount =
+    streaming && !paid
+      ? Math.max(0, expectedFreeCount - cities.filter((c) => !c.locked).length)
+      : 0
 
   const filtered = filter === 'all' ? ordered : ordered.filter(c => c.continent === filter)
   const top = useV2FreeLayout ? null : ordered[0]
@@ -941,7 +949,7 @@ export default function Results({
         </div>
       )}
 
-      {useV2FreeLayout && v2LockedTop3.length > 0 && (
+      {useV2FreeLayout && top3Ready && v2LockedTop3.length > 0 && (
         <div
           className="results-top3-teaser"
           style={{
@@ -1087,7 +1095,7 @@ export default function Results({
 
       {/* Cities grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 16 }}>
-        {filtered.map((city, i) => {
+        {(top3Ready ? filtered : filtered.filter((c) => !c.locked)).map((city, i) => {
           const compareSelected = isCompareSelected(city)
           const compareDisabled =
             paid &&
@@ -1168,7 +1176,29 @@ export default function Results({
           </motion.div>
           )
         })}
+        {Array.from({ length: freeSkeletonCount }, (_, i) => (
+          <div
+            key={`free-city-skeleton-${i}`}
+            aria-hidden
+            className="results-city-skeleton"
+            style={{
+              minHeight: 220,
+              borderRadius: 16,
+              background: '#12121a',
+              border: '1px solid rgba(255,255,255,0.07)',
+              animation: 'results-skeleton-pulse 1.4s ease-in-out infinite',
+            }}
+          />
+        ))}
       </div>
+      {freeSkeletonCount > 0 && (
+        <style>{`
+          @keyframes results-skeleton-pulse {
+            0%, 100% { opacity: 0.45 }
+            50% { opacity: 0.85 }
+          }
+        `}</style>
+      )}
 
       {paid && showComparison && compareSelection.length >= 2 && (
         <CityComparison cities={compareSelection} currency={currency} />
