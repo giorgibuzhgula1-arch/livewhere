@@ -54,6 +54,23 @@ const QUIZ_STEPS = [
 
 const LAST_STEP = QUIZ_STEPS.length - 1
 
+/**
+ * Chip → monthlyBudget mapping for AnalyzeRequest / scoreCity.
+ * The engine still receives a single USD number (not a range).
+ * Values are representative points inside each band:
+ *   under_1500 → 1200, 1500_2500 → 2000, 2500_4000 → 3250,
+ *   4000_plus → 5500, not_sure → 2500 (previous slider default).
+ */
+const BUDGET_CHIPS = [
+  { id: 'under_1500', label: '<$1,500', monthlyBudget: 1200 },
+  { id: '1500_2500', label: '$1,500–2,500', monthlyBudget: 2000 },
+  { id: '2500_4000', label: '$2,500–4,000', monthlyBudget: 3250 },
+  { id: '4000_plus', label: '$4,000+', monthlyBudget: 5500 },
+  { id: 'not_sure', label: 'Not sure yet', monthlyBudget: 2500 },
+] as const
+
+type BudgetChipId = (typeof BUDGET_CHIPS)[number]['id']
+
 const QUIZ_DRAFT_KEY = 'livewhere_quiz_draft'
 
 function persistQuizDraft(
@@ -61,8 +78,9 @@ function persistQuizDraft(
   priorities: UserPriorities,
   lifestyle: string[],
   step: number,
+  budgetChip: BudgetChipId | null,
 ) {
-  const payload = JSON.stringify({ monthlyBudget, priorities, lifestyle, step })
+  const payload = JSON.stringify({ monthlyBudget, priorities, lifestyle, step, budgetChip })
   try {
     sessionStorage.setItem(QUIZ_DRAFT_KEY, payload)
   } catch {
@@ -91,6 +109,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     expat_community: 3, visa_residency: 3,
   })
   const [lifestyle, setLifestyle] = useState<string[]>([])
+  const [budgetChip, setBudgetChip] = useState<BudgetChipId | null>(null)
 
   const prioritiesTracked = useRef(false)
 
@@ -103,11 +122,17 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
         priorities?: UserPriorities
         lifestyle?: unknown
         step?: unknown
+        budgetChip?: unknown
       }
       if (typeof draft.monthlyBudget === 'number') setMonthlyBudget(draft.monthlyBudget)
       if (draft.priorities && typeof draft.priorities === 'object') setPriorities(draft.priorities)
       if (Array.isArray(draft.lifestyle) && draft.lifestyle.every((x) => typeof x === 'string')) {
         setLifestyle(draft.lifestyle)
+      }
+      const restoredChip = BUDGET_CHIPS.find((chip) => draft.budgetChip === chip.id)
+      if (restoredChip) {
+        setBudgetChip(restoredChip.id)
+        setMonthlyBudget(restoredChip.monthlyBudget)
       }
       if (
         typeof draft.step === 'number' &&
@@ -122,14 +147,17 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     }
   }, [])
 
-  function handleBudgetChange(value: number) {
+  function handleBudgetChip(id: BudgetChipId) {
+    const chip = BUDGET_CHIPS.find((item) => item.id === id)
+    if (!chip) return
     if (!tracked.current) {
       tracked.current = true
       trackQuizStarted()
     }
-    setMonthlyBudget(value)
-    persistQuizDraft(value, priorities, lifestyle, step)
-    trackBudgetSelected(value)
+    setBudgetChip(chip.id)
+    setMonthlyBudget(chip.monthlyBudget)
+    persistQuizDraft(chip.monthlyBudget, priorities, lifestyle, step, chip.id)
+    trackBudgetSelected(chip.monthlyBudget)
   }
 
   function handlePriorityChange(key: keyof UserPriorities, value: number) {
@@ -139,7 +167,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     }
     setPriorities((p) => {
       const next = { ...p, [key]: value }
-      persistQuizDraft(monthlyBudget, next, lifestyle, step)
+      persistQuizDraft(monthlyBudget, next, lifestyle, step, budgetChip)
       return next
     })
     if (!prioritiesTracked.current) {
@@ -155,7 +183,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     }
     setLifestyle(prev => {
       const next = prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]
-      persistQuizDraft(monthlyBudget, priorities, next, step)
+      persistQuizDraft(monthlyBudget, priorities, next, step, budgetChip)
       return next
     })
     if (!prioritiesTracked.current) {
@@ -167,7 +195,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   function goToStep(nextStep: number) {
     if (nextStep < 0 || nextStep > LAST_STEP) return
     setStep(nextStep)
-    persistQuizDraft(monthlyBudget, priorities, lifestyle, nextStep)
+    persistQuizDraft(monthlyBudget, priorities, lifestyle, nextStep, budgetChip)
     scrollQuizIntoView()
   }
 
@@ -284,30 +312,51 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)', marginBottom: 16, lineHeight: 1.5 }}>
                 This includes rent, food, healthcare & lifestyle
               </p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>$500</span>
-                <span style={{ fontSize: 18, color: '#c8f05a', fontWeight: 700 }}>
-                  ${monthlyBudget.toLocaleString('en-US')} / month
-                </span>
-                <span style={{ fontSize: 13, color: 'rgba(240,237,232,0.45)' }}>$10,000</span>
-              </div>
-              <div className="quiz-slider-hit">
-              <input
-                type="range"
-                className="quiz-budget-slider"
-                min={500}
-                max={10000}
-                step={100}
-                value={monthlyBudget}
-                onChange={e => handleBudgetChange(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#c8f05a', cursor: 'pointer' }}
-              />
+              <div className="quiz-budget-chips">
+                {BUDGET_CHIPS.map((chip) => {
+                  const selected = budgetChip === chip.id
+                  return (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      className="quiz-budget-chip"
+                      onClick={() => handleBudgetChip(chip.id)}
+                      aria-pressed={selected}
+                      style={{
+                        minHeight: 48,
+                        padding: '12px 16px',
+                        borderRadius: 14,
+                        fontSize: 15,
+                        fontWeight: 600,
+                        fontFamily: "'DM Sans', sans-serif",
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        background: selected ? 'rgba(200,240,90,0.12)' : '#1a1a26',
+                        border: selected ? '1px solid #c8f05a' : '1px solid rgba(255,255,255,0.07)',
+                        color: selected ? '#c8f05a' : '#f0ede8',
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
           <style>{`
             @keyframes quiz-submit-spin { to { transform: rotate(360deg) } }
+            .quiz-budget-chips {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 10px;
+            }
+            .quiz-budget-chip {
+              width: 100%;
+            }
+            .quiz-budget-chips .quiz-budget-chip:last-child {
+              grid-column: 1 / -1;
+            }
             @media (max-width: 767px) {
               .quiz-card-header {
                 flex-direction: column !important;
@@ -368,7 +417,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                 align-items: center;
                 min-height: 44px;
               }
-              .quiz-budget-slider,
               .quiz-priority-slider {
                 display: block !important;
                 width: 100% !important;
@@ -380,21 +428,18 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                 appearance: none;
                 background: transparent;
               }
-              .quiz-budget-slider::-webkit-slider-runnable-track,
               .quiz-priority-slider::-webkit-slider-runnable-track {
                 width: 100%;
                 height: 4px;
                 background: rgba(255,255,255,0.15);
                 border-radius: 999px;
               }
-              .quiz-budget-slider::-moz-range-track,
               .quiz-priority-slider::-moz-range-track {
                 width: 100%;
                 height: 4px;
                 background: rgba(255,255,255,0.15);
                 border-radius: 999px;
               }
-              .quiz-budget-slider::-webkit-slider-thumb,
               .quiz-priority-slider::-webkit-slider-thumb {
                 -webkit-appearance: none;
                 appearance: none;
@@ -406,7 +451,6 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                 border: none;
                 cursor: pointer;
               }
-              .quiz-budget-slider::-moz-range-thumb,
               .quiz-priority-slider::-moz-range-thumb {
                 width: 28px;
                 height: 28px;
