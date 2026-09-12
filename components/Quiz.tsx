@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { AnalyzeRequest, UserPriorities } from '@/lib/types'
 import {
   trackBudgetSelected,
@@ -21,7 +22,7 @@ const LABELS: Record<number, string> = {
   2: 'Somewhat important',
   3: 'Important',
   4: 'Very important',
-  5: 'Very important',
+  5: 'Extremely important',
 }
 
 const PRIORITIES = [
@@ -120,7 +121,11 @@ function clearQuizDraft() {
 }
 
 function scrollQuizIntoView() {
-  document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const el = document.getElementById('quiz')
+  if (!el) return
+  const top = el.getBoundingClientRect().top
+  if (top >= 0 && top < 80) return
+  el.scrollIntoView({ behavior: 'auto', block: 'start' })
 }
 
 export default function Quiz({ onSubmit, loading, error }: Props) {
@@ -134,6 +139,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
   const [lifestyle, setLifestyle] = useState<string[]>([])
   const [budgetChip, setBudgetChip] = useState<BudgetChipId | null>(null)
   const [draftReady, setDraftReady] = useState(false)
+  const [mobileNav, setMobileNav] = useState(false)
 
   const prioritiesTracked = useRef(false)
 
@@ -164,6 +170,14 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
       /* private browsing / storage disabled / bad JSON */
     }
     setDraftReady(true)
+  }, [])
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setMobileNav(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
   }, [])
 
   useEffect(() => {
@@ -261,6 +275,93 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
     padding: '14px 20px',
   }
 
+  const stepNav = (
+    <div
+      className="quiz-step-nav"
+      style={{
+        display: 'flex',
+        gap: 12,
+        position: 'sticky',
+        bottom: 0,
+        background: '#12121a',
+        paddingTop: 8,
+        marginTop: 8,
+        zIndex: 2,
+      }}
+    >
+      {step > 0 && (
+        <button
+          type="button"
+          onClick={() => goToStep(step - 1)}
+          disabled={loading}
+          style={{
+            ...navButtonBase,
+            flex: '0 0 auto',
+            minWidth: 88,
+            background: '#1a1a26',
+            color: '#f0ede8',
+            border: '1px solid rgba(255,255,255,0.07)',
+            opacity: loading ? 0.7 : 1,
+          }}
+        >
+          Back
+        </button>
+      )}
+      {step < LAST_STEP ? (
+        <button
+          type="button"
+          onClick={() => goToStep(step + 1)}
+          disabled={loading}
+          style={{
+            ...navButtonBase,
+            flex: 1,
+            background: '#c8f05a',
+            color: '#0a0a0f',
+            border: 'none',
+            opacity: loading ? 0.85 : 1,
+          }}
+        >
+          Next
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={loading}
+          aria-busy={loading}
+          style={{
+            ...navButtonBase,
+            flex: 1,
+            background: '#c8f05a',
+            color: '#0a0a0f',
+            border: 'none',
+            opacity: loading ? 0.85 : 1,
+          }}
+        >
+          {loading ? (
+            <>
+              <span
+                aria-hidden
+                style={{
+                  width: 18,
+                  height: 18,
+                  border: '2px solid rgba(10,10,15,0.25)',
+                  borderTopColor: '#0a0a0f',
+                  borderRadius: '50%',
+                  animation: 'quiz-submit-spin 0.8s linear infinite',
+                  flexShrink: 0,
+                }}
+              />
+              Analyzing your matches…
+            </>
+          ) : (
+            <>✦ Analyze & Find My Countries</>
+          )}
+        </button>
+      )}
+    </div>
+  )
+
   return (
     <section ref={sectionRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 20px', position: 'relative', zIndex: 1 }}>
       <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#c8f05a', marginBottom: 12, fontWeight: 600 }}>
@@ -324,22 +425,24 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                       className="quiz-priority-level-chip"
                       onClick={() => handlePriorityChange(currentPriority.key as keyof UserPriorities, level)}
                       aria-pressed={selected}
+                      aria-label={`${level} · ${LABELS[level]}`}
                       style={{
                         minHeight: 48,
-                        padding: '12px 16px',
+                        minWidth: 48,
+                        padding: '12px 8px',
                         borderRadius: 14,
-                        fontSize: 15,
-                        fontWeight: 600,
+                        fontSize: 16,
+                        fontWeight: 700,
                         fontFamily: "'DM Sans', sans-serif",
                         cursor: 'pointer',
                         transition: 'all 0.15s',
-                        textAlign: 'left',
+                        textAlign: 'center',
                         background: selected ? 'rgba(200,240,90,0.12)' : '#1a1a26',
                         border: selected ? '1px solid #c8f05a' : '1px solid rgba(255,255,255,0.07)',
                         color: selected ? '#c8f05a' : '#f0ede8',
                       }}
                     >
-                      {level} · {LABELS[level]}
+                      {level}
                     </button>
                   )
                 })}
@@ -402,8 +505,8 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             }
             .quiz-priority-level-chips {
               display: grid;
-              grid-template-columns: minmax(0, 1fr);
-              gap: 10px;
+              grid-template-columns: repeat(5, minmax(0, 1fr));
+              gap: 8px;
             }
             .quiz-priority-level-chip {
               width: 100%;
@@ -417,7 +520,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
               }
               .quiz-card-body {
                 padding: 20px !important;
-                padding-bottom: 96px !important;
+                padding-bottom: 120px !important;
               }
               .quiz-step-nav {
                 position: fixed !important;
@@ -428,7 +531,13 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
                 padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
                 margin-top: 0 !important;
                 border-top: 1px solid rgba(255,255,255,0.07);
-                z-index: 40 !important;
+                z-index: 95 !important;
+                pointer-events: auto;
+                touch-action: manipulation;
+              }
+              .quiz-step-nav button {
+                touch-action: manipulation;
+                pointer-events: auto;
               }
             }
           `}</style>
@@ -439,90 +548,7 @@ export default function Quiz({ onSubmit, loading, error }: Props) {
             </div>
           )}
 
-          <div
-            className="quiz-step-nav"
-            style={{
-              display: 'flex',
-              gap: 12,
-              position: 'sticky',
-              bottom: 0,
-              background: '#12121a',
-              paddingTop: 8,
-              marginTop: 8,
-              zIndex: 2,
-            }}
-          >
-            {step > 0 && (
-              <button
-                type="button"
-                onClick={() => goToStep(step - 1)}
-                disabled={loading}
-                style={{
-                  ...navButtonBase,
-                  flex: '0 0 auto',
-                  minWidth: 88,
-                  background: '#1a1a26',
-                  color: '#f0ede8',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  opacity: loading ? 0.7 : 1,
-                }}
-              >
-                Back
-              </button>
-            )}
-            {step < LAST_STEP ? (
-              <button
-                type="button"
-                onClick={() => goToStep(step + 1)}
-                disabled={loading}
-                style={{
-                  ...navButtonBase,
-                  flex: 1,
-                  background: '#c8f05a',
-                  color: '#0a0a0f',
-                  border: 'none',
-                  opacity: loading ? 0.85 : 1,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                aria-busy={loading}
-                style={{
-                  ...navButtonBase,
-                  flex: 1,
-                  background: '#c8f05a',
-                  color: '#0a0a0f',
-                  border: 'none',
-                  opacity: loading ? 0.85 : 1,
-                }}
-              >
-                {loading ? (
-                  <>
-                    <span
-                      aria-hidden
-                      style={{
-                        width: 18,
-                        height: 18,
-                        border: '2px solid rgba(10,10,15,0.25)',
-                        borderTopColor: '#0a0a0f',
-                        borderRadius: '50%',
-                        animation: 'quiz-submit-spin 0.8s linear infinite',
-                        flexShrink: 0,
-                      }}
-                    />
-                    Analyzing your matches…
-                  </>
-                ) : (
-                  <>✦ Analyze & Find My Countries</>
-                )}
-              </button>
-            )}
-          </div>
+          {mobileNav ? createPortal(stepNav, document.body) : stepNav}
         </div>
       </div>
     </section>
