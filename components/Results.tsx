@@ -398,8 +398,11 @@ export default function Results({
         return b.score - a.score
       })
   const v2UnlockedCount = useV2FreeLayout ? ordered.filter((c) => !c.locked).length : 0
+  const v2LockedTop3 = useV2FreeLayout
+    ? [...ordered.filter((c) => c.locked)].sort((a, b) => b.score - a.score).slice(0, 3)
+    : []
   const v2Top1 = useV2FreeLayout
-    ? ordered.filter((c) => c.locked).at(-1) ?? null
+    ? v2LockedTop3[0] ?? null
     : null
 
   const filtered = filter === 'all' ? ordered : ordered.filter(c => c.continent === filter)
@@ -935,6 +938,77 @@ export default function Results({
           {useV2FreeLayout
             ? "You're looking at matches #12 through #4. Your true Top 3 scored higher than every city on this page — they're locked until you upgrade."
             : 'Your Top 3 matches are 100% free — no payment required. You\'re seeing real data for your #1 match — take-home pay, costs, climate, safety, pros/cons and visa path. The full breakdown and all 12 matches are available with Pro.'}
+        </div>
+      )}
+
+      {useV2FreeLayout && v2LockedTop3.length > 0 && (
+        <div
+          className="results-top3-teaser"
+          style={{
+            marginBottom: 24,
+            padding: '16px 14px',
+            background: '#12121a',
+            border: '1px solid rgba(200,240,90,0.2)',
+            borderRadius: 16,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#c8f05a',
+              marginBottom: 12,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Your true Top 3 — tap to unlock
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: 8,
+            }}
+          >
+            {v2LockedTop3.map((city, i) => (
+              <button
+                key={`${city.name}|${city.country}|teaser`}
+                type="button"
+                onClick={() => onUnlockPro?.()}
+                style={{
+                  minHeight: 88,
+                  padding: '12px 8px',
+                  borderRadius: 12,
+                  background: '#1a1a26',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: 22, lineHeight: 1.2 }} aria-hidden>
+                  {city.flag || '🔒'}
+                </div>
+                <div
+                  style={{
+                    ...lockedPreviewBlur,
+                    marginTop: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: '#f0ede8',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {city.name}
+                </div>
+                <div style={{ marginTop: 4, fontSize: 11, color: '#c8f05a', fontWeight: 600 }}>
+                  Top {i + 1} 🔒
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
